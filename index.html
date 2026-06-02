@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Luke Europe">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#F26419" id="themeColor">
+<title>Luke's Europe 2026</title>
+<style>
+/* No external fonts — using system stack that looks great on iOS/Android */
+:root {
+  --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  /* Type scale */
+  --t-2xs:10px; --t-xs:12px; --t-sm:13px; --t-md:15px;
+  --t-lg:17px;  --t-xl:20px; --t-2xl:26px; --t-3xl:44px;
+  /* Space scale — 8pt grid */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px;
+  --s5:20px; --s6:24px; --s7:32px;
+  /* Radius */
+  --r1:8px; --r2:12px; --r3:14px; --r4:20px; --rp:999px;
+  /* Light tokens */
+  --bg:#fff; --bg2:#F7F5F2; --bg3:#EDEBE6;
+  --bd:rgba(0,0,0,.09); --bd2:rgba(0,0,0,.16);
+  --tx:#141210; --tx2:#5C574F; --tx3:#9C968C;
+  --ac:#F26419; --ac-bg:#FFF2EB; --ac-bd:#FFCFAA; --ac-tx:#C04E0D;
+  --ok:#1A7A45; --ok-bg:#EDFAF3; --ok-bd:#A8DFC0;
+  --wn:#975F00; --wn-bg:#FFF8E0; --wn-bd:#F5D980;
+  --er:#C0392B;
+  --p1:#E07B5A; --p2:#4A9E7A; --p3:#E8A23C; --p4:#5A7EC4;
+}
+body.dark {
+  --bg:#111010; --bg2:#1C1A19; --bg3:#242220;
+  --bd:rgba(255,255,255,.08); --bd2:rgba(255,255,255,.14);
+  --tx:#F0EDE8; --tx2:#9C968C; --tx3:#5C574F;
+  --ac:#F26419; --ac-bg:#1F1208; --ac-bd:#4A2408; --ac-tx:#F58A50;
+  --ok:#5ABF8A; --ok-bg:#081A10; --ok-bd:#1A3C28;
+  --wn:#D4A020; --wn-bg:#1A1400; --wn-bd:#382C00;
+  --er:#E05C4C;
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { -webkit-text-size-adjust:100%; }
+body {
+  font-family:var(--font);
+  background:var(--bg); color:var(--tx);
+  max-width:430px; margin:0 auto;
+  min-height:100dvh; overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  transition:background .2s, color .2s;
+}
+* { -webkit-tap-highlight-color:transparent; }
+::-webkit-scrollbar { display:none; }
+* { scrollbar-width:none; }
+img { display:block; width:100%; }
+button, input { font-family:var(--font); }
+button { cursor:pointer; border:none; background:none; color:inherit; }
+
+/* Typography */
+.t2xs{font-size:var(--t-2xs);line-height:1.3}
+.txs {font-size:var(--t-xs); line-height:1.4}
+.tsm {font-size:var(--t-sm); line-height:1.5}
+.tmd {font-size:var(--t-md); line-height:1.4}
+.tlg {font-size:var(--t-lg); line-height:1.3}
+.txl {font-size:var(--t-xl); line-height:1.2}
+.t2xl{font-size:var(--t-2xl);line-height:1.15}
+.t3xl{font-size:var(--t-3xl);line-height:1}
+.w5{font-weight:500} .w6{font-weight:600} .w7{font-weight:700}
+.tight{letter-spacing:-.03em} .wide{letter-spacing:.06em}
+.c1{color:var(--tx)} .c2{color:var(--tx2)} .c3{color:var(--tx3)} .ca{color:var(--ac)}
+.lbl{font-size:var(--t-2xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3)}
+
+/* Spacing */
+.px{padding-left:var(--s4);padding-right:var(--s4)}
+.pt3{padding-top:var(--s3)} .pt4{padding-top:var(--s4)} .pt5{padding-top:var(--s5)}
+.mt2{margin-top:var(--s2)} .mt3{margin-top:var(--s3)} .mt4{margin-top:var(--s4)} .mt5{margin-top:var(--s5)}
+.mb2{margin-bottom:var(--s2)} .mb3{margin-bottom:var(--s3)} .mb4{margin-bottom:var(--s4)} .mb5{margin-bottom:var(--s5)}
+
+/* Layout */
+#app{display:flex;flex-direction:column;height:100dvh}
+#main{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 72px)}
+
+/* Header */
+#hdr{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--bd);
+     position:sticky;top:0;z-index:100;padding-top:env(safe-area-inset-top,0);transition:background .2s}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s4);min-height:48px}
+.logo{font-size:var(--t-lg);font-weight:700;letter-spacing:-.03em}
+.logo b{color:var(--ac)}
+.hdr-btns{display:flex;gap:var(--s2)}
+.ibtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+      border-radius:var(--r1);border:1px solid var(--bd);background:var(--bg2);font-size:16px;
+      transition:opacity .15s}
+.ibtn:active{opacity:.6}
+.prog-rail{height:2px;background:var(--bd)}
+.prog-bar{height:100%;background:var(--ac);transition:width .6s}
+.status-strip{display:flex;justify-content:space-between;align-items:center;
+              padding:var(--s2) var(--s4);background:var(--ac-bg);border-top:1px solid var(--ac-bd)}
+
+/* Nav */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;
+     display:flex;background:var(--bg);border-top:1px solid var(--bd);
+     padding-bottom:env(safe-area-inset-bottom,0);z-index:100;transition:background .2s}
+.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:3px;padding:var(--s2) 0 var(--s3);min-height:48px;
+      color:var(--tx3);font-size:var(--t-2xs);font-weight:600;letter-spacing:.04em;transition:color .15s}
+.nbtn.on{color:var(--ac)}
+.nbtn.on .pip{background:var(--ac)}
+.nicon{font-size:20px;line-height:1}
+.pip{width:3px;height:3px;border-radius:var(--rp);background:transparent;transition:background .15s}
+
+/* Panes */
+.pane{display:none} .pane.on{display:block}
+
+/* Card */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r3);padding:var(--s4);transition:background .2s,border-color .2s}
+.card-ac{background:var(--ac-bg)!important;border-color:var(--ac-bd)!important}
+.card-ok{background:var(--ok-bg)!important;border-color:var(--ok-bd)!important}
+
+/* Badge */
+.badge{display:inline-flex;align-items:center;gap:var(--s1);font-size:var(--t-2xs);font-weight:700;
+       padding:3px var(--s2);border-radius:var(--rp);white-space:nowrap}
+.bok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)}
+.bwn{background:var(--wn-bg);color:var(--wn);border:1px solid var(--wn-bd)}
+.bac{background:var(--ac-bg);color:var(--ac);border:1px solid var(--ac-bd)}
+
+/* Row */
+.row{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;
+     border-bottom:1px solid var(--bd);min-height:44px}
+.row:last-child{border-bottom:none}
+.rico{width:36px;height:36px;border-radius:var(--r1);background:var(--bg3);
+      display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+
+/* Chips */
+.chips{display:flex;gap:var(--s1);flex-wrap:wrap}
+.chip{width:26px;height:26px;border-radius:var(--rp);background:var(--bg3);border:1px solid var(--bd);
+      display:flex;align-items:center;justify-content:center;font-size:var(--t-2xs);font-weight:700;color:var(--tx2)}
+
+/* City hero — emoji always visible, img overlays when loaded */
+.hero{position:relative;height:180px;overflow:hidden;background:var(--bg3)}
+.hero-em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+         font-size:56px;opacity:.35;pointer-events:none}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 55%)}
+.hero-txt{position:absolute;bottom:0;left:0;right:0;padding:var(--s4)}
+
+/* Flight */
+.flt{background:var(--ac-bg);border:1px solid var(--ac-bd);border-radius:var(--r2);padding:var(--s3) var(--s4)}
+.apt{font-size:var(--t-xl);font-weight:700;letter-spacing:-.02em}
+.farr{color:var(--ac);font-size:var(--t-md)}
+
+/* Timeline */
+.tlw{padding:0 var(--s4)}
+.ph-hdr{display:flex;align-items:center;gap:var(--s2);padding:var(--s5) 0 var(--s2)}
+.ph-dot{width:8px;height:8px;border-radius:var(--rp);flex-shrink:0}
+.tli{display:flex;gap:var(--s3)}
+.tll{display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0}
+.tln{width:38px;height:38px;border-radius:var(--r1);background:var(--bg3);border:1px solid var(--bd);
+     display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .2s}
+.tli.td .tln{background:var(--ac-bg);border-color:var(--ac-bd)}
+.tli.td .tlc{color:var(--ac)}
+.tlln{width:2px;background:var(--bd);flex:1;min-height:12px;margin-top:var(--s1)}
+.tlb{flex:1;padding-bottom:var(--s4);min-width:0}
+.tlc{font-size:var(--t-md);font-weight:700;letter-spacing:-.02em;margin-bottom:var(--s1)}
+.tlt{font-size:var(--t-xs);color:var(--tx2);padding:3px 0;display:flex;gap:var(--s2);line-height:1.4}
+.tlt::before{content:'–';color:var(--tx3);flex-shrink:0}
+
+/* City chips */
+.cscroll{display:flex;gap:var(--s2);padding:var(--s4) var(--s4) 0;overflow-x:auto}
+.cchip{white-space:nowrap;padding:var(--s2) var(--s4);border-radius:var(--rp);
+       border:1px solid var(--bd);background:var(--bg2);font-size:var(--t-xs);
+       font-weight:600;color:var(--tx2);min-height:36px;transition:all .15s}
+.cchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+
+/* Guide */
+.gsec{margin-bottom:var(--s5)}
+.ghd{font-size:var(--t-2xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+     color:var(--tx3);margin-bottom:var(--s3);display:flex;align-items:center;gap:var(--s2)}
+.gic{color:var(--ac)}
+.git{padding:var(--s2) 0;border-bottom:1px solid var(--bd);font-size:var(--t-sm);color:var(--tx2);
+     display:flex;gap:var(--s2);line-height:1.5}
+.git:last-child{border-bottom:none}
+.git::before{content:'–';color:var(--tx3);flex-shrink:0}
+
+/* Review */
+.rev{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);
+     padding:var(--s3) var(--s4);margin-bottom:var(--s3)}
+
+/* Goals */
+.grow{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;
+      border-bottom:1px solid var(--bd);min-height:44px;cursor:pointer;-webkit-user-select:none;user-select:none}
+.grow:last-child{border-bottom:none}
+.gchk{width:22px;height:22px;border-radius:7px;border:2px solid var(--bd2);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s}
+.gchk.on{background:var(--ac);border-color:var(--ac)}
+.gchk.on::after{content:'';width:10px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;
+                transform:rotate(-45deg) translateY(-1px);display:block}
+.glbl{flex:1;font-size:var(--t-sm);font-weight:500}
+.glbl.done{color:var(--tx3);text-decoration:line-through}
+
+/* Budget */
+.stat2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-bottom:var(--s5)}
+.stile{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r3);padding:var(--s4)}
+.brow{display:flex;align-items:center;padding:var(--s2) 0;border-bottom:1px solid var(--bd);gap:var(--s2);min-height:44px}
+.brow:last-child{border-bottom:none}
+.binp{width:82px;padding:var(--s2);background:var(--bg3);border:1px solid var(--bd);
+      border-radius:var(--r1);font-size:var(--t-xs);font-weight:600;color:var(--tx);
+      text-align:right;outline:none;transition:border-color .15s;-webkit-appearance:none}
+.binp:focus{border-color:var(--ac)}
+
+/* Overlay */
+.ovl{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;
+     align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
+.ovl.on{opacity:1;pointer-events:auto}
+.sheet{background:var(--bg);border-radius:var(--r4) var(--r4) 0 0;
+       padding:var(--s5) var(--s4) calc(env(safe-area-inset-bottom,0px) + var(--s6));
+       width:100%;max-height:88dvh;overflow-y:auto;transform:translateY(20px);transition:transform .25s}
+.ovl.on .sheet{transform:none}
+.hndl{width:36px;height:4px;border-radius:var(--rp);background:var(--bd2);margin:0 auto var(--s5)}
+.cta{width:100%;background:var(--ac);color:#fff;border-radius:var(--r2);
+     height:52px;font-size:var(--t-md);font-weight:700;margin-top:var(--s4)}
+.cta:active{opacity:.85}
+.iblk{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s3)}
+.istep{display:flex;gap:var(--s3);align-items:flex-start;padding:var(--s2) 0;border-bottom:1px solid var(--bd)}
+.istep:last-child{border-bottom:none}
+.snum{width:22px;height:22px;border-radius:var(--rp);background:var(--ac);color:#fff;
+      font-size:var(--t-2xs);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.urlbox{display:block;background:var(--ac-bg);border:1px solid var(--ac-bd);border-radius:var(--r1);
+        padding:var(--s3) var(--s4);font-size:var(--t-xs);font-weight:600;color:var(--ac-tx);
+        word-break:break-all;margin:var(--s3) 0;text-align:center}
+
+/* Flex helpers */
+.f{display:flex} .fc{flex-direction:column} .ai{align-items:center}
+.jb{justify-content:space-between} .fw{flex-wrap:wrap} .f1{flex:1} .g2{gap:var(--s2)} .g3{gap:var(--s3)}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header id="hdr">
+    <div class="hdr-row">
+      <div class="logo">Luke's <b>Europe</b></div>
+      <div class="f g2">
+        <button class="ibtn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">☀️</button>
+        <button class="ibtn" onclick="openSheet()" aria-label="Install app">📲</button>
+      </div>
+    </div>
+    <div class="prog-rail"><div class="prog-bar" id="pBar" style="width:0%"></div></div>
+    <div class="status-strip">
+      <span class="t2xs w5 c3">9 Jun – 17 Jul · 39 days</span>
+      <span class="txs w7 ca" id="sChip">…</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <div id="pToday"    class="pane on"></div>
+    <div id="pTimeline" class="pane"></div>
+    <div id="pCities"   class="pane"></div>
+    <div id="pGoals"    class="pane"></div>
+    <div id="pBudget"   class="pane"></div>
+  </main>
+
+  <nav id="nav">
+    <button class="nbtn on" onclick="go('Today',this)"><span class="nicon">🗓</span><span>Today</span><div class="pip"></div></button>
+    <button class="nbtn" onclick="go('Timeline',this)"><span class="nicon">📍</span><span>Trip</span><div class="pip"></div></button>
+    <button class="nbtn" onclick="go('Cities',this)"><span class="nicon">🗺️</span><span>Cities</span><div class="pip"></div></button>
+    <button class="nbtn" onclick="go('Goals',this)"><span class="nicon">⚡</span><span>Goals</span><div class="pip"></div></button>
+    <button class="nbtn" onclick="go('Budget',this)"><span class="nicon">💰</span><span>Budget</span><div class="pip"></div></button>
+  </nav>
+</div>
+
+<div class="ovl" id="installOvl" onclick="closeSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="hndl"></div>
+    <p class="txl w7 mb3" style="text-align:center">Add to Home Screen 📲</p>
+    <p class="txs c2 mb4" style="text-align:center;line-height:1.6">Open this URL on your phone, then follow the steps to install.</p>
+    <div class="urlbox" id="urlBox">—</div>
+    <div class="iblk">
+      <p class="txs w7 mb3">📱 iPhone — Safari</p>
+      <div class="istep"><div class="snum">1</div><div class="tsm c2">Open the URL above in <strong>Safari</strong> (not Chrome)</div></div>
+      <div class="istep"><div class="snum">2</div><div class="tsm c2">Tap the <strong>Share ↑</strong> button at the bottom</div></div>
+      <div class="istep"><div class="snum">3</div><div class="tsm c2">Tap <strong>"Add to Home Screen"</strong></div></div>
+      <div class="istep"><div class="snum">4</div><div class="tsm c2">Tap <strong>Add</strong> — done!</div></div>
+    </div>
+    <div class="iblk">
+      <p class="txs w7 mb3">🤖 Android — Chrome</p>
+      <div class="istep"><div class="snum">1</div><div class="tsm c2">Open the URL above in <strong>Chrome</strong></div></div>
+      <div class="istep"><div class="snum">2</div><div class="tsm c2">Tap the <strong>⋮ menu</strong> top-right</div></div>
+      <div class="istep"><div class="snum">3</div><div class="tsm c2">Tap <strong>"Add to Home Screen"</strong></div></div>
+      <div class="istep"><div class="snum">4</div><div class="tsm c2">Tap <strong>Add</strong></div></div>
+    </div>
+    <button class="cta" onclick="closeSheet()">Got it ✓</button>
+  </div>
+</div>
+
+<script>
+// No external dependencies — fully self-contained
+
+var TODAY = new Date();
+var TS = new Date('2026-06-09');
+var TE = new Date('2026-07-17');
+var PC = {1:'#E07B5A',2:'#4A9E7A',3:'#E8A23C',4:'#5A7EC4'};
+var PN = {1:'Family',2:'Bucks + Solo',3:'Portugal',4:'Spain'};
+
+var BK = {
+  'bcn-ibz':{from:'BCN',to:'IBZ',fl:'VY3518',dep:'17:15',arr:'18:20',date:'Mon 13 Jul',seat:'5C',ref:'JNVDTN',eur:65.99},
+  'ibz-bcn':{from:'IBZ',to:'BCN',fl:'VY3511',dep:'14:25',arr:'15:25',date:'Wed 15 Jul',seat:'11B',ref:'DK846G',eur:102.99},
+};
+
+var DAYS=[
+  {d:'2026-06-09',c:'Sydney → Athens',e:'✈️',p:1,t:'travel',pp:['B','K','R','L'],a:null,r:null,th:['24hr+ long haul','Arrive Athens morning']},
+  {d:'2026-06-10',c:'Athens',e:'🏛️',p:1,t:'city',pp:['B','K','R','L'],a:null,r:null,th:['Acropolis & Museum','Lycabettus Hill sunset','Monastiraki markets']},
+  {d:'2026-06-11',c:'Milos',e:'🏖️',p:1,t:'city',pp:['B','K','R','L'],a:'Eleni House',r:null,th:['Check in','Sarakiniko Beach']},
+  {d:'2026-06-12',c:'Milos',e:'🏖️',p:1,t:'city',pp:['B','K','R','L'],a:'Eleni House',r:null,th:['Kleftiko Boat Tour','Sunset at Plaka']},
+  {d:'2026-06-13',c:'Milos',e:'🏖️',p:1,t:'city',pp:['B','K','R','L'],a:'Eleni House',r:null,th:['Beach day','Photography']},
+  {d:'2026-06-14',c:'Milos',e:'🏖️',p:1,t:'city',pp:['B','K','R','L'],a:'Eleni House',r:null,th:['Last island day']},
+  {d:'2026-06-15',c:'Catania',e:'🌋',p:1,t:'city',pp:['B','K','R','L'],a:null,r:null,th:['Sicily arrival','Cannoli & arancini']},
+  {d:'2026-06-16',c:'Taormina',e:'🍋',p:1,t:'city',pp:['B','K','R','L'],a:null,r:null,th:['Greek Theatre','Isola Bella','Corso Umberto']},
+  {d:'2026-06-17',c:'Taormina',e:'🍋',p:1,t:'city',pp:['B','K','R','L'],a:null,r:null,th:['Coastal walks','Sicilian pasta & wine']},
+  {d:'2026-06-18',c:'Taormina',e:'🍋',p:1,t:'city',pp:['B','K','R','L'],a:null,r:null,th:['Last family day 🥂']},
+  {d:'2026-06-19',c:'Bristol',e:'🇬🇧',p:2,t:'city',pp:['L','R','M'],a:'Airbnb',r:null,th:['Bucks begins! 🎉','Clifton & Harbourside']},
+  {d:'2026-06-20',c:'Bristol',e:'🇬🇧',p:2,t:'city',pp:['L','R','M'],a:'Airbnb',r:null,th:['Bucks day 2']},
+  {d:'2026-06-21',c:'Bristol → Munich',e:'✈️',p:2,t:'travel',pp:['L','R','M'],a:"Wombat's Hostel",r:'Trip.com confirmed',th:['Flight to Munich','Wombats check-in']},
+  {d:'2026-06-22',c:'Innsbruck',e:'🏔️',p:2,t:'city',pp:['L'],a:'MEININGER Hostel',r:'Hostelworld confirmed',th:['Nordkette Cable Car','Old Town','Mountain photography']},
+  {d:'2026-06-23',c:'Innsbruck',e:'🏔️',p:2,t:'event',pp:['L'],a:'MEININGER Hostel',r:'Hostelworld confirmed',th:['🔒 HIKE WITH ISMAEL','Outdoor calisthenics']},
+  {d:'2026-06-24',c:'Munich',e:'🍺',p:2,t:'city',pp:['L'],a:"Wombat's City Hostel",r:'Ref 8249-577112179 · €64.10',th:['Allianz Arena','Bayern Megastore (jersey!)','BMW Welt','Bahnwärter Thiel']},
+  {d:'2026-06-25',c:'Amsterdam',e:'🚲',p:2,t:'city',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['Munich → Amsterdam','Canal cycling']},
+  {d:'2026-06-26',c:'Amsterdam',e:'🎵',p:2,t:'event',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['🔒 DEFQON.1','Nightlife photography']},
+  {d:'2026-06-27',c:'Amsterdam',e:'🎨',p:2,t:'city',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['Stedelijk Museum','Moco Museum','NXT Museum']},
+  {d:'2026-06-28',c:'Amsterdam',e:'🎨',p:2,t:'city',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['Van Gogh Museum','Dutch branding walk']},
+  {d:'2026-06-29',c:'Amsterdam → Porto',e:'✈️',p:3,t:'travel',pp:['L'],a:null,r:'Transavia IE43SW confirmed',th:['Transavia flight IE43SW','Porto arrival']},
+  {d:'2026-06-30',c:'Porto',e:'🍷',p:3,t:'city',pp:['L'],a:null,r:null,th:['Ribeira District','Dom Luís Bridge','Tile photography']},
+  {d:'2026-07-01',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:'TAP Z7GFA9 confirmed',th:['TAP flight (Z7GFA9)','Ericeira check-in']},
+  {d:'2026-07-02',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:null,th:['Beach day','Atlantic swim 🏊']},
+  {d:'2026-07-03',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:null,th:['Rest & recovery','Family time']},
+  {d:'2026-07-04',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:null,th:['Beach & seafood']},
+  {d:'2026-07-05',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:null,th:['Outdoor workout','Surf photos']},
+  {d:'2026-07-06',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:null,th:['Last beach day']},
+  {d:'2026-07-07',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:null,th:['Travel prep']},
+  {d:'2026-07-08',c:'Madrid',e:'👑',p:4,t:'city',pp:['L'],a:'Generator Hostel',r:'Hostelworld confirmed',th:['Ericeira → Madrid','Prado Museum','Royal Palace']},
+  {d:'2026-07-09',c:'Madrid',e:'⚽',p:4,t:'city',pp:['L'],a:'Generator Hostel',r:'Hostelworld confirmed',th:['Bernabéu Tour','Football photos','Tapas & churros']},
+  {d:'2026-07-10',c:'Madrid',e:'👑',p:4,t:'city',pp:['L'],a:'Generator Hostel',r:'Hostelworld confirmed',th:['Street photography','Retiro Park']},
+  {d:'2026-07-11',c:'Barcelona',e:'🏗️',p:4,t:'city',pp:['L'],a:'Itaca Hostel',r:'Hostelworld confirmed',th:['Sagrada Família','Park Güell','Gothic Quarter']},
+  {d:'2026-07-12',c:'Barcelona',e:'🏗️',p:4,t:'city',pp:['L'],a:'Itaca Hostel',r:'Hostelworld confirmed',th:['MACBA','Poblenou','Camp Nou Museum']},
+  {d:'2026-07-13',c:'Barcelona → Ibiza',e:'✈️',p:4,t:'travel',pp:['L'],a:'Giramundo Guesthouse',r:'Vueling JNVDTN confirmed',bk:'bcn-ibz',th:['VY3518 · 17:15 · Seat 5C','Café del Mar sunset']},
+  {d:'2026-07-14',c:'Ibiza',e:'🌅',p:4,t:'city',pp:['L'],a:'Giramundo Guesthouse',r:'Hostelworld confirmed',th:['Beach clubs','Old Town','Mediterranean swim 🏊']},
+  {d:'2026-07-15',c:'Ibiza → Barcelona',e:'✈️',p:4,t:'travel',pp:['L'],a:'Hotel Ciutat del Prat',r:'Vueling DK846G confirmed',bk:'ibz-bcn',th:['VY3511 · 14:25 · Seat 11B','Airport hotel']},
+  {d:'2026-07-16',c:'Barcelona → Sydney',e:'✈️',p:4,t:'travel',pp:['L'],a:null,r:null,th:['Long haul home ✈️']},
+  {d:'2026-07-17',c:'Sydney',e:'🏠',p:4,t:'home',pp:['L'],a:null,r:null,th:['Home 🎉 Back to Zuip Co']},
+];
+
+// City hero colours (gradient backgrounds — no external images needed)
+var HERO_COLORS = {
+  Athens:'#C4A882,#8B7355',Milos:'#5BA4C8,#1E6A8A',Catania:'#C85A35,#8B2500',
+  Taormina:'#7DB87A,#2E7A2B',Bristol:'#6B8BA4,#3A5F7A',Munich:'#4A7CB8,#1A4A8A',
+  Innsbruck:'#7AB8E8,#2A6BA0',Amsterdam:'#C8A850,#8B6A1A',Porto:'#B87A4A,#7A4A1A',
+  Ericeira:'#4AB8C8,#1A7A8A',Madrid:'#C8884A,#8A4A1A',Barcelona:'#E8B84A,#C87A1A',
+  Ibiza:'#F08060,#C04020',
+};
+
+var GUIDES = {
+  Athens:{e:'🏛️',mustdo:['Acropolis — arrive 8am before crowds (book online)','Acropolis Museum — 2hrs minimum','Lycabettus Hill — best sunset in Athens','Monastiraki flea market & street food'],design:['Ancient proportions — Parthenon golden ratio study','Greek wayfinding & signage systems','Street typography in Plaka neighbourhood'],reviews:[{p:'Acropolis',r:4.9,t:'Go at opening — crowds triple by 10am. The Erechtheum and Propylaea are underrated.'},{p:'Monastiraki',r:4.5,t:'Brilliant for street photography. Best souvlaki in the city. Flea market on Sunday mornings.'}]},
+  Milos:{e:'🏖️',mustdo:['Sarakiniko Beach — volcanic white rock formations','Kleftiko Sea Caves boat tour (book full day)','Plaka village sunset with island views'],photo:['Sarakiniko at dawn — otherworldly, zero people','Klima village colourful fishing huts','Plaka rooftops at golden hour'],reviews:[{p:'Sarakiniko',r:4.9,t:'Unlike anything else in Greece. White pumice + turquoise water. Go before 8am.'},{p:'Kleftiko Boat Tour',r:4.8,t:'Only accessible by boat. Crystal sea caves you can swim inside. All-day tour is worth it.'}]},
+  Catania:{e:'🌋',mustdo:['Piazza del Duomo — baroque cathedral & elephant fountain','La Pescheria fish market 7–9am','Via Etna for street food & shopping'],food:['Arancini — try the pistachio version','Granita e brioche for breakfast (Sicilian ritual)','Fresh swordfish from the harbour catch'],reviews:[{p:'La Pescheria Market',r:4.7,t:'Chaotic and full of character. Best street photography of the trip. Go at 7am when it opens.'},{p:'Street Food',r:4.8,t:'Best arancini anywhere. The pistachio filling is extraordinary. Ask locals, not Google.'}]},
+  Taormina:{e:'🍋',mustdo:['Greek Theatre — Mount Etna as backdrop','Isola Bella beach (cable car from town)','Corso Umberto stroll — boutiques & gelato'],food:['Granita di mandorla e brioche — THE Sicilian breakfast','Ricotta cannoli — ask for fresh-filled','Pasta alla norma at a local trattoria'],reviews:[{p:'Greek Theatre',r:4.9,t:'One of the most dramatic settings on earth. Etna erupting in the background is once-in-a-lifetime.'},{p:'Isola Bella',r:4.7,t:'Cable car down to a tiny protected cove. Crystal water. Beautiful for swimming and photography.'}]},
+  Bristol:{e:'🇬🇧',mustdo:['Clifton Suspension Bridge — walk both ways','Harbourside walk & independent breweries','Banksy trail in Stokes Croft'],nightlife:['Wiper & True Brewery','The Lanes cocktail bars','Old Duke pub for jazz'],reviews:[{p:'Clifton Suspension Bridge',r:4.7,t:'Victorian engineering marvel. Views into the Avon Gorge are excellent for photography.'},{p:'Stokes Croft',r:4.6,t:'Best street art in the UK outside London. Good independent pubs and cafes.'}]},
+  Munich:{e:'🍺',mustdo:['Allianz Arena tour — book ahead','Bayern Munich Megastore — buy the jersey 🧣','BMW Welt — free entry, extraordinary architecture','English Garden — larger than Central Park'],design:['Deutsches Museum — engineering & design history','German typographic tradition in street signage','U-Bahn wayfinding system — superb grid design'],nightlife:['Bahnwärter Thiel — open-air club in converted tram depot','Augustiner Bräuhaus — authentic Munich beer culture'],reviews:[{p:'BMW Welt',r:4.8,t:'Free entry. The building itself is worth the trip. Cars displayed like sculpture. Budget 2–3hrs.'},{p:'Allianz Arena',r:4.8,t:'The LED facade at night is surreal. Tour on non-match days. Book online. Pitch walk is a highlight.'}]},
+  Innsbruck:{e:'🏔️',mustdo:['Nordkette Cable Car → 2,256m (20 min from city centre)','Old Town Altstadt & Golden Roof','Hike with Ismael — 23 June 🔒 LOCKED'],fitness:['Full mountain hike (4–6hrs, Ismael knows the route)','Outdoor calisthenics with Alps backdrop','Hiking gear at Intersport Kröll'],photo:['Nordkette summit — city + Alps in one frame','Inn River with mountain reflections','Old Town medieval lanes at dusk'],reviews:[{p:'Nordkette Cable Car',r:4.9,t:'Fastest way from a city to 2,256m in Europe. Views are breathtaking. Check weather — cloud can obscure summit.'},{p:'Old Town',r:4.6,t:'Golden Roof is the centrepiece. Medieval architecture in excellent condition. Great evening photography.'}]},
+  Amsterdam:{e:'🚲',mustdo:['Defqon.1 — 26 June 🔒 LOCKED','Canal cycling (rent from Macbike or Star Bikes)','Jordaan neighbourhood wander'],museums:['Stedelijk Museum — Dutch modernism & graphic design','Moco Museum — Banksy, Basquiat, contemporary','NXT Museum — immersive digital art','Van Gogh Museum — book weeks ahead'],design:['NDSM Wharf — Amsterdam creative district','Dutch graphic design bookshops in Jordaan','Droog design store on Staalstraat'],nightlife:['Shelter — techno bunker under the A\'dam Tower','Radion — one of Europe\'s best sound systems','Lofi — intimate basement house music'],reviews:[{p:'Stedelijk Museum',r:4.7,t:'The Rietveld room and Dutch modernism collection are world class. Design history lovers: budget 3+ hours.'},{p:'NXT Museum',r:4.6,t:'Most photogenic museum in NL. Immersive digital art. Every room different. Book ahead.'}]},
+  Porto:{e:'🍷',mustdo:['Ribeira District — UNESCO riverside neighbourhood','Dom Luís Bridge upper deck walk','Serra do Pilar for sunset panorama'],photo:['Azulejo tile facades — Almas Chapel has 20,000 tiles','Ribeira rooftops from the bridge at golden hour','Douro River reflections at dusk'],food:['Francesinha at Cervejaria Brasão (the Porto sandwich)','Port wine tasting in Vila Nova de Gaia','Bacalhau à Brás — salt cod done right'],reviews:[{p:'Dom Luís Bridge',r:4.8,t:'Upper deck walk gives the full panorama both ways. Go at sunset. One of the best free views in Europe.'},{p:'Ribeira',r:4.7,t:'Most photogenic riverside neighbourhood in Europe. Colour, texture, history. Explore every alley.'}]},
+  Ericeira:{e:'🏄',mustdo:['World Surfing Reserve cliff walks north of town','Praia do Sul for swimming and sunsets','Village cobblestone streets & seafood restaurants'],fitness:['Atlantic ocean swim — cold, bracing, worth it 🏊','Morning cliff path run from the village','Beach calisthenics with ocean view'],food:['Percebes (barnacles) at the harbour — fresh and local','Grilled fish at a harbour-side restaurant','Açaí bowls at a surf café for breakfast'],reviews:[{p:'Ericeira Village',r:4.8,t:'One of only two World Surfing Reserves in Europe. Laid back, dramatic cliffs, exceptional seafood.'},{p:'Coastal Cliff Walk',r:4.7,t:'Walk north from the village. Dramatic Atlantic views on volcanic rock. Perfect at golden hour.'}]},
+  Madrid:{e:'👑',mustdo:['Prado Museum — 3hrs minimum (Velázquez, Goya, El Greco)','Royal Palace & Sabatini Gardens','Retiro Park for street photography'],football:['Bernabéu Stadium Tour — new renovation is jaw-dropping','Football culture photography in La Latina bars'],food:['Tapas circuit in La Latina neighbourhood','Churros con chocolate at San Ginés (open 24hrs)','Vermut hour in Malasaña every Sunday 1–3pm'],reviews:[{p:'Prado Museum',r:4.9,t:'The Spanish masters at their absolute best. Las Meninas alone justifies the trip. Allow a full morning.'},{p:'Bernabéu Tour',r:4.8,t:'Post-renovation the stadium is genuinely stunning. Walking the pitch is surreal. Book online.'}]},
+  Barcelona:{e:'🏗️',mustdo:['Sagrada Família — book tower access weeks ahead','Park Güell (timed entry mosaic terrace)','Gothic Quarter — 2hrs wandering without a map'],design:['MACBA (contemporary art + Meier architecture)','Poblenou @22 district — design studios & galleries','Gaudí trail: Casa Batlló, Casa Milà, Palau Güell'],football:['Camp Nou Museum — new stadium renovation tour'],food:['Pa amb tomàquet (bread, tomato, oil — on everything)','Patatas bravas at a proper tapas bar','Sunday vermut in El Born neighbourhood'],reviews:[{p:'Sagrada Família',r:4.9,t:'Book the tower access. The interior light through coloured glass at noon is unlike anything.'},{p:'Poblenou',r:4.7,t:'Barcelona\'s design hub. Street art, tech startups, independent studios. Great half-day wander.'}]},
+  Ibiza:{e:'🌅',mustdo:['Sunset at Café del Mar — arrive 30min early','Dalt Vila UNESCO Old Town on the hill','Es Vedrà viewpoint at sunset'],photo:['Café del Mar golden hour — iconic shot','Dalt Vila ramparts over the harbour','White-washed village streets in Sant Josep'],nightlife:['Café del Mar — the original sunset ritual','DC-10 — legendary Monday club nights (check calendar)'],reviews:[{p:'Café del Mar',r:4.7,t:'The sunset is genuinely one of Europe\'s most famous. Arrive 30 minutes early for the wall.'},{p:'Dalt Vila',r:4.8,t:'UNESCO old town on the hill. Seriously underrated. Incredible views and ancient history.'}]},
+};
+
+var GSECS=[{k:'mustdo',i:'★',l:'Must Do'},{k:'design',i:'◆',l:'Design'},{k:'photo',i:'◉',l:'Photography'},{k:'food',i:'●',l:'Food & Drink'},{k:'museums',i:'▲',l:'Museums'},{k:'nightlife',i:'◎',l:'Nightlife'},{k:'fitness',i:'▶',l:'Fitness'},{k:'football',i:'⚽',l:'Football'}];
+
+var GOALS=[
+  {id:'defqon',l:'Defqon.1',cat:'Travel',locked:true},
+  {id:'allianz',l:'Allianz Arena',cat:'Travel'},
+  {id:'jersey',l:'Bayern Munich jersey',cat:'Travel'},
+  {id:'hike',l:'Innsbruck mountain hike',cat:'Travel',locked:true},
+  {id:'amsmuse',l:'Amsterdam art museums',cat:'Travel'},
+  {id:'barcarch',l:'Barcelona architecture day',cat:'Travel'},
+  {id:'ibizabch',l:'Ibiza beach day',cat:'Travel'},
+  {id:'cali',l:'Calisthenics in another country',cat:'Fitness'},
+  {id:'mtnhike',l:'Mountain hike',cat:'Fitness'},
+  {id:'med',l:'Swim in Mediterranean',cat:'Fitness'},
+  {id:'outdoor',l:'Train outdoors in Europe',cat:'Fitness'},
+  {id:'street',l:'Street photography',cat:'Photography'},
+  {id:'footy',l:'Football culture photos',cat:'Photography'},
+  {id:'mtnphoto',l:'Mountain photography',cat:'Photography'},
+  {id:'archphoto',l:'Architecture photos',cat:'Photography'},
+  {id:'night',l:'Nightlife photos',cat:'Photography'},
+  {id:'desmuse',l:'Visit design museums',cat:'Design'},
+  {id:'wayf',l:'Photograph wayfinding/signage',cat:'Design'},
+  {id:'ui',l:'Save UI inspiration',cat:'Design'},
+  {id:'transport',l:'Observe transport systems',cat:'Design'},
+];
+
+var BCATS=['Flights','Accommodation','Food','Transport','Activities','Shopping','Emergency'];
+
+// State
+var dark = localStorage.getItem('lk_t')==='dark';
+var gs   = JSON.parse(localStorage.getItem('lk_g')||'{}');
+var bs   = JSON.parse(localStorage.getItem('lk_b')||'{}');
+var city = 'Athens';
+
+// Helpers
+function fmt(s) {
+  return new Date(s+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+}
+function stars(r) {
+  var f=Math.round(r); return '★'.repeat(f)+'☆'.repeat(5-f);
+}
+function g(id) { return document.getElementById(id); }
+function h(tag,cls,html) {
+  var el=document.createElement(tag);
+  if(cls) el.className=cls;
+  if(html!==undefined) el.innerHTML=html;
+  return el;
+}
+
+function boot() {
+  applyTheme();
+  g('urlBox').textContent = window.location.href;
+  updateStatus();
+  renderToday();
+  renderTimeline();
+  renderCities();
+  renderGoals();
+  renderBudget();
+}
+
+function updateStatus() {
+  var pct=Math.min(100,Math.max(0,Math.round((TODAY-TS)/(TE-TS)*100)));
+  g('pBar').style.width=pct+'%';
+  var left=Math.ceil((TS-TODAY)/86400000);
+  var on=TODAY>=TS&&TODAY<=TE;
+  g('sChip').textContent=TODAY>TE?'Trip complete 🎉':on?'Day '+Math.floor((TODAY-TS)/86400000+1)+' of 39':left+' day'+(left!==1?'s':'')+' to go';
+}
+
+function renderToday() {
+  var ts=TODAY.toISOString().split('T')[0];
+  var entry=null; for(var i=0;i<DAYS.length;i++){if(DAYS[i].d===ts){entry=DAYS[i];break;}}
+  var left=Math.ceil((TS-TODAY)/86400000);
+  var on=TODAY>=TS&&TODAY<=TE;
+  var done=0; for(var i=0;i<GOALS.length;i++){if(gs[GOALS[i].id])done++;}
+  var out='';
+
+  if(!on&&left>0){
+    out+='<div class="px pt4"><div class="card card-ac mb4" style="text-align:center;padding:24px 16px">';
+    out+='<div class="lbl mb3">Departure countdown</div>';
+    out+='<div class="t3xl w7 ca tight">'+left+'</div>';
+    out+='<div class="txs c3 mt3">days · Tue 9 June from Sydney</div></div>';
+    out+='<div class="lbl mb3">First stops</div>';
+    for(var i=0;i<3;i++){var d=DAYS[i];out+='<div class="row"><div class="rico">'+d.e+'</div><div class="f1"><div class="t2xs c3 w5">'+fmt(d.d)+'</div><div class="tsm w6">'+d.c+'</div></div></div>';}
+    out+='</div>';
+  } else if(entry){
+    out+='<div class="px pt4">';
+    out+='<div class="mb4"><div class="t2xs c3 w5 mb2">'+fmt(entry.d)+'</div>';
+    out+='<div class="t2xl w7 tight mb3">'+entry.e+' '+entry.c+'</div>';
+    if(entry.pp&&entry.pp.length){out+='<div class="chips mb4">';for(var i=0;i<entry.pp.length;i++){out+='<div class="chip">'+entry.pp[i]+'</div>';}out+='</div>';}
+    if(entry.a){var ok=!!entry.r;out+='<div class="row"><div class="rico">🏠</div><div class="f1"><div class="t2xs c3 w5">Tonight\'s stay</div><div class="tsm w6">'+entry.a+'</div><div class="mt2">'+(ok?'<span class="badge bok">✓ '+entry.r+'</span>':'<span class="badge bwn">⚠ Confirm booking</span>')+'</div></div></div>';}
+    else if(entry.t!=='travel'&&entry.t!=='home'){out+='<div class="row"><div class="rico">🏠</div><div><div class="t2xs c3 mb2">Accommodation</div><span class="badge bwn">⚠ Not listed</span></div></div>';}
+    if(entry.bk&&BK[entry.bk]){var b=BK[entry.bk];out+='<div class="flt mt4"><div class="f ai jb mb2"><span class="apt">'+b.from+'</span><span class="farr">✈</span><span class="apt">'+b.to+'</span></div><div class="f ai jb"><span class="tsm w6 c2">'+b.dep+'</span><span class="t2xs ca w7">'+b.fl+' · Seat '+b.seat+'</span><span class="tsm w6 c2">'+b.arr+'</span></div><div class="f ai g2 mt3"><span class="badge bok">✓ Confirmed</span><span class="t2xs c3">'+b.ref+'</span><span class="txs ca w7">€'+b.eur+'</span></div></div>';}
+    out+='<div class="lbl mt5 mb3">Today\'s plan</div>';
+    for(var i=0;i<entry.th.length;i++){var t=entry.th[i];out+='<div class="row"><div class="rico">'+(t.indexOf('🔒')===0?'🔒':'→')+'</div><div class="tsm c2">'+t.replace('🔒 ','')+'</div></div>';}
+    out+='</div>';
+  }
+
+  out+='<div class="px"><div class="lbl mt5 mb3">Locked in</div>';
+  var locked=[{d:'2026-06-23',l:'Hike with Ismael',city:'Innsbruck'},{d:'2026-06-26',l:'Defqon.1',city:'Amsterdam'}];
+  for(var i=0;i<locked.length;i++){var ev=locked[i];var diff=Math.ceil((new Date(ev.d)-TODAY)/86400000);out+='<div class="row"><div class="rico">🔒</div><div class="f1"><div class="t2xs c3 w5">'+fmt(ev.d)+' · '+ev.city+'</div><div class="tsm w6">'+ev.l+'</div></div><div class="tsm w7 ca">'+(diff>0?diff+'d':'Today!')+'</div></div>';}
+
+  out+='<div class="lbl mt5 mb3">Confirmed from emails</div><div class="card mb4">';
+  var bkeys=['bcn-ibz','ibz-bcn'];
+  for(var i=0;i<bkeys.length;i++){var b=BK[bkeys[i]];out+='<div class="row"><div class="txs c2 f1">✈️ '+b.from+'→'+b.to+' · '+b.date+'</div><div class="f ai g2"><span class="txs w7 ca">€'+b.eur+'</span><span class="badge bok">✓ '+b.ref+'</span></div></div>';}
+  var conf=['🏠 Wombats Munich · 24 Jun · €64.10','🏠 Hans Brinker Amsterdam · 25–29 Jun','🏠 MEININGER Innsbruck · 22–24 Jun','🏠 Generator Madrid · 8–10 Jul','🏠 Itaca Barcelona · 11–13 Jul','🏠 Giramundo Ibiza · 13–15 Jul','✈️ Transavia AMS→OPO · IE43SW','✈️ TAP Portugal · Z7GFA9'];
+  for(var i=0;i<conf.length;i++){out+='<div class="row"><div class="txs c2 f1">'+conf[i]+'</div><span class="badge bok">✓</span></div>';}
+  out+='</div>';
+
+  out+='<div class="card card-ac mb4"><div class="f ai jb mb3"><div class="txs w6 ca">Non-negotiables</div><div class="txs w7 ca">'+done+' / '+GOALS.length+'</div></div><div class="prog-rail"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%"></div></div></div>';
+  out+='</div>';
+  g('pToday').innerHTML=out;
+}
+
+function renderTimeline(){
+  var ts=TODAY.toISOString().split('T')[0];
+  var out='<div class="tlw pt3">';
+  var lp=0;
+  for(var i=0;i<DAYS.length;i++){
+    var d=DAYS[i];
+    if(d.p!==lp){lp=d.p;out+='<div class="ph-hdr"><div class="ph-dot" style="background:'+PC[d.p]+'"></div><span class="lbl" style="color:'+PC[d.p]+'">Phase '+d.p+' — '+PN[d.p]+'</span></div>';}
+    var today=d.d===ts;
+    var noAc=!d.a&&d.t!=='travel'&&d.t!=='home';
+    out+='<div class="tli'+(today?' td':'')+'"><div class="tll"><div class="tln">'+d.e+'</div>'+(i<DAYS.length-1?'<div class="tlln"></div>':'')+'</div>';
+    out+='<div class="tlb"><div class="t2xs c3 w5 mb2">'+fmt(d.d)+'</div><div class="tlc">'+d.c+'</div>';
+    if(d.pp&&d.pp.length){out+='<div class="chips mb3">';for(var j=0;j<d.pp.length;j++){out+='<div class="chip">'+d.pp[j]+'</div>';}out+='</div>';}
+    var bgs=[];
+    if(d.a) bgs.push('<span class="badge '+(d.r?'bok':'bwn')+'">'+(d.r?'✓ '+d.a:'📍 '+d.a)+'</span>');
+    if(noAc) bgs.push('<span class="badge bwn">⚠ Book accom</span>');
+    if(d.t==='event') bgs.push('<span class="badge bac">🔒 Locked</span>');
+    if(bgs.length) out+='<div class="f fw g2 mb3">'+bgs.join('')+'</div>';
+    if(d.bk&&BK[d.bk]){var b=BK[d.bk];out+='<div class="flt mb3"><div class="f ai jb mb2"><span class="apt">'+b.from+'</span><span class="farr">✈</span><span class="apt">'+b.to+'</span></div><div class="t2xs c3">'+b.fl+' · '+b.dep+'–'+b.arr+' · Seat '+b.seat+' · '+b.ref+'</div></div>';}
+    for(var j=0;j<d.th.length;j++) out+='<div class="tlt">'+d.th[j]+'</div>';
+    out+='</div></div>';
+  }
+  out+='</div>';
+  g('pTimeline').innerHTML=out;
+}
+
+function renderCities(){
+  var chips='<div class="cscroll">';
+  var keys=Object.keys(GUIDES);
+  for(var i=0;i<keys.length;i++) chips+='<button class="cchip'+(keys[i]===city?' on':'')+'" onclick="selCity(\''+keys[i]+'\')">'+keys[i]+'</button>';
+  chips+='</div>';
+  g('pCities').innerHTML=chips+'<div id="gInner"></div>';
+  renderGuide();
+}
+
+function selCity(c){
+  city=c;
+  var chips=document.querySelectorAll('.cchip');
+  for(var i=0;i<chips.length;i++) chips[i].classList.toggle('on',chips[i].textContent===c);
+  renderGuide();
+}
+
+function renderGuide(){
+  var gu=GUIDES[city];
+  if(!gu)return;
+  var days=DAYS.filter(function(d){return d.c.indexOf(city)!==-1;});
+  var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' days'):'';
+  // Hero using CSS gradient — no external images, no CORS
+  var colors=(HERO_COLORS[city]||'#888,#555').split(',');
+  var out='<div class="hero">';
+  out+='<div style="position:absolute;inset:0;background:linear-gradient(135deg,#'+colors[0]+' 0%,#'+colors[1]+' 100%)"></div>';
+  out+='<div class="hero-em">'+gu.e+'</div>';
+  out+='<div class="hero-grad"></div>';
+  out+='<div class="hero-txt"><div class="t2xl w7 tight" style="color:#fff">'+city+'</div><div class="txs" style="color:rgba(255,255,255,.75);margin-top:3px">'+sub+'</div></div>';
+  out+='</div>';
+  out+='<div class="px pt4">';
+  if(gu.reviews&&gu.reviews.length){
+    out+='<div class="gsec"><div class="ghd"><span class="gic">★</span> Reviews & Insider Tips</div>';
+    for(var i=0;i<gu.reviews.length;i++){var rv=gu.reviews[i];out+='<div class="rev"><div class="f ai jb mb2"><div class="tsm w7">'+rv.p+'</div><div class="txs ca w6">'+rv.r+' '+stars(rv.r)+'</div></div><div class="txs c2" style="line-height:1.6">'+rv.t+'</div></div>';}
+    out+='</div>';
+  }
+  for(var i=0;i<GSECS.length;i++){var s=GSECS[i];var items=gu[s.k];if(!items||!items.length)continue;out+='<div class="gsec"><div class="ghd"><span class="gic">'+s.i+'</span> '+s.l+'</div>';for(var j=0;j<items.length;j++) out+='<div class="git">'+items[j]+'</div>';out+='</div>';}
+  out+='</div>';
+  g('gInner').innerHTML=out;
+}
+
+function renderGoals(){
+  var done=0; for(var i=0;i<GOALS.length;i++){if(gs[GOALS[i].id])done++;}
+  var out='<div class="px pt4">';
+  out+='<div class="card card-ac mb5"><div class="f ai jb mb3"><div class="tsm w7 ca">Non-negotiables</div><div class="tlg w7 ca">'+done+' / '+GOALS.length+'</div></div><div class="prog-rail" style="height:5px;border-radius:3px"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%;height:100%;border-radius:3px"></div></div></div>';
+  var cats=['Travel','Fitness','Photography','Design'];
+  for(var c=0;c<cats.length;c++){
+    out+='<div class="lbl mb3 mt4">'+cats[c]+'</div>';
+    for(var i=0;i<GOALS.length;i++){var go=GOALS[i];if(go.cat!==cats[c])continue;var on=!!gs[go.id];out+='<div class="grow" onclick="tog(\''+go.id+'\')"><div class="gchk'+(on?' on':'')+'"></div><div class="glbl'+(on?' done':'')+'">'+go.l+'</div>'+(go.locked?'<div class="t2xs w7 ca" style="letter-spacing:.05em">LOCKED</div>':'')+'</div>';}
+  }
+  out+='</div>';
+  g('pGoals').innerHTML=out;
+}
+
+function tog(id){
+  gs[id]=!gs[id];
+  localStorage.setItem('lk_g',JSON.stringify(gs));
+  renderGoals(); renderToday();
+}
+
+function renderBudget(){
+  var tB=0,tA=0;
+  for(var i=0;i<BCATS.length;i++){tB+=parseFloat(bs[BCATS[i]+'_b']||0);tA+=parseFloat(bs[BCATS[i]+'_a']||0);}
+  var out='<div class="px pt4">';
+  out+='<div class="card card-ok mb5"><div class="lbl mb3">Confirmed costs from emails</div><div class="row"><div class="txs c2 f1">✈️ BCN→IBZ Vueling VY3518 · 13 Jul</div><div class="tsm w7 ca">€65.99</div></div><div class="row"><div class="txs c2 f1">✈️ IBZ→BCN Vueling VY3511 · 15 Jul</div><div class="tsm w7 ca">€102.99</div></div><div class="row"><div class="txs c2 f1">🏠 Wombats Munich · 24 Jun · 1 night</div><div class="tsm w7 ca">€64.10</div></div><div class="row" style="border:none"><div class="t2xs c3">€9.56 paid online · €56.41 at property · check-in 2pm</div></div></div>';
+  out+='<div class="stat2"><div class="stile"><div class="lbl mb2">Budget A$</div><div class="t2xl w7 ca tight" id="tB">A$'+Math.round(tB).toLocaleString()+'</div></div><div class="stile"><div class="lbl mb2">Spent A$</div><div class="t2xl w7 tight" id="tA" style="color:'+(tA>tB&&tB>0?'var(--er)':'var(--tx)')+'">A$'+Math.round(tA).toLocaleString()+'</div></div></div>';
+  out+='<div class="f jb mb3 pb3" style="border-bottom:1px solid var(--bd)"><div class="lbl">Category</div><div class="f g2"><div class="lbl" style="width:82px;text-align:right">Budget</div><div class="lbl" style="width:82px;text-align:right">Actual</div></div></div>';
+  for(var i=0;i<BCATS.length;i++){var cat=BCATS[i];out+='<div class="brow"><div class="tsm w5 c2 f1">'+cat+'</div><div class="f g2"><input class="binp" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_b']||'')+'" oninput="savB(\''+cat+'\',\'b\',this.value)"><input class="binp" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_a']||'')+'" oninput="savB(\''+cat+'\',\'a\',this.value)" style="border-color:var(--ok-bd)"></div></div>';}
+  out+='</div>';
+  g('pBudget').innerHTML=out;
+}
+
+function savB(cat,f,v){
+  bs[cat+'_'+f]=v;
+  localStorage.setItem('lk_b',JSON.stringify(bs));
+  var tB=0,tA=0;
+  for(var i=0;i<BCATS.length;i++){tB+=parseFloat(bs[BCATS[i]+'_b']||0);tA+=parseFloat(bs[BCATS[i]+'_a']||0);}
+  var b=g('tB'),a=g('tA');
+  if(b) b.textContent='A$'+Math.round(tB).toLocaleString();
+  if(a){a.textContent='A$'+Math.round(tA).toLocaleString();a.style.color=tA>tB&&tB>0?'var(--er)':'var(--tx)';}
+}
+
+function go(name,btn){
+  var panes=document.querySelectorAll('.pane');
+  for(var i=0;i<panes.length;i++) panes[i].classList.remove('on');
+  var nbtns=document.querySelectorAll('.nbtn');
+  for(var i=0;i<nbtns.length;i++) nbtns[i].classList.remove('on');
+  g('p'+name).classList.add('on');
+  btn.classList.add('on');
+  g('main').scrollTo({top:0,behavior:'instant'});
+}
+
+function applyTheme(){
+  document.body.classList.toggle('dark',dark);
+  g('themeBtn').textContent=dark?'🌙':'☀️';
+  g('themeColor').content=dark?'#111010':'#F26419';
+}
+function toggleTheme(){dark=!dark;localStorage.setItem('lk_t',dark?'dark':'light');applyTheme();}
+
+function openSheet(){g('installOvl').classList.add('on');document.body.style.overflow='hidden';}
+function closeSheet(){g('installOvl').classList.remove('on');document.body.style.overflow='';}
+
+boot();
+</script>
+</body>
+</html>
