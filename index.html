@@ -7,251 +7,581 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Luke Europe">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#F26419" id="themeColor">
+<meta name="theme-color" content="#0d0d0d" id="themeColor">
 <title>Luke's Europe 2026</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
 <style>
-/* No external fonts — using system stack that looks great on iOS/Android */
+/* ─── Design tokens ─────────────────────────────────────── */
 :root {
-  --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  /* Type scale */
-  --t-2xs:10px; --t-xs:12px; --t-sm:13px; --t-md:15px;
-  --t-lg:17px;  --t-xl:20px; --t-2xl:26px; --t-3xl:44px;
-  /* Space scale — 8pt grid */
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px;
-  --s5:20px; --s6:24px; --s7:32px;
-  /* Radius */
-  --r1:8px; --r2:12px; --r3:14px; --r4:20px; --rp:999px;
-  /* Light tokens */
-  --bg:#fff; --bg2:#F7F5F2; --bg3:#EDEBE6;
-  --bd:rgba(0,0,0,.09); --bd2:rgba(0,0,0,.16);
-  --tx:#141210; --tx2:#5C574F; --tx3:#9C968C;
-  --ac:#F26419; --ac-bg:#FFF2EB; --ac-bd:#FFCFAA; --ac-tx:#C04E0D;
-  --ok:#1A7A45; --ok-bg:#EDFAF3; --ok-bd:#A8DFC0;
-  --wn:#975F00; --wn-bg:#FFF8E0; --wn-bd:#F5D980;
-  --er:#C0392B;
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+
+  /* Dark mode (default) */
+  --bg:   #0d0d0d;
+  --s1:   #181818;
+  --s2:   #222;
+  --s3:   #2d2d2d;
+  --tx:   #f0ede8;
+  --tx2:  #888;
+  --tx3:  #484848;
+  --bd:   rgba(255,255,255,.07);
+  --bd2:  rgba(255,255,255,.13);
+
+  --ac:      #F26419;
+  --ac-dim:  rgba(242,100,25,.13);
+  --ac-tx:   #F58A50;
+  --ok:      #4ade80;
+  --ok-dim:  rgba(74,222,128,.12);
+  --ok-tx:   #4ade80;
+  --warn:    #fbbf24;
+  --warn-dim:rgba(251,191,36,.12);
+  --warn-tx: #fbbf24;
+  --err:     #f87171;
+
+  /* Phase colours */
   --p1:#E07B5A; --p2:#4A9E7A; --p3:#E8A23C; --p4:#5A7EC4;
+
+  /* Spacing */
+  --sp1:4px; --sp2:8px; --sp3:12px; --sp4:16px;
+  --sp5:20px; --sp6:24px; --sp8:32px;
+
+  /* Radius */
+  --r-sm:10px; --r-md:16px; --r-lg:22px; --r-xl:28px; --r-full:999px;
+
+  /* Spring easing */
+  --spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.4%,
+    0.938 16%, 1.017, 1.06, 1.076 22.3%, 1.07 24%,
+    1.013 27.3%, 0.992 29.2%, 0.977 31.5%, 0.975 33%,
+    0.984 36.8%, 1.001 40%, 1.006 43.3%, 1 50%
+  );
 }
-body.dark {
-  --bg:#111010; --bg2:#1C1A19; --bg3:#242220;
-  --bd:rgba(255,255,255,.08); --bd2:rgba(255,255,255,.14);
-  --tx:#F0EDE8; --tx2:#9C968C; --tx3:#5C574F;
-  --ac:#F26419; --ac-bg:#1F1208; --ac-bd:#4A2408; --ac-tx:#F58A50;
-  --ok:#5ABF8A; --ok-bg:#081A10; --ok-bd:#1A3C28;
-  --wn:#D4A020; --wn-bg:#1A1400; --wn-bd:#382C00;
-  --er:#E05C4C;
+
+body.light {
+  --bg:  #f4f2ef;
+  --s1:  #ffffff;
+  --s2:  #edeae5;
+  --s3:  #e0dbd4;
+  --tx:  #141210;
+  --tx2: #5C574F;
+  --tx3: #9C968C;
+  --bd:  rgba(0,0,0,.08);
+  --bd2: rgba(0,0,0,.15);
 }
+
+/* ─── Reset ─────────────────────────────────────────────── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 html { -webkit-text-size-adjust:100%; }
-body {
-  font-family:var(--font);
-  background:var(--bg); color:var(--tx);
-  max-width:430px; margin:0 auto;
-  min-height:100dvh; overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
-  transition:background .2s, color .2s;
-}
 * { -webkit-tap-highlight-color:transparent; }
 ::-webkit-scrollbar { display:none; }
 * { scrollbar-width:none; }
-img { display:block; width:100%; }
-button, input { font-family:var(--font); }
+button,input { font-family:var(--font); }
 button { cursor:pointer; border:none; background:none; color:inherit; }
 
-/* Typography */
-.t2xs{font-size:var(--t-2xs);line-height:1.3}
-.txs {font-size:var(--t-xs); line-height:1.4}
-.tsm {font-size:var(--t-sm); line-height:1.5}
-.tmd {font-size:var(--t-md); line-height:1.4}
-.tlg {font-size:var(--t-lg); line-height:1.3}
-.txl {font-size:var(--t-xl); line-height:1.2}
-.t2xl{font-size:var(--t-2xl);line-height:1.15}
-.t3xl{font-size:var(--t-3xl);line-height:1}
-.w5{font-weight:500} .w6{font-weight:600} .w7{font-weight:700}
-.tight{letter-spacing:-.03em} .wide{letter-spacing:.06em}
-.c1{color:var(--tx)} .c2{color:var(--tx2)} .c3{color:var(--tx3)} .ca{color:var(--ac)}
-.lbl{font-size:var(--t-2xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3)}
+/* ─── Base ───────────────────────────────────────────────── */
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--tx);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background .3s, color .3s;
+}
 
-/* Spacing */
-.px{padding-left:var(--s4);padding-right:var(--s4)}
-.pt3{padding-top:var(--s3)} .pt4{padding-top:var(--s4)} .pt5{padding-top:var(--s5)}
-.mt2{margin-top:var(--s2)} .mt3{margin-top:var(--s3)} .mt4{margin-top:var(--s4)} .mt5{margin-top:var(--s5)}
-.mb2{margin-bottom:var(--s2)} .mb3{margin-bottom:var(--s3)} .mb4{margin-bottom:var(--s4)} .mb5{margin-bottom:var(--s5)}
+#app { display:flex; flex-direction:column; height:100dvh; }
+#main {
+  flex:1; overflow-y:auto; overscroll-behavior:contain;
+  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 68px);
+}
 
-/* Layout */
-#app{display:flex;flex-direction:column;height:100dvh}
-#main{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 72px)}
+/* ─── Panes ──────────────────────────────────────────────── */
+.pane { display:none; }
+.pane.on { display:block; }
 
-/* Header */
-#hdr{flex-shrink:0;background:var(--bg);border-bottom:1px solid var(--bd);
-     position:sticky;top:0;z-index:100;padding-top:env(safe-area-inset-top,0);transition:background .2s}
-.hdr-row{display:flex;align-items:center;justify-content:space-between;padding:var(--s3) var(--s4);min-height:48px}
-.logo{font-size:var(--t-lg);font-weight:700;letter-spacing:-.03em}
-.logo b{color:var(--ac)}
-.hdr-btns{display:flex;gap:var(--s2)}
-.ibtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
-      border-radius:var(--r1);border:1px solid var(--bd);background:var(--bg2);font-size:16px;
-      transition:opacity .15s}
-.ibtn:active{opacity:.6}
-.prog-rail{height:2px;background:var(--bd)}
-.prog-bar{height:100%;background:var(--ac);transition:width .6s}
-.status-strip{display:flex;justify-content:space-between;align-items:center;
-              padding:var(--s2) var(--s4);background:var(--ac-bg);border-top:1px solid var(--ac-bd)}
+/* ─── Bottom Nav ─────────────────────────────────────────── */
+#nav {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:430px;
+  background: rgba(13,13,13,.88);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border-top: 1px solid var(--bd);
+  padding-bottom: env(safe-area-inset-bottom,0);
+  z-index:100; display:flex;
+  transition: background .3s;
+}
+body.light #nav { background: rgba(244,242,239,.9); }
 
-/* Nav */
-#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;
-     display:flex;background:var(--bg);border-top:1px solid var(--bd);
-     padding-bottom:env(safe-area-inset-bottom,0);z-index:100;transition:background .2s}
-.nbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:3px;padding:var(--s2) 0 var(--s3);min-height:48px;
-      color:var(--tx3);font-size:var(--t-2xs);font-weight:600;letter-spacing:.04em;transition:color .15s}
-.nbtn.on{color:var(--ac)}
-.nbtn.on .pip{background:var(--ac)}
-.nicon{font-size:20px;line-height:1}
-.pip{width:3px;height:3px;border-radius:var(--rp);background:transparent;transition:background .15s}
+.nbtn {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:3px;
+  padding:10px 0 11px;
+  color:var(--tx3); font-size:9px; font-weight:700;
+  letter-spacing:.07em; text-transform:uppercase;
+  transition: color .2s, transform .4s var(--spring);
+}
+.nbtn:active { transform:scale(.86); }
+.nbtn.on { color:var(--ac); }
+.nbtn i { font-size:21px; line-height:1; }
 
-/* Panes */
-.pane{display:none} .pane.on{display:block}
+/* ─── Typography ─────────────────────────────────────────── */
+.label {
+  font-size:10px; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--tx3);
+}
+.cap   { font-size:12px; font-weight:500; color:var(--tx2); }
+.body  { font-size:15px; line-height:1.5; }
+.title { font-size:17px; font-weight:600; line-height:1.3; letter-spacing:-.01em; }
+.head  { font-size:22px; font-weight:700; line-height:1.2; letter-spacing:-.02em; }
 
-/* Card */
-.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r3);padding:var(--s4);transition:background .2s,border-color .2s}
-.card-ac{background:var(--ac-bg)!important;border-color:var(--ac-bd)!important}
-.card-ok{background:var(--ok-bg)!important;border-color:var(--ok-bd)!important}
+.muted  { color:var(--tx2); }
+.dim    { color:var(--tx3); }
+.accent { color:var(--ac); }
+.ok-tx  { color:var(--ok); }
+.warn-tx{ color:var(--warn); }
 
-/* Badge */
-.badge{display:inline-flex;align-items:center;gap:var(--s1);font-size:var(--t-2xs);font-weight:700;
-       padding:3px var(--s2);border-radius:var(--rp);white-space:nowrap}
-.bok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)}
-.bwn{background:var(--wn-bg);color:var(--wn);border:1px solid var(--wn-bd)}
-.bac{background:var(--ac-bg);color:var(--ac);border:1px solid var(--ac-bd)}
+/* ─── Spacing helpers ────────────────────────────────────── */
+.px { padding-left:var(--sp4); padding-right:var(--sp4); }
+.mt2{margin-top:var(--sp2)} .mt3{margin-top:var(--sp3)} .mt4{margin-top:var(--sp4)}
+.mt5{margin-top:var(--sp5)} .mt6{margin-top:var(--sp6)} .mt8{margin-top:var(--sp8)}
+.mb2{margin-bottom:var(--sp2)} .mb3{margin-bottom:var(--sp3)} .mb4{margin-bottom:var(--sp4)}
+.mb5{margin-bottom:var(--sp5)} .mb6{margin-bottom:var(--sp6)}
+.pt4{padding-top:var(--sp4)} .pt5{padding-top:var(--sp5)} .pt6{padding-top:var(--sp6)}
+.pb4{padding-bottom:var(--sp4)}
 
-/* Row */
-.row{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;
-     border-bottom:1px solid var(--bd);min-height:44px}
-.row:last-child{border-bottom:none}
-.rico{width:36px;height:36px;border-radius:var(--r1);background:var(--bg3);
-      display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+/* ─── Layout ─────────────────────────────────────────────── */
+.row    { display:flex; align-items:center; gap:var(--sp3); }
+.col    { display:flex; flex-direction:column; }
+.between{ justify-content:space-between; }
+.wrap   { flex-wrap:wrap; }
+.grow1  { flex:1; }
+.gap2   { gap:var(--sp2); }
+.gap3   { gap:var(--sp3); }
 
-/* Chips */
-.chips{display:flex;gap:var(--s1);flex-wrap:wrap}
-.chip{width:26px;height:26px;border-radius:var(--rp);background:var(--bg3);border:1px solid var(--bd);
-      display:flex;align-items:center;justify-content:center;font-size:var(--t-2xs);font-weight:700;color:var(--tx2)}
+/* ─── Cards ──────────────────────────────────────────────── */
+.card {
+  background:var(--s1); border-radius:var(--r-lg);
+  padding:var(--sp4);
+  border:1px solid var(--bd);
+  transition: background .3s, border-color .3s;
+}
+.card-ac { background:var(--ac-dim)!important; border-color:rgba(242,100,25,.25)!important; }
+.card-ok { background:var(--ok-dim)!important; border-color:rgba(74,222,128,.2)!important; }
+.card-wn { background:var(--warn-dim)!important; border-color:rgba(251,191,36,.2)!important; }
 
-/* City hero — emoji always visible, img overlays when loaded */
-.hero{position:relative;height:180px;overflow:hidden;background:var(--bg3)}
-.hero-em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-         font-size:56px;opacity:.35;pointer-events:none}
-.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.hero-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,transparent 55%)}
-.hero-txt{position:absolute;bottom:0;left:0;right:0;padding:var(--s4)}
+/* ─── Badges ─────────────────────────────────────────────── */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:11px; font-weight:700; letter-spacing:.02em;
+  padding:3px 8px; border-radius:var(--r-full);
+  white-space:nowrap;
+}
+.b-ok   { background:var(--ok-dim);   color:var(--ok);   border:1px solid rgba(74,222,128,.2); }
+.b-warn { background:var(--warn-dim); color:var(--warn); border:1px solid rgba(251,191,36,.2); }
+.b-ac   { background:var(--ac-dim);   color:var(--ac);   border:1px solid rgba(242,100,25,.25); }
+.b-dim  { background:var(--s2);       color:var(--tx2);  border:1px solid var(--bd); }
 
-/* Flight */
-.flt{background:var(--ac-bg);border:1px solid var(--ac-bd);border-radius:var(--r2);padding:var(--s3) var(--s4)}
-.apt{font-size:var(--t-xl);font-weight:700;letter-spacing:-.02em}
-.farr{color:var(--ac);font-size:var(--t-md)}
+/* ─── Icon container ─────────────────────────────────────── */
+.ico {
+  width:40px; height:40px; border-radius:var(--r-sm);
+  background:var(--s2); border:1px solid var(--bd);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+  transition: background .3s;
+}
+.ico-ac { background:var(--ac-dim)!important; border-color:rgba(242,100,25,.2)!important; }
+.ico-ok { background:var(--ok-dim)!important; border-color:rgba(74,222,128,.15)!important; }
+.ico i  { font-size:18px; }
 
-/* Timeline */
-.tlw{padding:0 var(--s4)}
-.ph-hdr{display:flex;align-items:center;gap:var(--s2);padding:var(--s5) 0 var(--s2)}
-.ph-dot{width:8px;height:8px;border-radius:var(--rp);flex-shrink:0}
-.tli{display:flex;gap:var(--s3)}
-.tll{display:flex;flex-direction:column;align-items:center;width:40px;flex-shrink:0}
-.tln{width:38px;height:38px;border-radius:var(--r1);background:var(--bg3);border:1px solid var(--bd);
-     display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .2s}
-.tli.td .tln{background:var(--ac-bg);border-color:var(--ac-bd)}
-.tli.td .tlc{color:var(--ac)}
-.tlln{width:2px;background:var(--bd);flex:1;min-height:12px;margin-top:var(--s1)}
-.tlb{flex:1;padding-bottom:var(--s4);min-width:0}
-.tlc{font-size:var(--t-md);font-weight:700;letter-spacing:-.02em;margin-bottom:var(--s1)}
-.tlt{font-size:var(--t-xs);color:var(--tx2);padding:3px 0;display:flex;gap:var(--s2);line-height:1.4}
-.tlt::before{content:'–';color:var(--tx3);flex-shrink:0}
+/* ─── List rows ──────────────────────────────────────────── */
+.list-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp3) 0;
+  border-bottom:1px solid var(--bd);
+  min-height:52px;
+}
+.list-row:last-child { border-bottom:none; }
 
-/* City chips */
-.cscroll{display:flex;gap:var(--s2);padding:var(--s4) var(--s4) 0;overflow-x:auto}
-.cchip{white-space:nowrap;padding:var(--s2) var(--s4);border-radius:var(--rp);
-       border:1px solid var(--bd);background:var(--bg2);font-size:var(--t-xs);
-       font-weight:600;color:var(--tx2);min-height:36px;transition:all .15s}
-.cchip.on{background:var(--ac);border-color:var(--ac);color:#fff}
+/* ─── Progress bar ───────────────────────────────────────── */
+.prog-rail { height:4px; background:var(--s3); border-radius:var(--r-full); overflow:hidden; }
+.prog-bar  { height:100%; background:var(--ac); border-radius:var(--r-full); transition:width .6s ease; }
 
-/* Guide */
-.gsec{margin-bottom:var(--s5)}
-.ghd{font-size:var(--t-2xs);font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-     color:var(--tx3);margin-bottom:var(--s3);display:flex;align-items:center;gap:var(--s2)}
-.gic{color:var(--ac)}
-.git{padding:var(--s2) 0;border-bottom:1px solid var(--bd);font-size:var(--t-sm);color:var(--tx2);
-     display:flex;gap:var(--s2);line-height:1.5}
-.git:last-child{border-bottom:none}
-.git::before{content:'–';color:var(--tx3);flex-shrink:0}
+/* ─── TODAY — Hero ───────────────────────────────────────── */
+.today-util {
+  display:flex; justify-content:flex-end; gap:var(--sp2);
+  padding: calc(env(safe-area-inset-top,0px) + 10px) var(--sp4) 0;
+}
+.util-btn {
+  width:36px; height:36px; border-radius:var(--r-full);
+  background:var(--s2); border:1px solid var(--bd);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--tx2); font-size:16px;
+  transition: background .2s, transform .3s var(--spring);
+}
+.util-btn:active { transform:scale(.88); }
+.util-btn i { font-size:17px; }
 
-/* Review */
-.rev{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);
-     padding:var(--s3) var(--s4);margin-bottom:var(--s3)}
+.today-hero {
+  padding: var(--sp6) var(--sp4) var(--sp4);
+  min-height:220px;
+  display:flex; flex-direction:column; justify-content:flex-end;
+}
+.hero-eyebrow {
+  font-size:11px; font-weight:700; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--tx3);
+  margin-bottom:var(--sp2);
+}
+.hero-display {
+  font-size: clamp(64px, 17vw, 96px);
+  font-weight:900; letter-spacing:-.04em; line-height:.9;
+  color:var(--ac);
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.3),
+    0 6px 20px rgba(242,100,25,.25);
+}
+body.light .hero-display {
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.1),
+    0 6px 20px rgba(242,100,25,.2);
+}
+.hero-sub {
+  font-size:17px; font-weight:500; color:var(--tx2);
+  margin-top:var(--sp3); letter-spacing:-.01em;
+}
 
-/* Goals */
-.grow{display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;
-      border-bottom:1px solid var(--bd);min-height:44px;cursor:pointer;-webkit-user-select:none;user-select:none}
-.grow:last-child{border-bottom:none}
-.gchk{width:22px;height:22px;border-radius:7px;border:2px solid var(--bd2);
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s}
-.gchk.on{background:var(--ac);border-color:var(--ac)}
-.gchk.on::after{content:'';width:10px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;
-                transform:rotate(-45deg) translateY(-1px);display:block}
-.glbl{flex:1;font-size:var(--t-sm);font-weight:500}
-.glbl.done{color:var(--tx3);text-decoration:line-through}
+/* ─── TODAY — Sections ───────────────────────────────────── */
+.sec-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:var(--sp3);
+}
+.sec-action {
+  font-size:12px; font-weight:600; color:var(--ac);
+  letter-spacing:.01em;
+}
 
-/* Budget */
-.stat2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);margin-bottom:var(--s5)}
-.stile{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r3);padding:var(--s4)}
-.brow{display:flex;align-items:center;padding:var(--s2) 0;border-bottom:1px solid var(--bd);gap:var(--s2);min-height:44px}
-.brow:last-child{border-bottom:none}
-.binp{width:82px;padding:var(--s2);background:var(--bg3);border:1px solid var(--bd);
-      border-radius:var(--r1);font-size:var(--t-xs);font-weight:600;color:var(--tx);
-      text-align:right;outline:none;transition:border-color .15s;-webkit-appearance:none}
-.binp:focus{border-color:var(--ac)}
+/* Flight card */
+.flt-card {
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp4);
+  transition:background .3s;
+}
+.flt-route {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:var(--sp3);
+}
+.flt-code { font-size:26px; font-weight:800; letter-spacing:-.03em; }
+.flt-arrow { color:var(--ac); font-size:20px; }
+.flt-meta { font-size:13px; color:var(--tx2); font-weight:500; }
 
-/* Overlay */
-.ovl{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;
-     align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
-.ovl.on{opacity:1;pointer-events:auto}
-.sheet{background:var(--bg);border-radius:var(--r4) var(--r4) 0 0;
-       padding:var(--s5) var(--s4) calc(env(safe-area-inset-bottom,0px) + var(--s6));
-       width:100%;max-height:88dvh;overflow-y:auto;transform:translateY(20px);transition:transform .25s}
-.ovl.on .sheet{transform:none}
-.hndl{width:36px;height:4px;border-radius:var(--rp);background:var(--bd2);margin:0 auto var(--s5)}
-.cta{width:100%;background:var(--ac);color:#fff;border-radius:var(--r2);
-     height:52px;font-size:var(--t-md);font-weight:700;margin-top:var(--s4)}
-.cta:active{opacity:.85}
-.iblk{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r2);padding:var(--s4);margin-bottom:var(--s3)}
-.istep{display:flex;gap:var(--s3);align-items:flex-start;padding:var(--s2) 0;border-bottom:1px solid var(--bd)}
-.istep:last-child{border-bottom:none}
-.snum{width:22px;height:22px;border-radius:var(--rp);background:var(--ac);color:#fff;
-      font-size:var(--t-2xs);font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.urlbox{display:block;background:var(--ac-bg);border:1px solid var(--ac-bd);border-radius:var(--r1);
-        padding:var(--s3) var(--s4);font-size:var(--t-xs);font-weight:600;color:var(--ac-tx);
-        word-break:break-all;margin:var(--s3) 0;text-align:center}
+/* ─── TIMELINE ───────────────────────────────────────────── */
+.phase-hdr {
+  display:flex; align-items:center; gap:var(--sp2);
+  padding:var(--sp6) var(--sp4) var(--sp3);
+}
+.phase-dot {
+  width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0;
+}
+.phase-label {
+  font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+}
 
-/* Flex helpers */
-.f{display:flex} .fc{flex-direction:column} .ai{align-items:center}
-.jb{justify-content:space-between} .fw{flex-wrap:wrap} .f1{flex:1} .g2{gap:var(--s2)} .g3{gap:var(--s3)}
+.day-wrap { padding:0 var(--sp4) var(--sp3); }
+.day-card {
+  background:var(--s1); border-radius:var(--r-lg);
+  border:1px solid var(--bd); overflow:hidden;
+  transition:background .3s, transform .4s var(--spring);
+}
+.day-card:active { transform:scale(.99); }
+.day-card.today { border-color:rgba(242,100,25,.35); }
+
+.day-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp3) var(--sp4);
+  border-bottom:1px solid var(--bd);
+  background:var(--s2);
+  transition:background .3s;
+}
+.day-hdr.today { background:var(--ac-dim); border-color:rgba(242,100,25,.2); }
+.day-date { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tx3); }
+.day-date.today { color:var(--ac); }
+.day-num  { font-size:11px; font-weight:700; color:var(--tx3); }
+.day-num.today { color:var(--ac); }
+
+.day-body { padding:var(--sp3) var(--sp4); }
+.day-city {
+  font-size:17px; font-weight:700; letter-spacing:-.02em;
+  color:var(--tx); margin-bottom:var(--sp2);
+  display:flex; align-items:center; gap:var(--sp2);
+}
+.day-city.today { color:var(--ac); }
+.day-city-em { font-size:18px; }
+
+.day-badges { display:flex; flex-wrap:wrap; gap:var(--sp2); margin-bottom:var(--sp3); }
+
+.day-hl {
+  display:flex; align-items:flex-start; gap:var(--sp2);
+  padding:3px 0; font-size:13px; color:var(--tx2); line-height:1.5;
+}
+.day-hl::before {
+  content:''; width:4px; height:4px; border-radius:var(--r-full);
+  background:var(--tx3); flex-shrink:0; margin-top:6px;
+}
+
+/* Flight inline */
+.day-flt {
+  background:var(--ac-dim); border:1px solid rgba(242,100,25,.2);
+  border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
+  margin-bottom:var(--sp3);
+}
+.day-flt-route {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:var(--sp2);
+}
+.day-flt-code { font-size:20px; font-weight:800; letter-spacing:-.02em; }
+.day-flt-arrow { color:var(--ac); }
+.day-flt-meta  { font-size:12px; color:var(--tx2); font-weight:500; }
+
+/* ─── CITIES ─────────────────────────────────────────────── */
+.city-scroll {
+  display:flex; gap:var(--sp2);
+  padding:var(--sp4) var(--sp4) 0;
+  overflow-x:auto;
+}
+.city-chip {
+  white-space:nowrap; padding:7px var(--sp4);
+  border-radius:var(--r-full);
+  border:1px solid var(--bd);
+  background:var(--s2); font-size:13px; font-weight:600;
+  color:var(--tx2); min-height:36px;
+  transition: background .2s, color .2s, border-color .2s, transform .3s var(--spring);
+}
+.city-chip:active { transform:scale(.94); }
+.city-chip.on {
+  background:var(--ac); border-color:var(--ac); color:#fff;
+}
+
+.city-hero {
+  position:relative; height:200px; overflow:hidden;
+  margin-top:var(--sp4);
+}
+.city-hero-bg {
+  position:absolute; inset:0;
+}
+.city-hero-grad {
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,.82) 0%, rgba(0,0,0,.2) 55%, transparent 100%);
+}
+.city-hero-em {
+  position:absolute; inset:0; display:flex; align-items:center;
+  justify-content:center; font-size:72px; opacity:.2; pointer-events:none;
+}
+.city-hero-txt {
+  position:absolute; bottom:0; left:0; right:0; padding:var(--sp4);
+}
+.city-hero-name {
+  font-size:32px; font-weight:800; letter-spacing:-.03em;
+  color:#fff; line-height:1;
+}
+.city-hero-sub {
+  font-size:13px; color:rgba(255,255,255,.65); margin-top:4px; font-weight:500;
+}
+
+.guide-sec { margin-bottom:var(--sp6); }
+.guide-hdr {
+  display:flex; align-items:center; gap:var(--sp2);
+  margin-bottom:var(--sp3);
+}
+.guide-hdr-icon {
+  width:28px; height:28px; border-radius:var(--r-sm);
+  background:var(--ac-dim); border:1px solid rgba(242,100,25,.2);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.guide-hdr-icon i { font-size:14px; color:var(--ac); }
+.guide-hdr-label {
+  font-size:13px; font-weight:700; letter-spacing:.02em; color:var(--tx);
+}
+
+.guide-item {
+  display:flex; align-items:flex-start; gap:var(--sp2);
+  padding:var(--sp2) 0; border-bottom:1px solid var(--bd);
+  font-size:14px; color:var(--tx2); line-height:1.55;
+}
+.guide-item:last-child { border-bottom:none; }
+.guide-item::before {
+  content:''; width:4px; height:4px; border-radius:var(--r-full);
+  background:var(--ac); opacity:.6; flex-shrink:0; margin-top:7px;
+}
+
+.review-card {
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
+  margin-bottom:var(--sp3); transition:background .3s;
+}
+.review-place { font-size:14px; font-weight:700; color:var(--tx); }
+.review-rating { font-size:12px; font-weight:700; color:var(--ac); }
+.review-txt { font-size:13px; color:var(--tx2); line-height:1.6; margin-top:4px; }
+.stars { letter-spacing:.05em; }
+
+/* ─── GOALS ──────────────────────────────────────────────── */
+.goal-cat-hdr {
+  font-size:11px; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--tx3);
+  padding: var(--sp5) 0 var(--sp3);
+  border-bottom:1px solid var(--bd);
+  margin-bottom:2px;
+}
+
+.goal-item {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
+  min-height:52px; cursor:pointer;
+  -webkit-user-select:none; user-select:none;
+  transition: opacity .2s;
+}
+.goal-item:last-child { border-bottom:none; }
+.goal-item:active { opacity:.7; }
+
+.goal-chk {
+  width:24px; height:24px; border-radius:8px;
+  border:2px solid var(--bd2); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition: background .2s, border-color .2s, transform .5s var(--spring);
+}
+.goal-chk.on {
+  background:var(--ac); border-color:var(--ac);
+  transform:scale(1.08);
+}
+.goal-chk.on::after {
+  content:''; width:10px; height:6px;
+  border-left:2px solid #fff; border-bottom:2px solid #fff;
+  transform:rotate(-45deg) translateY(-1px); display:block;
+}
+.goal-lbl {
+  flex:1; font-size:15px; font-weight:500; line-height:1.35;
+  transition:color .2s;
+}
+.goal-lbl.done { color:var(--tx3); text-decoration:line-through; }
+.goal-locked {
+  font-size:10px; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--ac); flex-shrink:0;
+}
+
+/* ─── BUDGET ─────────────────────────────────────────────── */
+.budget-hero {
+  display:grid; grid-template-columns:1fr 1fr; gap:var(--sp3);
+  margin-bottom:var(--sp5);
+}
+.budget-tile {
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp4);
+  transition:background .3s;
+}
+.budget-tile-label { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--tx3); margin-bottom:var(--sp2); }
+.budget-tile-num {
+  font-size:28px; font-weight:800; letter-spacing:-.03em;
+  line-height:1; color:var(--tx);
+}
+.budget-tile-num.accent { color:var(--ac); }
+.budget-tile-num.over   { color:var(--err); }
+
+.budget-cat-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: var(--sp3) 0; border-bottom:1px solid var(--bd);
+  margin-bottom:2px;
+}
+.budget-cat-hdr-label { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--tx3); }
+
+.budget-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding: var(--sp2) 0; border-bottom:1px solid var(--bd);
+  min-height:52px;
+}
+.budget-row:last-child { border-bottom:none; }
+
+.budget-row-name { flex:1; font-size:14px; font-weight:500; color:var(--tx2); }
+.binp {
+  width:80px; padding:var(--sp2) var(--sp2);
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-sm); font-size:13px; font-weight:600;
+  color:var(--tx); text-align:right; outline:none;
+  font-family:var(--font);
+  -webkit-appearance:none;
+  transition:border-color .2s;
+}
+.binp:focus { border-color:var(--ac); }
+.binp.actual { border-color:rgba(74,222,128,.25); }
+
+/* ─── INSTALL SHEET ──────────────────────────────────────── */
+.ovl {
+  position:fixed; inset:0; background:rgba(0,0,0,.6);
+  z-index:200; display:flex; align-items:flex-end;
+  opacity:0; pointer-events:none;
+  transition:opacity .25s;
+}
+.ovl.on { opacity:1; pointer-events:auto; }
+.sheet {
+  background:var(--s1); border-radius:var(--r-xl) var(--r-xl) 0 0;
+  padding:var(--sp5) var(--sp4) calc(env(safe-area-inset-bottom,0px) + var(--sp6));
+  width:100%; max-height:88dvh; overflow-y:auto;
+  transform:translateY(24px);
+  transition:transform .3s var(--spring);
+}
+.ovl.on .sheet { transform:none; }
+.sheet-handle {
+  width:36px; height:4px; border-radius:var(--r-full);
+  background:var(--bd2); margin:0 auto var(--sp5);
+}
+.sheet-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:var(--sp2); letter-spacing:-.02em; }
+.sheet-sub { font-size:13px; color:var(--tx2); text-align:center; line-height:1.6; margin-bottom:var(--sp4); }
+
+.url-box {
+  background:var(--ac-dim); border:1px solid rgba(242,100,25,.25);
+  border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
+  font-size:12px; font-weight:600; color:var(--ac-tx);
+  word-break:break-all; margin:var(--sp3) 0; text-align:center;
+}
+
+.inst-blk {
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp4);
+  margin-bottom:var(--sp3);
+}
+.inst-blk-hdr { font-size:13px; font-weight:700; margin-bottom:var(--sp3); }
+.inst-step {
+  display:flex; gap:var(--sp3); align-items:flex-start;
+  padding:var(--sp2) 0; border-bottom:1px solid var(--bd);
+}
+.inst-step:last-child { border-bottom:none; }
+.inst-num {
+  width:22px; height:22px; border-radius:var(--r-full);
+  background:var(--ac); color:#fff;
+  font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; margin-top:1px;
+}
+.inst-txt { font-size:13px; color:var(--tx2); line-height:1.5; }
+
+.cta-btn {
+  width:100%; background:var(--ac); color:#fff;
+  border-radius:var(--r-md); height:52px;
+  font-size:16px; font-weight:700; margin-top:var(--sp4);
+  transition:opacity .15s, transform .3s var(--spring);
+}
+.cta-btn:active { opacity:.85; transform:scale(.98); }
+
+/* ─── Reduced motion ─────────────────────────────────────── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
 </style>
 </head>
 <body>
 
 <div id="app">
-  <header id="hdr">
-    <div class="hdr-row">
-      <div class="logo">Luke's <b>Europe</b></div>
-      <div class="f g2">
-        <button class="ibtn" id="themeBtn" onclick="toggleTheme()" aria-label="Toggle theme">☀️</button>
-        <button class="ibtn" onclick="openSheet()" aria-label="Install app">📲</button>
-      </div>
-    </div>
-    <div class="prog-rail"><div class="prog-bar" id="pBar" style="width:0%"></div></div>
-    <div class="status-strip">
-      <span class="t2xs w5 c3">9 Jun – 17 Jul · 39 days</span>
-      <span class="txs w7 ca" id="sChip">…</span>
-    </div>
-  </header>
-
   <main id="main">
     <div id="pToday"    class="pane on"></div>
     <div id="pTimeline" class="pane"></div>
@@ -261,41 +591,47 @@ button { cursor:pointer; border:none; background:none; color:inherit; }
   </main>
 
   <nav id="nav">
-    <button class="nbtn on" onclick="go('Today',this)"><span class="nicon">🗓</span><span>Today</span><div class="pip"></div></button>
-    <button class="nbtn" onclick="go('Timeline',this)"><span class="nicon">📍</span><span>Trip</span><div class="pip"></div></button>
-    <button class="nbtn" onclick="go('Cities',this)"><span class="nicon">🗺️</span><span>Cities</span><div class="pip"></div></button>
-    <button class="nbtn" onclick="go('Goals',this)"><span class="nicon">⚡</span><span>Goals</span><div class="pip"></div></button>
-    <button class="nbtn" onclick="go('Budget',this)"><span class="nicon">💰</span><span>Budget</span><div class="pip"></div></button>
+    <button class="nbtn on"  onclick="go('Today',this)">
+      <i class="ph-fill ph-sun-horizon"></i>Today
+    </button>
+    <button class="nbtn" onclick="go('Timeline',this)">
+      <i class="ph ph-map-trifold"></i>Trip
+    </button>
+    <button class="nbtn" onclick="go('Cities',this)">
+      <i class="ph ph-compass"></i>Cities
+    </button>
+    <button class="nbtn" onclick="go('Goals',this)">
+      <i class="ph ph-check-square"></i>Goals
+    </button>
+    <button class="nbtn" onclick="go('Budget',this)">
+      <i class="ph ph-wallet"></i>Budget
+    </button>
   </nav>
 </div>
 
+<!-- Install sheet -->
 <div class="ovl" id="installOvl" onclick="closeSheet()">
   <div class="sheet" onclick="event.stopPropagation()">
-    <div class="hndl"></div>
-    <p class="txl w7 mb3" style="text-align:center">Add to Home Screen 📲</p>
-    <p class="txs c2 mb4" style="text-align:center;line-height:1.6">Open this URL on your phone, then follow the steps to install.</p>
-    <div class="urlbox" id="urlBox">—</div>
-    <div class="iblk">
-      <p class="txs w7 mb3">📱 iPhone — Safari</p>
-      <div class="istep"><div class="snum">1</div><div class="tsm c2">Open the URL above in <strong>Safari</strong> (not Chrome)</div></div>
-      <div class="istep"><div class="snum">2</div><div class="tsm c2">Tap the <strong>Share ↑</strong> button at the bottom</div></div>
-      <div class="istep"><div class="snum">3</div><div class="tsm c2">Tap <strong>"Add to Home Screen"</strong></div></div>
-      <div class="istep"><div class="snum">4</div><div class="tsm c2">Tap <strong>Add</strong> — done!</div></div>
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Add to Home Screen</div>
+    <div class="sheet-sub">Open this URL on your phone, then add it to your home screen.</div>
+    <div class="url-box" id="urlBox">—</div>
+    <div class="inst-blk">
+      <div class="inst-blk-hdr">iPhone — Safari</div>
+      <div class="inst-step"><div class="inst-num">1</div><div class="inst-txt">Open the URL above in <strong>Safari</strong></div></div>
+      <div class="inst-step"><div class="inst-num">2</div><div class="inst-txt">Tap the <strong>Share ↑</strong> button</div></div>
+      <div class="inst-step"><div class="inst-num">3</div><div class="inst-txt">Tap <strong>"Add to Home Screen"</strong> → Add</div></div>
     </div>
-    <div class="iblk">
-      <p class="txs w7 mb3">🤖 Android — Chrome</p>
-      <div class="istep"><div class="snum">1</div><div class="tsm c2">Open the URL above in <strong>Chrome</strong></div></div>
-      <div class="istep"><div class="snum">2</div><div class="tsm c2">Tap the <strong>⋮ menu</strong> top-right</div></div>
-      <div class="istep"><div class="snum">3</div><div class="tsm c2">Tap <strong>"Add to Home Screen"</strong></div></div>
-      <div class="istep"><div class="snum">4</div><div class="tsm c2">Tap <strong>Add</strong></div></div>
+    <div class="inst-blk">
+      <div class="inst-blk-hdr">Android — Chrome</div>
+      <div class="inst-step"><div class="inst-num">1</div><div class="inst-txt">Open the URL above in <strong>Chrome</strong></div></div>
+      <div class="inst-step"><div class="inst-num">2</div><div class="inst-txt">Tap <strong>⋮ menu</strong> → "Add to Home Screen"</div></div>
     </div>
-    <button class="cta" onclick="closeSheet()">Got it ✓</button>
+    <button class="cta-btn" onclick="closeSheet()">Got it</button>
   </div>
 </div>
 
 <script>
-// No external dependencies — fully self-contained
-
 var TODAY = new Date();
 var TS = new Date('2026-06-09');
 var TE = new Date('2026-07-17');
@@ -349,13 +685,14 @@ var DAYS=[
   {d:'2026-07-17',c:'Sydney',e:'🏠',p:4,t:'home',pp:['L'],a:null,r:null,th:['Home 🎉 Back to Zuip Co']},
 ];
 
-// City hero colours (gradient backgrounds — no external images needed)
-var HERO_COLORS = {
-  Athens:'#C4A882,#8B7355',Milos:'#5BA4C8,#1E6A8A',Catania:'#C85A35,#8B2500',
-  Taormina:'#7DB87A,#2E7A2B',Bristol:'#6B8BA4,#3A5F7A',Munich:'#4A7CB8,#1A4A8A',
-  Innsbruck:'#7AB8E8,#2A6BA0',Amsterdam:'#C8A850,#8B6A1A',Porto:'#B87A4A,#7A4A1A',
-  Ericeira:'#4AB8C8,#1A7A8A',Madrid:'#C8884A,#8A4A1A',Barcelona:'#E8B84A,#C87A1A',
-  Ibiza:'#F08060,#C04020',
+var HERO_BG = {
+  Athens:'135deg,#8B7355,#5A4A35',Milos:'160deg,#1E6A8A,#0D3F57',
+  Catania:'135deg,#8B2500,#5A1500',Taormina:'150deg,#2E7A2B,#1A4A18',
+  Bristol:'135deg,#3A5F7A,#1E3A50',Munich:'135deg,#1A4A8A,#0D2A57',
+  Innsbruck:'160deg,#2A6BA0,#143A60',Amsterdam:'135deg,#8B6A1A,#5A4010',
+  Porto:'135deg,#7A4A1A,#4A280A',Ericeira:'160deg,#1A7A8A,#0D4A55',
+  Madrid:'135deg,#8A4A1A,#5A2A0A',Barcelona:'135deg,#C87A1A,#8A4A0A',
+  Ibiza:'135deg,#C04020,#8A2010',
 };
 
 var GUIDES = {
@@ -365,7 +702,7 @@ var GUIDES = {
   Taormina:{e:'🍋',mustdo:['Greek Theatre — Mount Etna as backdrop','Isola Bella beach (cable car from town)','Corso Umberto stroll — boutiques & gelato'],food:['Granita di mandorla e brioche — THE Sicilian breakfast','Ricotta cannoli — ask for fresh-filled','Pasta alla norma at a local trattoria'],reviews:[{p:'Greek Theatre',r:4.9,t:'One of the most dramatic settings on earth. Etna erupting in the background is once-in-a-lifetime.'},{p:'Isola Bella',r:4.7,t:'Cable car down to a tiny protected cove. Crystal water. Beautiful for swimming and photography.'}]},
   Bristol:{e:'🇬🇧',mustdo:['Clifton Suspension Bridge — walk both ways','Harbourside walk & independent breweries','Banksy trail in Stokes Croft'],nightlife:['Wiper & True Brewery','The Lanes cocktail bars','Old Duke pub for jazz'],reviews:[{p:'Clifton Suspension Bridge',r:4.7,t:'Victorian engineering marvel. Views into the Avon Gorge are excellent for photography.'},{p:'Stokes Croft',r:4.6,t:'Best street art in the UK outside London. Good independent pubs and cafes.'}]},
   Munich:{e:'🍺',mustdo:['Allianz Arena tour — book ahead','Bayern Munich Megastore — buy the jersey 🧣','BMW Welt — free entry, extraordinary architecture','English Garden — larger than Central Park'],design:['Deutsches Museum — engineering & design history','German typographic tradition in street signage','U-Bahn wayfinding system — superb grid design'],nightlife:['Bahnwärter Thiel — open-air club in converted tram depot','Augustiner Bräuhaus — authentic Munich beer culture'],reviews:[{p:'BMW Welt',r:4.8,t:'Free entry. The building itself is worth the trip. Cars displayed like sculpture. Budget 2–3hrs.'},{p:'Allianz Arena',r:4.8,t:'The LED facade at night is surreal. Tour on non-match days. Book online. Pitch walk is a highlight.'}]},
-  Innsbruck:{e:'🏔️',mustdo:['Nordkette Cable Car → 2,256m (20 min from city centre)','Old Town Altstadt & Golden Roof','Hike with Ismael — 23 June 🔒 LOCKED'],fitness:['Full mountain hike (4–6hrs, Ismael knows the route)','Outdoor calisthenics with Alps backdrop','Hiking gear at Intersport Kröll'],photo:['Nordkette summit — city + Alps in one frame','Inn River with mountain reflections','Old Town medieval lanes at dusk'],reviews:[{p:'Nordkette Cable Car',r:4.9,t:'Fastest way from a city to 2,256m in Europe. Views are breathtaking. Check weather — cloud can obscure summit.'},{p:'Old Town',r:4.6,t:'Golden Roof is the centrepiece. Medieval architecture in excellent condition. Great evening photography.'}]},
+  Innsbruck:{e:'🏔️',mustdo:['Nordkette Cable Car → 2,256m (20 min from city centre)','Old Town Altstadt & Golden Roof','Hike with Ismael — 23 June 🔒 LOCKED'],fitness:['Full mountain hike (4–6hrs, Ismael knows the route)','Outdoor calisthenics with Alps backdrop','Hiking gear at Intersport Kröll'],photo:['Nordkette summit — city + Alps in one frame','Inn River with mountain reflections','Old Town medieval lanes at dusk'],reviews:[{p:'Nordkette Cable Car',r:4.9,t:'Fastest way from a city to 2,256m in Europe. Views are breathtaking. Check weather.'},{p:'Old Town',r:4.6,t:'Golden Roof is the centrepiece. Medieval architecture in excellent condition. Great evening photography.'}]},
   Amsterdam:{e:'🚲',mustdo:['Defqon.1 — 26 June 🔒 LOCKED','Canal cycling (rent from Macbike or Star Bikes)','Jordaan neighbourhood wander'],museums:['Stedelijk Museum — Dutch modernism & graphic design','Moco Museum — Banksy, Basquiat, contemporary','NXT Museum — immersive digital art','Van Gogh Museum — book weeks ahead'],design:['NDSM Wharf — Amsterdam creative district','Dutch graphic design bookshops in Jordaan','Droog design store on Staalstraat'],nightlife:['Shelter — techno bunker under the A\'dam Tower','Radion — one of Europe\'s best sound systems','Lofi — intimate basement house music'],reviews:[{p:'Stedelijk Museum',r:4.7,t:'The Rietveld room and Dutch modernism collection are world class. Design history lovers: budget 3+ hours.'},{p:'NXT Museum',r:4.6,t:'Most photogenic museum in NL. Immersive digital art. Every room different. Book ahead.'}]},
   Porto:{e:'🍷',mustdo:['Ribeira District — UNESCO riverside neighbourhood','Dom Luís Bridge upper deck walk','Serra do Pilar for sunset panorama'],photo:['Azulejo tile facades — Almas Chapel has 20,000 tiles','Ribeira rooftops from the bridge at golden hour','Douro River reflections at dusk'],food:['Francesinha at Cervejaria Brasão (the Porto sandwich)','Port wine tasting in Vila Nova de Gaia','Bacalhau à Brás — salt cod done right'],reviews:[{p:'Dom Luís Bridge',r:4.8,t:'Upper deck walk gives the full panorama both ways. Go at sunset. One of the best free views in Europe.'},{p:'Ribeira',r:4.7,t:'Most photogenic riverside neighbourhood in Europe. Colour, texture, history. Explore every alley.'}]},
   Ericeira:{e:'🏄',mustdo:['World Surfing Reserve cliff walks north of town','Praia do Sul for swimming and sunsets','Village cobblestone streets & seafood restaurants'],fitness:['Atlantic ocean swim — cold, bracing, worth it 🏊','Morning cliff path run from the village','Beach calisthenics with ocean view'],food:['Percebes (barnacles) at the harbour — fresh and local','Grilled fish at a harbour-side restaurant','Açaí bowls at a surf café for breakfast'],reviews:[{p:'Ericeira Village',r:4.8,t:'One of only two World Surfing Reserves in Europe. Laid back, dramatic cliffs, exceptional seafood.'},{p:'Coastal Cliff Walk',r:4.7,t:'Walk north from the village. Dramatic Atlantic views on volcanic rock. Perfect at golden hour.'}]},
@@ -374,65 +711,75 @@ var GUIDES = {
   Ibiza:{e:'🌅',mustdo:['Sunset at Café del Mar — arrive 30min early','Dalt Vila UNESCO Old Town on the hill','Es Vedrà viewpoint at sunset'],photo:['Café del Mar golden hour — iconic shot','Dalt Vila ramparts over the harbour','White-washed village streets in Sant Josep'],nightlife:['Café del Mar — the original sunset ritual','DC-10 — legendary Monday club nights (check calendar)'],reviews:[{p:'Café del Mar',r:4.7,t:'The sunset is genuinely one of Europe\'s most famous. Arrive 30 minutes early for the wall.'},{p:'Dalt Vila',r:4.8,t:'UNESCO old town on the hill. Seriously underrated. Incredible views and ancient history.'}]},
 };
 
-var GSECS=[{k:'mustdo',i:'★',l:'Must Do'},{k:'design',i:'◆',l:'Design'},{k:'photo',i:'◉',l:'Photography'},{k:'food',i:'●',l:'Food & Drink'},{k:'museums',i:'▲',l:'Museums'},{k:'nightlife',i:'◎',l:'Nightlife'},{k:'fitness',i:'▶',l:'Fitness'},{k:'football',i:'⚽',l:'Football'}];
+var GSECS=[
+  {k:'mustdo',  ph:'ph-star',       l:'Must Do'},
+  {k:'design',  ph:'ph-ruler',      l:'Design'},
+  {k:'photo',   ph:'ph-aperture',   l:'Photography'},
+  {k:'food',    ph:'ph-fork-knife', l:'Food & Drink'},
+  {k:'museums', ph:'ph-buildings',  l:'Museums'},
+  {k:'nightlife',ph:'ph-martini',   l:'Nightlife'},
+  {k:'fitness', ph:'ph-barbell',    l:'Fitness'},
+  {k:'football',ph:'ph-trophy',     l:'Football'},
+];
 
 var GOALS=[
-  {id:'defqon',l:'Defqon.1',cat:'Travel',locked:true},
-  {id:'allianz',l:'Allianz Arena',cat:'Travel'},
-  {id:'jersey',l:'Bayern Munich jersey',cat:'Travel'},
-  {id:'hike',l:'Innsbruck mountain hike',cat:'Travel',locked:true},
-  {id:'amsmuse',l:'Amsterdam art museums',cat:'Travel'},
-  {id:'barcarch',l:'Barcelona architecture day',cat:'Travel'},
-  {id:'ibizabch',l:'Ibiza beach day',cat:'Travel'},
-  {id:'cali',l:'Calisthenics in another country',cat:'Fitness'},
-  {id:'mtnhike',l:'Mountain hike',cat:'Fitness'},
-  {id:'med',l:'Swim in Mediterranean',cat:'Fitness'},
-  {id:'outdoor',l:'Train outdoors in Europe',cat:'Fitness'},
-  {id:'street',l:'Street photography',cat:'Photography'},
-  {id:'footy',l:'Football culture photos',cat:'Photography'},
-  {id:'mtnphoto',l:'Mountain photography',cat:'Photography'},
-  {id:'archphoto',l:'Architecture photos',cat:'Photography'},
-  {id:'night',l:'Nightlife photos',cat:'Photography'},
-  {id:'desmuse',l:'Visit design museums',cat:'Design'},
-  {id:'wayf',l:'Photograph wayfinding/signage',cat:'Design'},
-  {id:'ui',l:'Save UI inspiration',cat:'Design'},
-  {id:'transport',l:'Observe transport systems',cat:'Design'},
+  {id:'defqon',   l:'Defqon.1',                   cat:'Travel',      locked:true},
+  {id:'allianz',  l:'Allianz Arena',               cat:'Travel'},
+  {id:'jersey',   l:'Bayern Munich jersey',        cat:'Travel'},
+  {id:'hike',     l:'Innsbruck mountain hike',     cat:'Travel',      locked:true},
+  {id:'amsmuse',  l:'Amsterdam art museums',       cat:'Travel'},
+  {id:'barcarch', l:'Barcelona architecture day',  cat:'Travel'},
+  {id:'ibizabch', l:'Ibiza beach day',             cat:'Travel'},
+  {id:'cali',     l:'Calisthenics in another country',cat:'Fitness'},
+  {id:'mtnhike',  l:'Mountain hike',               cat:'Fitness'},
+  {id:'med',      l:'Swim in Mediterranean',       cat:'Fitness'},
+  {id:'outdoor',  l:'Train outdoors in Europe',    cat:'Fitness'},
+  {id:'street',   l:'Street photography',          cat:'Photography'},
+  {id:'footy',    l:'Football culture photos',     cat:'Photography'},
+  {id:'mtnphoto', l:'Mountain photography',        cat:'Photography'},
+  {id:'archphoto',l:'Architecture photos',         cat:'Photography'},
+  {id:'night',    l:'Nightlife photos',             cat:'Photography'},
+  {id:'desmuse',  l:'Visit design museums',        cat:'Design'},
+  {id:'wayf',     l:'Photograph wayfinding/signage',cat:'Design'},
+  {id:'ui',       l:'Save UI inspiration',         cat:'Design'},
+  {id:'transport',l:'Observe transport systems',   cat:'Design'},
 ];
 
 var BCATS=['Flights','Accommodation','Food','Transport','Activities','Shopping','Emergency'];
+var BICONS={Flights:'ph-airplane',Accommodation:'ph-bed',Food:'ph-fork-knife',
+            Transport:'ph-train',Activities:'ph-ticket',Shopping:'ph-shopping-bag',Emergency:'ph-first-aid'};
 
 // State
-var dark = localStorage.getItem('lk_t')==='dark';
+var dark = localStorage.getItem('lk_t') !== 'light';
 var gs   = JSON.parse(localStorage.getItem('lk_g')||'{}');
 var bs   = JSON.parse(localStorage.getItem('lk_b')||'{}');
 var city = 'Athens';
 
-// Helpers
-function fmt(s) {
+function g(id){ return document.getElementById(id); }
+function fmt(s){
   return new Date(s+'T00:00:00').toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
 }
-function stars(r) {
+function fmtLong(s){
+  return new Date(s+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+}
+function stars(r){
   var f=Math.round(r); return '★'.repeat(f)+'☆'.repeat(5-f);
 }
-function g(id) { return document.getElementById(id); }
-function h(tag,cls,html) {
-  var el=document.createElement(tag);
-  if(cls) el.className=cls;
-  if(html!==undefined) el.innerHTML=html;
-  return el;
+function dayNum(d){
+  return Math.floor((new Date(d+'T00:00:00')-TS)/86400000)+1;
 }
 
-function boot() {
+function boot(){
   applyTheme();
   g('urlBox').textContent = window.location.href;
-  // Inject web app manifest dynamically so the file stays self-contained
-  if (!document.querySelector('link[rel="manifest"]')) {
-    var mf = {name:"Luke’s Europe 2026",short_name:"Luke Europe",start_url:"./",display:"standalone",background_color:"#111010",theme_color:"#F26419",icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%88%EF%B8%8F%3C/text%3E%3C/svg%3E",sizes:"any",type:"image/svg+xml"}]};
-    var ml=document.createElement('link');ml.rel='manifest';
+  if(!document.querySelector('link[rel="manifest"]')){
+    var mf={name:"Luke's Europe 2026",short_name:"Luke Europe",start_url:"./",display:"standalone",
+            background_color:"#0d0d0d",theme_color:"#F26419",
+            icons:[{src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%88%EF%B8%8F%3C/text%3E%3C/svg%3E",sizes:"any",type:"image/svg+xml"}]};
+    var ml=document.createElement('link'); ml.rel='manifest';
     ml.href='data:application/json,'+encodeURIComponent(JSON.stringify(mf));
     document.head.appendChild(ml);
   }
-  updateStatus();
   renderToday();
   renderTimeline();
   renderCities();
@@ -440,88 +787,272 @@ function boot() {
   renderBudget();
 }
 
-function updateStatus() {
-  var pct=Math.min(100,Math.max(0,Math.round((TODAY-TS)/(TE-TS)*100)));
-  g('pBar').style.width=pct+'%';
-  var left=Math.ceil((TS-TODAY)/86400000);
-  var on=TODAY>=TS&&TODAY<=TE;
-  g('sChip').textContent=TODAY>TE?'Trip complete 🎉':on?'Day '+Math.floor((TODAY-TS)/86400000+1)+' of 39':left+' day'+(left!==1?'s':'')+' to go';
-}
+/* ─── TODAY ─────────────────────────────────────────────── */
+function renderToday(){
+  var ts  = TODAY.toISOString().split('T')[0];
+  var on  = TODAY >= TS && TODAY <= TE;
+  var done= 0; for(var i=0;i<GOALS.length;i++) if(gs[GOALS[i].id]) done++;
+  var entry=null; for(var i=0;i<DAYS.length;i++) if(DAYS[i].d===ts){entry=DAYS[i];break;}
+  var left= Math.ceil((TS-TODAY)/86400000);
+  var out ='';
 
-function renderToday() {
-  var ts=TODAY.toISOString().split('T')[0];
-  var entry=null; for(var i=0;i<DAYS.length;i++){if(DAYS[i].d===ts){entry=DAYS[i];break;}}
-  var left=Math.ceil((TS-TODAY)/86400000);
-  var on=TODAY>=TS&&TODAY<=TE;
-  var done=0; for(var i=0;i<GOALS.length;i++){if(gs[GOALS[i].id])done++;}
-  var out='';
+  // Utility bar
+  out += '<div class="today-util">';
+  out += '<button class="util-btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme"><i class="ph ph-sun"></i></button>';
+  out += '<button class="util-btn" onclick="openSheet()" aria-label="Install app"><i class="ph ph-download-simple"></i></button>';
+  out += '</div>';
 
-  if(!on&&left>0){
-    out+='<div class="px pt4"><div class="card card-ac mb4" style="text-align:center;padding:24px 16px">';
-    out+='<div class="lbl mb3">Departure countdown</div>';
-    out+='<div class="t3xl w7 ca tight">'+left+'</div>';
-    out+='<div class="txs c3 mt3">days · Tue 9 June from Sydney</div></div>';
-    out+='<div class="lbl mb3">First stops</div>';
-    for(var i=0;i<3;i++){var d=DAYS[i];out+='<div class="row"><div class="rico">'+d.e+'</div><div class="f1"><div class="t2xs c3 w5">'+fmt(d.d)+'</div><div class="tsm w6">'+d.c+'</div></div></div>';}
-    out+='</div>';
+  // Hero zone
+  if(!on && left > 0){
+    // Pre-trip countdown
+    out += '<div class="today-hero">';
+    out += '<div class="hero-eyebrow">Departure in</div>';
+    out += '<div class="hero-display">'+left+'</div>';
+    out += '<div class="hero-sub">days &nbsp;·&nbsp; Tue 9 June · Sydney → Athens</div>';
+    out += '</div>';
+
+    // Trip progress strip
+    var pct = 0;
+    out += '<div class="px">';
+    out += '<div class="card mb4">';
+    out += '<div class="row between mb3"><span class="label">Trip progress</span><span class="label accent">0 of 39 days</span></div>';
+    out += '<div class="prog-rail"><div class="prog-bar" style="width:0%"></div></div>';
+    out += '</div>';
+
+    // First days preview
+    out += '<div class="row between mb3"><span class="label">First stops</span></div>';
+    for(var i=0;i<4;i++){
+      var d=DAYS[i];
+      out += '<div class="list-row">';
+      out += '<div class="ico"><span style="font-size:18px">'+d.e+'</span></div>';
+      out += '<div class="grow1">';
+      out += '<div class="cap mb2">'+fmt(d.d)+'</div>';
+      out += '<div class="title">'+d.c+'</div>';
+      out += '</div>';
+      out += '</div>';
+    }
+    out += '</div>';
+
   } else if(entry){
-    out+='<div class="px pt4">';
-    out+='<div class="mb4"><div class="t2xs c3 w5 mb2">'+fmt(entry.d)+'</div>';
-    out+='<div class="t2xl w7 tight mb3">'+entry.e+' '+entry.c+'</div>';
-    if(entry.pp&&entry.pp.length){out+='<div class="chips mb4">';for(var i=0;i<entry.pp.length;i++){out+='<div class="chip">'+entry.pp[i]+'</div>';}out+='</div>';}
-    if(entry.a){var ok=!!entry.r;out+='<div class="row"><div class="rico">🏠</div><div class="f1"><div class="t2xs c3 w5">Tonight\'s stay</div><div class="tsm w6">'+entry.a+'</div><div class="mt2">'+(ok?'<span class="badge bok">✓ '+entry.r+'</span>':'<span class="badge bwn">⚠ Confirm booking</span>')+'</div></div></div>';}
-    else if(entry.t!=='travel'&&entry.t!=='home'){out+='<div class="row"><div class="rico">🏠</div><div><div class="t2xs c3 mb2">Accommodation</div><span class="badge bwn">⚠ Not listed</span></div></div>';}
-    if(entry.bk&&BK[entry.bk]){var b=BK[entry.bk];out+='<div class="flt mt4"><div class="f ai jb mb2"><span class="apt">'+b.from+'</span><span class="farr">✈</span><span class="apt">'+b.to+'</span></div><div class="f ai jb"><span class="tsm w6 c2">'+b.dep+'</span><span class="t2xs ca w7">'+b.fl+' · Seat '+b.seat+'</span><span class="tsm w6 c2">'+b.arr+'</span></div><div class="f ai g2 mt3"><span class="badge bok">✓ Confirmed</span><span class="t2xs c3">'+b.ref+'</span><span class="txs ca w7">€'+b.eur+'</span></div></div>';}
-    out+='<div class="lbl mt5 mb3">Today\'s plan</div>';
-    for(var i=0;i<entry.th.length;i++){var t=entry.th[i];out+='<div class="row"><div class="rico">'+(t.indexOf('🔒')===0?'🔒':'→')+'</div><div class="tsm c2">'+t.replace('🔒 ','')+'</div></div>';}
-    out+='</div>';
+    // On trip
+    var dn = dayNum(entry.d);
+    out += '<div class="today-hero">';
+    out += '<div class="hero-eyebrow">Day '+dn+' of 39 &nbsp;·&nbsp; '+fmtLong(entry.d)+'</div>';
+    out += '<div class="hero-display">'+entry.c.split(' → ')[0]+'</div>';
+    if(entry.c.indexOf(' → ')!==-1){
+      out += '<div class="hero-sub">→ '+entry.c.split(' → ')[1]+'</div>';
+    }
+    out += '</div>';
+    out += '<div class="px">';
+
+    // Trip progress
+    var pct=Math.round((dn-1)/39*100);
+    out += '<div class="card mb4">';
+    out += '<div class="row between mb3"><span class="label">Trip progress</span><span class="label accent">Day '+dn+' of 39</span></div>';
+    out += '<div class="prog-rail"><div class="prog-bar" style="width:'+pct+'%"></div></div>';
+    out += '</div>';
+
+    // Tonight
+    if(entry.a){
+      var ok=!!entry.r;
+      out += '<div class="label mb3">Tonight</div>';
+      out += '<div class="card '+(ok?'card-ok':'card-wn')+' mb4">';
+      out += '<div class="row">';
+      out += '<div class="ico '+(ok?'ico-ok':'')+'"><i class="'+(ok?'ph-fill':'ph')+' ph-bed"></i></div>';
+      out += '<div class="grow1">';
+      out += '<div class="cap mb1">Accommodation</div>';
+      out += '<div class="title">'+entry.a+'</div>';
+      if(ok) out += '<div class="cap mt1 ok-tx">'+entry.r+'</div>';
+      else   out += '<div class="cap mt1 warn-tx">Confirm booking</div>';
+      out += '</div></div></div>';
+    }
+
+    // Flight
+    if(entry.bk && BK[entry.bk]){
+      var b=BK[entry.bk];
+      out += '<div class="label mb3">Flight today</div>';
+      out += '<div class="flt-card mb4">';
+      out += '<div class="flt-route">';
+      out += '<span class="flt-code">'+b.from+'</span>';
+      out += '<i class="ph-fill ph-airplane-in-flight flt-arrow"></i>';
+      out += '<span class="flt-code">'+b.to+'</span>';
+      out += '</div>';
+      out += '<div class="row gap2 mb3">';
+      out += '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Confirmed</span>';
+      out += '<span class="badge b-dim">'+b.fl+'</span>';
+      out += '<span class="badge b-dim">Seat '+b.seat+'</span>';
+      out += '</div>';
+      out += '<div class="row between"><span class="cap">Dep '+b.dep+'</span><span class="cap">Arr '+b.arr+'</span><span class="cap accent">€'+b.eur+'</span></div>';
+      out += '</div>';
+    }
+
+    // Today plan
+    if(entry.th && entry.th.length){
+      out += '<div class="label mb3">Today</div>';
+      out += '<div class="card mb4">';
+      for(var i=0;i<entry.th.length;i++){
+        var t=entry.th[i];
+        var locked=t.indexOf('🔒')===0;
+        out += '<div class="list-row">';
+        out += '<div class="ico '+(locked?'ico-ac':'')+'"><i class="ph'+(locked?'-fill':'')+' '+(locked?'ph-lock-simple':'ph-caret-right')+'"></i></div>';
+        out += '<div class="grow1 body">'+t.replace('🔒 ','')+'</div>';
+        out += '</div>';
+      }
+      out += '</div>';
+    }
+
+    out += '</div>';
+
+  } else if(TODAY > TE){
+    // Post trip
+    out += '<div class="today-hero">';
+    out += '<div class="hero-eyebrow">Trip complete</div>';
+    out += '<div class="hero-display">🎉</div>';
+    out += '<div class="hero-sub">39 days · 13 cities · Europe 2026</div>';
+    out += '</div>';
+    out += '<div class="px">';
+    out += '<div class="card card-ok mb4 row">';
+    out += '<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
+    out += '<div class="grow1"><div class="title ok-tx">Back in Sydney</div><div class="cap mt1">Trip finished '+fmt('2026-07-17')+'</div></div>';
+    out += '</div></div>';
   }
 
-  out+='<div class="px"><div class="lbl mt5 mb3">Locked in</div>';
+  // Locked events — always show
+  out += '<div class="px">';
+  out += '<div class="label mb3">Locked in</div>';
   var locked=[{d:'2026-06-23',l:'Hike with Ismael',city:'Innsbruck'},{d:'2026-06-26',l:'Defqon.1',city:'Amsterdam'}];
-  for(var i=0;i<locked.length;i++){var ev=locked[i];var diff=Math.ceil((new Date(ev.d)-TODAY)/86400000);out+='<div class="row"><div class="rico">🔒</div><div class="f1"><div class="t2xs c3 w5">'+fmt(ev.d)+' · '+ev.city+'</div><div class="tsm w6">'+ev.l+'</div></div><div class="tsm w7 ca">'+(diff>0?diff+'d':'Today!')+'</div></div>';}
+  out += '<div class="card mb4">';
+  for(var i=0;i<locked.length;i++){
+    var ev=locked[i];
+    var diff=Math.ceil((new Date(ev.d+'T00:00:00')-TODAY)/86400000);
+    out += '<div class="list-row">';
+    out += '<div class="ico ico-ac"><i class="ph-fill ph-lock-simple accent"></i></div>';
+    out += '<div class="grow1">';
+    out += '<div class="cap mb1">'+fmt(ev.d)+' · '+ev.city+'</div>';
+    out += '<div class="title">'+ev.l+'</div>';
+    out += '</div>';
+    out += '<div class="badge '+(diff<=0?'b-ok':diff<7?'b-warn':'b-dim')+'">'+(diff<=0?'Today':diff+'d')+'</div>';
+    out += '</div>';
+  }
+  out += '</div>';
 
-  out+='<div class="lbl mt5 mb3">Confirmed from emails</div><div class="card mb4">';
+  // Goals progress
+  out += '<div class="label mb3">Goals</div>';
+  out += '<div class="card card-ac mb4">';
+  out += '<div class="row between mb3">';
+  out += '<span class="title accent">Non-negotiables</span>';
+  out += '<span class="title accent">'+done+' / '+GOALS.length+'</span>';
+  out += '</div>';
+  out += '<div class="prog-rail"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%"></div></div>';
+  out += '</div>';
+
+  // Confirmed bookings
+  out += '<div class="label mb3">Confirmed bookings</div>';
+  out += '<div class="card mb4">';
   var bkeys=['bcn-ibz','ibz-bcn'];
-  for(var i=0;i<bkeys.length;i++){var b=BK[bkeys[i]];out+='<div class="row"><div class="txs c2 f1">✈️ '+b.from+'→'+b.to+' · '+b.date+'</div><div class="f ai g2"><span class="txs w7 ca">€'+b.eur+'</span><span class="badge bok">✓ '+b.ref+'</span></div></div>';}
-  var conf=['🏠 Wombats Munich · 24 Jun · €64.10','🏠 Hans Brinker Amsterdam · 25–29 Jun','🏠 MEININGER Innsbruck · 22–24 Jun','🏠 Generator Madrid · 8–10 Jul','🏠 Itaca Barcelona · 11–13 Jul','🏠 Giramundo Ibiza · 13–15 Jul','✈️ Transavia AMS→OPO · IE43SW','✈️ TAP Portugal · Z7GFA9'];
-  for(var i=0;i<conf.length;i++){out+='<div class="row"><div class="txs c2 f1">'+conf[i]+'</div><span class="badge bok">✓</span></div>';}
-  out+='</div>';
+  for(var i=0;i<bkeys.length;i++){
+    var b=BK[bkeys[i]];
+    out += '<div class="list-row">';
+    out += '<div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div>';
+    out += '<div class="grow1"><div class="title">'+b.from+' → '+b.to+'</div><div class="cap mt1">'+b.date+' · '+b.fl+' · €'+b.eur+'</div></div>';
+    out += '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>'+b.ref+'</span>';
+    out += '</div>';
+  }
+  var stays=[
+    {i:'ph-bed',t:"Wombat's Munich",s:'24 Jun',e:'€64.10'},
+    {i:'ph-bed',t:'Hans Brinker Amsterdam',s:'25–28 Jun',e:null},
+    {i:'ph-bed',t:'MEININGER Innsbruck',s:'22–24 Jun',e:null},
+    {i:'ph-bed',t:'Generator Madrid',s:'8–10 Jul',e:null},
+    {i:'ph-bed',t:'Itaca Barcelona',s:'11–13 Jul',e:null},
+    {i:'ph-bed',t:'Giramundo Ibiza',s:'13–15 Jul',e:null},
+    {i:'ph-airplane',t:'Transavia AMS→OPO',s:'IE43SW',e:null},
+    {i:'ph-airplane',t:'TAP Portugal',s:'Z7GFA9',e:null},
+  ];
+  for(var i=0;i<stays.length;i++){
+    var s=stays[i];
+    out += '<div class="list-row">';
+    out += '<div class="ico ico-ok"><i class="ph-fill '+s.i+'"></i></div>';
+    out += '<div class="grow1"><div class="title">'+s.t+'</div><div class="cap mt1">'+s.s+(s.e?' · '+s.e:'')+'</div></div>';
+    out += '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i></span>';
+    out += '</div>';
+  }
+  out += '</div>';
+  out += '</div>';
 
-  out+='<div class="card card-ac mb4"><div class="f ai jb mb3"><div class="txs w6 ca">Non-negotiables</div><div class="txs w7 ca">'+done+' / '+GOALS.length+'</div></div><div class="prog-rail"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%"></div></div></div>';
-  out+='</div>';
-  g('pToday').innerHTML=out;
+  g('pToday').innerHTML = out;
+  // Update theme icon
+  var tb=g('themeBtn');
+  if(tb) tb.querySelector('i').className = dark ? 'ph ph-moon' : 'ph ph-sun';
 }
 
+/* ─── TIMELINE ───────────────────────────────────────────── */
 function renderTimeline(){
   var ts=TODAY.toISOString().split('T')[0];
-  var out='<div class="tlw pt3">';
+  var out='';
   var lp=0;
   for(var i=0;i<DAYS.length;i++){
     var d=DAYS[i];
-    if(d.p!==lp){lp=d.p;out+='<div class="ph-hdr"><div class="ph-dot" style="background:'+PC[d.p]+'"></div><span class="lbl" style="color:'+PC[d.p]+'">Phase '+d.p+' — '+PN[d.p]+'</span></div>';}
+    if(d.p!==lp){
+      lp=d.p;
+      out+='<div class="phase-hdr">';
+      out+='<div class="phase-dot" style="background:'+PC[d.p]+'"></div>';
+      out+='<span class="phase-label" style="color:'+PC[d.p]+'">'+PN[d.p]+'</span>';
+      out+='</div>';
+    }
     var today=d.d===ts;
+    var dn=dayNum(d.d);
     var noAc=!d.a&&d.t!=='travel'&&d.t!=='home';
-    out+='<div class="tli'+(today?' td':'')+'"><div class="tll"><div class="tln">'+d.e+'</div>'+(i<DAYS.length-1?'<div class="tlln"></div>':'')+'</div>';
-    out+='<div class="tlb"><div class="t2xs c3 w5 mb2">'+fmt(d.d)+'</div><div class="tlc">'+d.c+'</div>';
-    if(d.pp&&d.pp.length){out+='<div class="chips mb3">';for(var j=0;j<d.pp.length;j++){out+='<div class="chip">'+d.pp[j]+'</div>';}out+='</div>';}
+
+    out+='<div class="day-wrap">';
+    out+='<div class="day-card'+(today?' today':'')+'">';
+
+    // Header
+    out+='<div class="day-hdr'+(today?' today':'')+'">';
+    out+='<span class="day-date'+(today?' today':'')+'">'+fmt(d.d)+'</span>';
+    out+='<span class="day-num'+(today?' today':'')+'">Day '+dn+'</span>';
+    out+='</div>';
+
+    // Body
+    out+='<div class="day-body">';
+    out+='<div class="day-city'+(today?' today':'')+'">';
+    out+='<span class="day-city-em">'+d.e+'</span>';
+    out+=d.c;
+    out+='</div>';
+
+    // Badges
     var bgs=[];
-    if(d.a) bgs.push('<span class="badge '+(d.r?'bok':'bwn')+'">'+(d.r?'✓ '+d.a:'📍 '+d.a)+'</span>');
-    if(noAc) bgs.push('<span class="badge bwn">⚠ Book accom</span>');
-    if(d.t==='event') bgs.push('<span class="badge bac">🔒 Locked</span>');
-    if(bgs.length) out+='<div class="f fw g2 mb3">'+bgs.join('')+'</div>';
-    if(d.bk&&BK[d.bk]){var b=BK[d.bk];out+='<div class="flt mb3"><div class="f ai jb mb2"><span class="apt">'+b.from+'</span><span class="farr">✈</span><span class="apt">'+b.to+'</span></div><div class="t2xs c3">'+b.fl+' · '+b.dep+'–'+b.arr+' · Seat '+b.seat+' · '+b.ref+'</div></div>';}
-    for(var j=0;j<d.th.length;j++) out+='<div class="tlt">'+d.th[j]+'</div>';
-    out+='</div></div>';
+    if(d.a) bgs.push('<span class="badge '+(d.r?'b-ok':'b-warn')+'">'+(d.r?'<i class="ph-fill ph-check-circle"></i>'+d.a:'<i class="ph-fill ph-warning-circle"></i>'+d.a)+'</span>');
+    if(noAc) bgs.push('<span class="badge b-warn"><i class="ph-fill ph-warning-circle"></i>Book accommodation</span>');
+    if(d.t==='event') bgs.push('<span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked</span>');
+    if(bgs.length) out+='<div class="day-badges">'+bgs.join('')+'</div>';
+
+    // Flight
+    if(d.bk&&BK[d.bk]){
+      var b=BK[d.bk];
+      out+='<div class="day-flt">';
+      out+='<div class="day-flt-route"><span class="day-flt-code">'+b.from+'</span><i class="ph-fill ph-airplane-in-flight day-flt-arrow"></i><span class="day-flt-code">'+b.to+'</span></div>';
+      out+='<div class="day-flt-meta">'+b.fl+' · '+b.dep+'–'+b.arr+' · Seat '+b.seat+' · €'+b.eur+'</div>';
+      out+='</div>';
+    }
+
+    // Highlights
+    for(var j=0;j<d.th.length;j++){
+      var t=d.th[j];
+      out+='<div class="day-hl">'+t.replace('🔒 ','')+'</div>';
+    }
+
+    out+='</div></div></div>';
   }
-  out+='</div>';
   g('pTimeline').innerHTML=out;
 }
 
+/* ─── CITIES ─────────────────────────────────────────────── */
 function renderCities(){
-  var chips='<div class="cscroll">';
   var keys=Object.keys(GUIDES);
-  for(var i=0;i<keys.length;i++) chips+='<button class="cchip'+(keys[i]===city?' on':'')+'" onclick="selCity(\''+keys[i]+'\')">'+keys[i]+'</button>';
+  var chips='<div class="city-scroll">';
+  for(var i=0;i<keys.length;i++){
+    chips+='<button class="city-chip'+(keys[i]===city?' on':'')+'" onclick="selCity(\''+keys[i]+'\')">'+keys[i]+'</button>';
+  }
   chips+='</div>';
   g('pCities').innerHTML=chips+'<div id="gInner"></div>';
   renderGuide();
@@ -529,43 +1060,87 @@ function renderCities(){
 
 function selCity(c){
   city=c;
-  var chips=document.querySelectorAll('.cchip');
+  var chips=document.querySelectorAll('.city-chip');
   for(var i=0;i<chips.length;i++) chips[i].classList.toggle('on',chips[i].textContent===c);
   renderGuide();
+  var inner=g('gInner');
+  if(inner) inner.scrollIntoView({behavior:'smooth'});
 }
 
 function renderGuide(){
-  var gu=GUIDES[city];
-  if(!gu)return;
+  var gu=GUIDES[city]; if(!gu)return;
   var days=DAYS.filter(function(d){return d.c.indexOf(city)!==-1;});
-  var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' days'):'';
-  // Hero using CSS gradient — no external images, no CORS
-  var colors=(HERO_COLORS[city]||'#888,#555').split(',');
-  var out='<div class="hero">';
-  out+='<div style="position:absolute;inset:0;background:linear-gradient(135deg,#'+colors[0]+' 0%,#'+colors[1]+' 100%)"></div>';
-  out+='<div class="hero-em">'+gu.e+'</div>';
-  out+='<div class="hero-grad"></div>';
-  out+='<div class="hero-txt"><div class="t2xl w7 tight" style="color:#fff">'+city+'</div><div class="txs" style="color:rgba(255,255,255,.75);margin-top:3px">'+sub+'</div></div>';
+  var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' nights'):'';
+  var bg=HERO_BG[city]||'135deg,#555,#333';
+
+  var out='<div class="city-hero">';
+  out+='<div class="city-hero-bg" style="background:linear-gradient('+bg+')"></div>';
+  out+='<div class="city-hero-em">'+gu.e+'</div>';
+  out+='<div class="city-hero-grad"></div>';
+  out+='<div class="city-hero-txt"><div class="city-hero-name">'+city+'</div><div class="city-hero-sub">'+sub+'</div></div>';
   out+='</div>';
+
   out+='<div class="px pt4">';
+
+  // Reviews
   if(gu.reviews&&gu.reviews.length){
-    out+='<div class="gsec"><div class="ghd"><span class="gic">★</span> Reviews & Insider Tips</div>';
-    for(var i=0;i<gu.reviews.length;i++){var rv=gu.reviews[i];out+='<div class="rev"><div class="f ai jb mb2"><div class="tsm w7">'+rv.p+'</div><div class="txs ca w6">'+rv.r+' '+stars(rv.r)+'</div></div><div class="txs c2" style="line-height:1.6">'+rv.t+'</div></div>';}
+    out+='<div class="guide-sec">';
+    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph-fill ph-star"></i></div><span class="guide-hdr-label">Insider Tips</span></div>';
+    for(var i=0;i<gu.reviews.length;i++){
+      var rv=gu.reviews[i];
+      out+='<div class="review-card">';
+      out+='<div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div>';
+      out+='<div class="review-txt">'+rv.t+'</div>';
+      out+='</div>';
+    }
     out+='</div>';
   }
-  for(var i=0;i<GSECS.length;i++){var s=GSECS[i];var items=gu[s.k];if(!items||!items.length)continue;out+='<div class="gsec"><div class="ghd"><span class="gic">'+s.i+'</span> '+s.l+'</div>';for(var j=0;j<items.length;j++) out+='<div class="git">'+items[j]+'</div>';out+='</div>';}
+
+  // Guide sections
+  for(var i=0;i<GSECS.length;i++){
+    var s=GSECS[i];
+    var items=gu[s.k]; if(!items||!items.length) continue;
+    out+='<div class="guide-sec">';
+    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph '+s.ph+'"></i></div><span class="guide-hdr-label">'+s.l+'</span></div>';
+    for(var j=0;j<items.length;j++) out+='<div class="guide-item">'+items[j]+'</div>';
+    out+='</div>';
+  }
   out+='</div>';
   g('gInner').innerHTML=out;
 }
 
+/* ─── GOALS ──────────────────────────────────────────────── */
 function renderGoals(){
-  var done=0; for(var i=0;i<GOALS.length;i++){if(gs[GOALS[i].id])done++;}
-  var out='<div class="px pt4">';
-  out+='<div class="card card-ac mb5"><div class="f ai jb mb3"><div class="tsm w7 ca">Non-negotiables</div><div class="tlg w7 ca">'+done+' / '+GOALS.length+'</div></div><div class="prog-rail" style="height:5px;border-radius:3px"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%;height:100%;border-radius:3px"></div></div></div>';
+  var done=0; for(var i=0;i<GOALS.length;i++) if(gs[GOALS[i].id]) done++;
+  var out='<div class="px pt5">';
+  out+='<div class="card card-ac mb5">';
+  out+='<div class="row between mb3"><span class="title accent">Non-negotiables</span><span class="title accent">'+done+' / '+GOALS.length+'</span></div>';
+  out+='<div class="prog-rail" style="height:5px"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%;height:100%"></div></div>';
+  out+='</div>';
+
   var cats=['Travel','Fitness','Photography','Design'];
+  var catIcons={Travel:'ph-airplane',Fitness:'ph-barbell',Photography:'ph-aperture',Design:'ph-ruler'};
   for(var c=0;c<cats.length;c++){
-    out+='<div class="lbl mb3 mt4">'+cats[c]+'</div>';
-    for(var i=0;i<GOALS.length;i++){var go=GOALS[i];if(go.cat!==cats[c])continue;var on=!!gs[go.id];out+='<div class="grow" onclick="tog(\''+go.id+'\')"><div class="gchk'+(on?' on':'')+'"></div><div class="glbl'+(on?' done':'')+'">'+go.l+'</div>'+(go.locked?'<div class="t2xs w7 ca" style="letter-spacing:.05em">LOCKED</div>':'')+'</div>';}
+    var cat=cats[c];
+    var catDone=0;
+    for(var i=0;i<GOALS.length;i++) if(GOALS[i].cat===cat&&gs[GOALS[i].id]) catDone++;
+    var catTotal=0;
+    for(var i=0;i<GOALS.length;i++) if(GOALS[i].cat===cat) catTotal++;
+
+    out+='<div class="goal-cat-hdr"><div class="row between">';
+    out+='<div class="row gap2"><i class="ph '+catIcons[cat]+'" style="color:var(--tx3)"></i>'+cat+'</div>';
+    out+='<span>'+catDone+' / '+catTotal+'</span>';
+    out+='</div></div>';
+
+    for(var i=0;i<GOALS.length;i++){
+      var go=GOALS[i]; if(go.cat!==cat) continue;
+      var on=!!gs[go.id];
+      out+='<div class="goal-item" onclick="tog(\''+go.id+'\')">'+
+             '<div class="goal-chk'+(on?' on':'')+'"></div>'+
+             '<div class="goal-lbl'+(on?' done':'')+'">'+go.l+'</div>'+
+             (go.locked?'<span class="goal-locked"><i class="ph-fill ph-lock-simple"></i> Locked</span>':'')+
+           '</div>';
+    }
   }
   out+='</div>';
   g('pGoals').innerHTML=out;
@@ -577,14 +1152,46 @@ function tog(id){
   renderGoals(); renderToday();
 }
 
+/* ─── BUDGET ─────────────────────────────────────────────── */
 function renderBudget(){
   var tB=0,tA=0;
-  for(var i=0;i<BCATS.length;i++){tB+=parseFloat(bs[BCATS[i]+'_b']||0);tA+=parseFloat(bs[BCATS[i]+'_a']||0);}
-  var out='<div class="px pt4">';
-  out+='<div class="card card-ok mb5"><div class="lbl mb3">Confirmed costs from emails</div><div class="row"><div class="txs c2 f1">✈️ BCN→IBZ Vueling VY3518 · 13 Jul</div><div class="tsm w7 ca">€65.99</div></div><div class="row"><div class="txs c2 f1">✈️ IBZ→BCN Vueling VY3511 · 15 Jul</div><div class="tsm w7 ca">€102.99</div></div><div class="row"><div class="txs c2 f1">🏠 Wombats Munich · 24 Jun · 1 night</div><div class="tsm w7 ca">€64.10</div></div><div class="row" style="border:none"><div class="t2xs c3">€9.56 paid online · €56.41 at property · check-in 2pm</div></div></div>';
-  out+='<div class="stat2"><div class="stile"><div class="lbl mb2">Budget A$</div><div class="t2xl w7 ca tight" id="tB">A$'+Math.round(tB).toLocaleString()+'</div></div><div class="stile"><div class="lbl mb2">Spent A$</div><div class="t2xl w7 tight" id="tA" style="color:'+(tA>tB&&tB>0?'var(--er)':'var(--tx)')+'">A$'+Math.round(tA).toLocaleString()+'</div></div></div>';
-  out+='<div class="f jb mb3 pb3" style="border-bottom:1px solid var(--bd)"><div class="lbl">Category</div><div class="f g2"><div class="lbl" style="width:82px;text-align:right">Budget</div><div class="lbl" style="width:82px;text-align:right">Actual</div></div></div>';
-  for(var i=0;i<BCATS.length;i++){var cat=BCATS[i];out+='<div class="brow"><div class="tsm w5 c2 f1">'+cat+'</div><div class="f g2"><input class="binp" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_b']||'')+'" oninput="savB(\''+cat+'\',\'b\',this.value)"><input class="binp" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_a']||'')+'" oninput="savB(\''+cat+'\',\'a\',this.value)" style="border-color:var(--ok-bd)"></div></div>';}
+  for(var i=0;i<BCATS.length;i++){
+    tB+=parseFloat(bs[BCATS[i]+'_b']||0);
+    tA+=parseFloat(bs[BCATS[i]+'_a']||0);
+  }
+  var over=tA>tB&&tB>0;
+  var out='<div class="px pt5">';
+
+  // Hero tiles
+  out+='<div class="budget-hero">';
+  out+='<div class="budget-tile"><div class="budget-tile-label">Budget</div><div class="budget-tile-num accent" id="tB">A$'+Math.round(tB).toLocaleString()+'</div></div>';
+  out+='<div class="budget-tile"><div class="budget-tile-label">Spent</div><div class="budget-tile-num'+(over?' over':'')+'" id="tA">A$'+Math.round(tA).toLocaleString()+'</div></div>';
+  out+='</div>';
+
+  // Confirmed costs
+  out+='<div class="label mb3">Confirmed from bookings</div>';
+  out+='<div class="card card-ok mb5">';
+  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div><div class="grow1"><div class="title">BCN → IBZ · Vueling</div><div class="cap mt1">Mon 13 Jul · VY3518</div></div><span class="accent" style="font-weight:700">€65.99</span></div>';
+  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div><div class="grow1"><div class="title">IBZ → BCN · Vueling</div><div class="cap mt1">Wed 15 Jul · VY3511</div></div><span class="accent" style="font-weight:700">€102.99</span></div>';
+  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-bed"></i></div><div class="grow1"><div class="title">Wombat\'s Munich</div><div class="cap mt1">24 Jun · €9.56 online + €56.41 at property</div></div><span class="accent" style="font-weight:700">€64.10</span></div>';
+  out+='</div>';
+
+  // Category rows
+  out+='<div class="budget-cat-hdr">';
+  out+='<div style="flex:1" class="budget-cat-hdr-label">Category</div>';
+  out+='<div style="width:80px;text-align:right" class="budget-cat-hdr-label">Budget</div>';
+  out+='<div style="width:80px;text-align:right" class="budget-cat-hdr-label">Actual</div>';
+  out+='</div>';
+
+  for(var i=0;i<BCATS.length;i++){
+    var cat=BCATS[i];
+    out+='<div class="budget-row">';
+    out+='<div class="ico"><i class="ph '+(BICONS[cat]||'ph-tag')+'"></i></div>';
+    out+='<div class="budget-row-name">'+cat+'</div>';
+    out+='<input class="binp" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_b']||'')+'" oninput="savB(\''+cat+'\',\'b\',this.value)">';
+    out+='<input class="binp actual" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_a']||'')+'" oninput="savB(\''+cat+'\',\'a\',this.value)">';
+    out+='</div>';
+  }
   out+='</div>';
   g('pBudget').innerHTML=out;
 }
@@ -593,12 +1200,19 @@ function savB(cat,f,v){
   bs[cat+'_'+f]=v;
   localStorage.setItem('lk_b',JSON.stringify(bs));
   var tB=0,tA=0;
-  for(var i=0;i<BCATS.length;i++){tB+=parseFloat(bs[BCATS[i]+'_b']||0);tA+=parseFloat(bs[BCATS[i]+'_a']||0);}
+  for(var i=0;i<BCATS.length;i++){
+    tB+=parseFloat(bs[BCATS[i]+'_b']||0);
+    tA+=parseFloat(bs[BCATS[i]+'_a']||0);
+  }
   var b=g('tB'),a=g('tA');
   if(b) b.textContent='A$'+Math.round(tB).toLocaleString();
-  if(a){a.textContent='A$'+Math.round(tA).toLocaleString();a.style.color=tA>tB&&tB>0?'var(--er)':'var(--tx)';}
+  if(a){
+    a.textContent='A$'+Math.round(tA).toLocaleString();
+    a.className='budget-tile-num'+(tA>tB&&tB>0?' over':'');
+  }
 }
 
+/* ─── Navigation ─────────────────────────────────────────── */
 function go(name,btn){
   var panes=document.querySelectorAll('.pane');
   for(var i=0;i<panes.length;i++) panes[i].classList.remove('on');
@@ -606,18 +1220,32 @@ function go(name,btn){
   for(var i=0;i<nbtns.length;i++) nbtns[i].classList.remove('on');
   g('p'+name).classList.add('on');
   btn.classList.add('on');
+  // Switch active nav icon to fill variant
+  var icons=document.querySelectorAll('.nbtn i');
+  for(var i=0;i<icons.length;i++){
+    var ic=icons[i];
+    ic.className=ic.className.replace('ph-fill ph ','ph ').replace('ph-fill ','');
+  }
+  var activeIcon=btn.querySelector('i');
+  if(activeIcon) activeIcon.className=activeIcon.className.replace(/^ph /,'ph-fill ph ');
   g('main').scrollTo({top:0,behavior:'instant'});
 }
 
+/* ─── Theme ──────────────────────────────────────────────── */
 function applyTheme(){
-  document.body.classList.toggle('dark',dark);
-  g('themeBtn').textContent=dark?'🌙':'☀️';
-  g('themeColor').content=dark?'#111010':'#F26419';
+  document.body.classList.toggle('light',!dark);
+  g('themeColor').content = dark ? '#0d0d0d' : '#f4f2ef';
+  var tb=g('themeBtn');
+  if(tb) tb.querySelector('i').className = dark ? 'ph ph-moon' : 'ph ph-sun';
 }
-function toggleTheme(){dark=!dark;localStorage.setItem('lk_t',dark?'dark':'light');applyTheme();}
+function toggleTheme(){
+  dark=!dark;
+  localStorage.setItem('lk_t',dark?'dark':'light');
+  applyTheme();
+}
 
-function openSheet(){g('installOvl').classList.add('on');document.body.style.overflow='hidden';}
-function closeSheet(){g('installOvl').classList.remove('on');document.body.style.overflow='';}
+function openSheet(){ g('installOvl').classList.add('on'); document.body.style.overflow='hidden'; }
+function closeSheet(){ g('installOvl').classList.remove('on'); document.body.style.overflow=''; }
 
 boot();
 </script>
