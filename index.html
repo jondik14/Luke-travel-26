@@ -85,13 +85,14 @@ body {
   color: var(--tx);
   max-width: 430px;
   margin: 0 auto;
+  min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   transition: background .3s, color .3s;
 }
 
-#app { display:flex; flex-direction:column; height:100dvh; }
+#app { display:flex; flex-direction:column; height:100vh; height:100dvh; }
 #main {
   flex:1; overflow-y:auto; overscroll-behavior:contain;
   padding-bottom: calc(env(safe-area-inset-bottom,0px) + 68px);
@@ -526,7 +527,7 @@ body.light .hero-display {
 .sheet {
   background:var(--s1); border-radius:var(--r-xl) var(--r-xl) 0 0;
   padding:var(--sp5) var(--sp4) calc(env(safe-area-inset-bottom,0px) + var(--sp6));
-  width:100%; max-height:88dvh; overflow-y:auto;
+  width:100%; max-height:88vh; max-height:88dvh; overflow-y:auto;
   transform:translateY(24px);
   transition:transform .3s var(--spring);
 }
@@ -591,19 +592,19 @@ body.light .hero-display {
   </main>
 
   <nav id="nav">
-    <button class="nbtn on"  onclick="go('Today',this)">
+    <button class="nbtn on"  onclick="go('Today',this)"    data-icon="ph-sun-horizon">
       <i class="ph-fill ph-sun-horizon"></i>Today
     </button>
-    <button class="nbtn" onclick="go('Timeline',this)">
+    <button class="nbtn" onclick="go('Timeline',this)"  data-icon="ph-map-trifold">
       <i class="ph ph-map-trifold"></i>Trip
     </button>
-    <button class="nbtn" onclick="go('Cities',this)">
+    <button class="nbtn" onclick="go('Cities',this)"    data-icon="ph-compass">
       <i class="ph ph-compass"></i>Cities
     </button>
-    <button class="nbtn" onclick="go('Goals',this)">
+    <button class="nbtn" onclick="go('Goals',this)"     data-icon="ph-check-square">
       <i class="ph ph-check-square"></i>Goals
     </button>
-    <button class="nbtn" onclick="go('Budget',this)">
+    <button class="nbtn" onclick="go('Budget',this)"    data-icon="ph-wallet">
       <i class="ph ph-wallet"></i>Budget
     </button>
   </nav>
@@ -1217,18 +1218,17 @@ function go(name,btn){
   var panes=document.querySelectorAll('.pane');
   for(var i=0;i<panes.length;i++) panes[i].classList.remove('on');
   var nbtns=document.querySelectorAll('.nbtn');
-  for(var i=0;i<nbtns.length;i++) nbtns[i].classList.remove('on');
+  for(var i=0;i<nbtns.length;i++){
+    var nb=nbtns[i];
+    nb.classList.remove('on');
+    var ic=nb.querySelector('i');
+    if(ic) ic.className='ph '+nb.getAttribute('data-icon');
+  }
   g('p'+name).classList.add('on');
   btn.classList.add('on');
-  // Switch active nav icon to fill variant
-  var icons=document.querySelectorAll('.nbtn i');
-  for(var i=0;i<icons.length;i++){
-    var ic=icons[i];
-    ic.className=ic.className.replace('ph-fill ph ','ph ').replace('ph-fill ','');
-  }
   var activeIcon=btn.querySelector('i');
-  if(activeIcon) activeIcon.className=activeIcon.className.replace(/^ph /,'ph-fill ph ');
-  g('main').scrollTo({top:0,behavior:'instant'});
+  if(activeIcon) activeIcon.className='ph-fill '+btn.getAttribute('data-icon');
+  try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
 }
 
 /* ─── Theme ──────────────────────────────────────────────── */
@@ -1247,7 +1247,16 @@ function toggleTheme(){
 function openSheet(){ g('installOvl').classList.add('on'); document.body.style.overflow='hidden'; }
 function closeSheet(){ g('installOvl').classList.remove('on'); document.body.style.overflow=''; }
 
-boot();
+try {
+  boot();
+} catch(e) {
+  var ep = g('pToday');
+  if(ep) ep.innerHTML = '<div style="padding:24px 16px;color:#f87171">'
+    +'<div style="font-size:17px;font-weight:700;margin-bottom:8px">App error</div>'
+    +'<div style="font-size:13px;opacity:.8;word-break:break-all">'+(e.message||String(e))+'</div>'
+    +'<div style="font-size:11px;margin-top:12px;opacity:.5">'+((e.stack||'').split('\n')[1]||'')+'</div>'
+    +'</div>';
+}
 </script>
 </body>
 </html>
