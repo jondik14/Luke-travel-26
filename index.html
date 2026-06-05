@@ -772,6 +772,9 @@ function dayNum(d){
 
 function boot(){
   applyTheme();
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
+  }
   g('urlBox').textContent = window.location.href;
   if(!document.querySelector('link[rel="manifest"]')){
     var mf={name:"Luke's Europe 2026",short_name:"Luke Europe",start_url:"./",display:"standalone",
