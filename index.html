@@ -404,17 +404,18 @@ body.light .hero-display {
   overflow-x:auto;
 }
 .city-chip {
-  white-space:nowrap; padding:7px var(--sp4);
+  white-space:nowrap; padding:8px var(--sp4);
   border-radius:var(--r-full);
-  border:1px solid var(--bd);
-  background:var(--s2); font-size:13px; font-weight:600;
-  color:var(--tx2); min-height:36px;
+  border:1px solid var(--bd2);
+  background:var(--s2); font-size:14px; font-weight:700;
+  color:var(--tx); min-height:40px;
+  display:flex; align-items:center; gap:6px;
   transition: background .2s, color .2s, border-color .2s, transform .3s var(--spring);
 }
 .city-chip:active { transform:scale(.94); }
-.city-chip.on {
-  background:var(--ac); border-color:var(--ac); color:#fff;
-}
+.city-chip.on { background:var(--ac); border-color:var(--ac); color:#fff; }
+.city-chip.on .city-chip-dot { background:rgba(255,255,255,.55)!important; }
+.city-chip-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
 
 .city-hero {
   position:relative; height:200px; overflow:hidden;
@@ -760,6 +761,84 @@ body.light .hero-display {
 
 /* ─── Spend tile on Today ────────────────────────────────── */
 .spend-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp4); }
+
+/* ─── Stats tiles (Today dashboard) ─────────────────────── */
+.stat-tiles {
+  display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--sp2);
+  padding:0 var(--sp4);
+}
+.stat-tile {
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp4) var(--sp3);
+  text-align:center; transition:background .3s;
+}
+.stat-tile-val {
+  font-size:20px; font-weight:800; letter-spacing:-.02em;
+  color:var(--ac); line-height:1; margin-bottom:4px;
+}
+.stat-tile-lbl {
+  font-size:9px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--tx3);
+}
+
+/* ─── Coming up cards (Today dashboard) ─────────────────── */
+.coming-card {
+  display:flex; align-items:center; gap:var(--sp3);
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp3) var(--sp4);
+  transition:background .3s;
+}
+.coming-thumb {
+  width:52px; height:52px; border-radius:var(--r-md); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.coming-info { flex:1; min-width:0; }
+.coming-city { font-size:15px; font-weight:700; color:var(--tx); letter-spacing:-.01em; }
+.coming-date { font-size:12px; color:var(--tx2); margin-top:2px; }
+.coming-plan { font-size:12px; color:var(--tx3); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ─── City visit card (Cities tab) ──────────────────────── */
+.visit-card {
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-lg); overflow:hidden; transition:background .3s;
+}
+.visit-hdr {
+  display:flex; align-items:center; gap:var(--sp2);
+  padding:var(--sp3) var(--sp4); border-bottom:1px solid var(--bd);
+}
+.visit-meta {
+  padding:var(--sp3) var(--sp4); border-bottom:1px solid var(--bd);
+}
+.visit-dates { font-size:13px; font-weight:600; color:var(--tx); flex:1; min-width:0; }
+.visit-day {
+  display:flex; align-items:flex-start; gap:var(--sp3);
+  padding:var(--sp3) var(--sp4); border-bottom:1px solid var(--bd);
+}
+.visit-day:last-child { border-bottom:none; }
+.visit-day-num {
+  font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--ac); flex-shrink:0; padding-top:3px; min-width:40px;
+}
+.visit-day-info { flex:1; min-width:0; }
+.visit-day-date { font-size:12px; font-weight:600; color:var(--tx2); margin-bottom:4px; }
+.visit-day-item {
+  font-size:13px; color:var(--tx); line-height:1.45; padding:1px 0;
+}
+
+/* ─── Suggestions grid (Cities tab) ─────────────────────── */
+.suggest-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:var(--sp2);
+}
+.suggest-item {
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp3);
+  font-size:12px; font-weight:500; color:var(--tx2); line-height:1.45;
+  text-align:left; transition:background .2s, transform .3s var(--spring);
+}
+.suggest-item:active { background:var(--ac-dim); color:var(--ac); transform:scale(.96); }
+.suggest-item-plus {
+  font-size:14px; font-weight:700; color:var(--ac); display:block; margin-bottom:2px;
+}
 
 /* ─── Reduced motion ─────────────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
@@ -1177,6 +1256,17 @@ function toggleMap(){
   }
 }
 
+function zoomMapToCity(c){
+  if(!COORDS[c]) return;
+  if(!_mapOpen) toggleMap();
+  var main=g('main'); if(main) main.scrollTo({top:0,behavior:'smooth'});
+  if(_mapInited&&_map){
+    _map.flyTo(COORDS[c],11,{duration:1.2});
+  } else {
+    setTimeout(function(){ if(_map) _map.flyTo(COORDS[c],11,{duration:1.2}); },350);
+  }
+}
+
 /* ─── Phase kanban ───────────────────────────────────────── */
 function renderPhaseKanban(ts){
   var out='<div class="phase-scroll">';
@@ -1375,15 +1465,35 @@ function renderToday(){
   }
   out += '</div>';
 
-  // Goals progress — compact
-  out += '<div class="label mb3">Goals</div>';
-  out += '<div class="card card-ac mb4">';
-  out += '<div class="row between mb3">';
-  out += '<span class="title accent">Non-negotiables</span>';
-  out += '<span class="title accent">'+done+' / '+GOALS.length+'</span>';
+  // Stats tiles
+  var loggedTotal2=0; for(var i=0;i<exps.length;i++) loggedTotal2+=exps[i].amt;
+  var dayTileVal, dayTileLbl;
+  if(!on&&left>0){ dayTileVal=left+'d'; dayTileLbl='to depart'; }
+  else if(on){ dayTileVal=dayNum(ts)+'/39'; dayTileLbl='day'; }
+  else { dayTileVal='Done'; dayTileLbl='39 days'; }
+  out += '<div class="stat-tiles mb4">';
+  out += '<div class="stat-tile"><div class="stat-tile-val">€'+Math.round(loggedTotal2)+'</div><div class="stat-tile-lbl">logged</div></div>';
+  out += '<div class="stat-tile"><div class="stat-tile-val">'+done+'/'+GOALS.length+'</div><div class="stat-tile-lbl">goals</div></div>';
+  out += '<div class="stat-tile"><div class="stat-tile-val">'+dayTileVal+'</div><div class="stat-tile-lbl">'+dayTileLbl+'</div></div>';
   out += '</div>';
-  out += '<div class="prog-rail"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%"></div></div>';
-  out += '</div>';
+
+  // Coming up — next 3 upcoming days
+  var upcoming=[];
+  for(var i=0;i<DAYS.length;i++){ if(DAYS[i].d>ts){ upcoming.push(DAYS[i]); if(upcoming.length>=3) break; } }
+  if(upcoming.length){
+    out += '<div class="label mb3">Coming up</div>';
+    for(var i=0;i<upcoming.length;i++){
+      var ud=upcoming[i];
+      var ubg=HERO_BG[photoCity(ud.c)]||'135deg,#444,#222';
+      out += '<div class="coming-card mb3">';
+      out += '<div class="coming-thumb" style="background:linear-gradient('+ubg+')"><span style="font-size:26px">'+ud.e+'</span></div>';
+      out += '<div class="coming-info">';
+      out += '<div class="coming-city">'+ud.c+'</div>';
+      out += '<div class="coming-date">'+fmt(ud.d)+'&nbsp;·&nbsp;Day '+dayNum(ud.d)+'</div>';
+      if(ud.th&&ud.th.length) out += '<div class="coming-plan">'+ud.th[0].replace('🔒 ','')+'</div>';
+      out += '</div></div>';
+    }
+  }
 
   // Confirmed bookings — collapsed
   var totalBk=2+8; // flights + stays
@@ -1586,7 +1696,12 @@ function renderTimeline(){
       out+='<div class="label" style="margin:'+(d.a||d.bk?'12px':'0')+'px 0 6px">Plan</div>';
       for(var j=0;j<d.th.length;j++) out+='<div class="day-hl">'+d.th[j].replace('🔒 ','')+'</div>';
     }
-    if(gc) out+='<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+gc+'\')"><i class="ph ph-compass"></i>'+gc+' guide</button>';
+    if(gc){
+      out+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">';
+      out+='<button class="cta-sm" style="margin-top:0" onclick="event.stopPropagation();goGuide(\''+gc+'\')"><i class="ph ph-compass"></i>'+gc+' guide</button>';
+      if(COORDS[gc]) out+='<button class="cta-sm" style="margin-top:0" onclick="event.stopPropagation();zoomMapToCity(\''+gc+'\')"><i class="ph ph-map-pin"></i>Map</button>';
+      out+='</div>';
+    }
 
     out+='</div></div></div></div>'; // body-inner, day-body, day-card, day-wrap
   }
@@ -1598,9 +1713,22 @@ function renderTimeline(){
 /* ─── CITIES ─────────────────────────────────────────────── */
 function renderCities(){
   var keys=Object.keys(GUIDES);
+  // Build city → phase map
+  var cityPhase={};
+  for(var i=0;i<DAYS.length;i++){
+    var parts=DAYS[i].c.split(' → ');
+    for(var j=0;j<parts.length;j++){
+      var ct=parts[j].trim();
+      if(ct&&GUIDES[ct]&&!cityPhase[ct]) cityPhase[ct]=DAYS[i].p;
+    }
+  }
   var chips='<div class="city-scroll">';
   for(var i=0;i<keys.length;i++){
-    chips+='<button class="city-chip'+(keys[i]===city?' on':'')+'" onclick="selCity(\''+keys[i]+'\')">'+keys[i]+'</button>';
+    var k=keys[i];
+    var ph=cityPhase[k]||1;
+    chips+='<button class="city-chip'+(k===city?' on':'')+'" onclick="selCity(\''+k+'\')">';
+    chips+='<span class="city-chip-dot" style="background:'+(k===city?'rgba(255,255,255,.55)':PC[ph])+'"></span>';
+    chips+=k+'</button>';
   }
   chips+='</div>';
   g('pCities').innerHTML=chips+'<div id="gInner"></div>';
@@ -1622,6 +1750,10 @@ function renderGuide(){
   var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' nights':''):'';
   var bg=HERO_BG[city]||'135deg,#555,#333';
 
+  // Detect phase of this city
+  var phOfCity=1;
+  for(var i=0;i<DAYS.length;i++){ if(DAYS[i].c.indexOf(city)!==-1){phOfCity=DAYS[i].p;break;} }
+
   var out='<div class="city-hero">';
   out+='<div class="city-hero-bg" style="background:linear-gradient('+bg+')"></div>';
   out+='<div class="city-hero-em">'+gu.e+'</div>';
@@ -1631,7 +1763,37 @@ function renderGuide(){
 
   out+='<div class="px pt4">';
 
-  // Reviews
+  // ── My Visit ──
+  if(days.length){
+    var firstD=days[0];
+    var pCol=PC[phOfCity]||'var(--ac)';
+    out+='<div class="visit-card mb5">';
+    out+='<div class="visit-hdr">';
+    out+='<div class="guide-hdr-icon" style="background:'+pCol+'1a;border-color:'+pCol+'40">';
+    out+='<i class="ph-fill ph-calendar-check" style="color:'+pCol+'"></i></div>';
+    out+='<span class="guide-hdr-label">My Visit</span>';
+    out+='<span class="badge b-dim" style="margin-left:auto;color:'+pCol+'">'+PN[phOfCity]+'</span>';
+    out+='</div>';
+    if(firstD.a){
+      out+='<div class="visit-meta"><div class="row gap2">';
+      out+='<i class="ph ph-bed" style="color:var(--tx3);font-size:14px"></i>';
+      out+='<span class="visit-dates">'+firstD.a+'</span>';
+      out+=(firstD.r?'<span class="badge b-ok" style="margin-left:auto">Booked</span>':'<span class="badge b-warn" style="margin-left:auto">TBC</span>');
+      out+='</div></div>';
+    }
+    for(var i=0;i<days.length;i++){
+      var d=days[i];
+      out+='<div class="visit-day">';
+      out+='<div class="visit-day-num">Day '+dayNum(d.d)+'</div>';
+      out+='<div class="visit-day-info">';
+      out+='<div class="visit-day-date">'+fmt(d.d)+'</div>';
+      if(d.th&&d.th.length) for(var j=0;j<Math.min(d.th.length,3);j++) out+='<div class="visit-day-item">'+d.th[j].replace('🔒 ','')+'</div>';
+      out+='</div></div>';
+    }
+    out+='</div>';
+  }
+
+  // ── Insider Tips ──
   if(gu.reviews&&gu.reviews.length){
     out+='<div class="guide-sec">';
     out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph-fill ph-star"></i></div><span class="guide-hdr-label">Insider Tips</span></div>';
@@ -1645,7 +1807,7 @@ function renderGuide(){
     out+='</div>';
   }
 
-  // Guide sections
+  // ── Guide sections ──
   for(var i=0;i<GSECS.length;i++){
     var s=GSECS[i];
     var items=gu[s.k]; if(!items||!items.length) continue;
@@ -1654,6 +1816,24 @@ function renderGuide(){
     for(var j=0;j<items.length;j++) out+='<div class="guide-item">'+items[j]+'</div>';
     out+='</div>';
   }
+
+  // ── Add to your plans ──
+  var suggs=[];
+  if(gu.mustdo) suggs=suggs.concat(gu.mustdo.slice(0,2));
+  if(gu.food)   suggs=suggs.concat(gu.food.slice(0,2));
+  if(gu.photo)  suggs=suggs.concat(gu.photo.slice(0,1));
+  suggs=suggs.slice(0,4);
+  if(suggs.length){
+    out+='<div class="guide-sec">';
+    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-plus-circle"></i></div><span class="guide-hdr-label">Add to your plans</span></div>';
+    out+='<div class="suggest-grid">';
+    for(var i=0;i<suggs.length;i++){
+      var sg=suggs[i]; if(sg.length>62) sg=sg.substring(0,60)+'…';
+      out+='<button class="suggest-item"><span class="suggest-item-plus">+</span>'+sg+'</button>';
+    }
+    out+='</div></div>';
+  }
+
   out+='</div>';
   g('gInner').innerHTML=out;
 }
