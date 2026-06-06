@@ -278,57 +278,96 @@ body.light .hero-display {
 .flt-meta { font-size:13px; color:var(--tx2); font-weight:500; }
 
 /* ─── TIMELINE ───────────────────────────────────────────── */
+
+/* Phase jump tabs — sticky at top of scroll pane */
+.tl-tabs {
+  position:sticky; top:0; z-index:9;
+  display:flex; gap:var(--sp2); overflow-x:auto;
+  padding:var(--sp3) var(--sp4);
+  background:var(--bg); border-bottom:1px solid var(--bd);
+  transition:background .3s;
+}
+.tl-tab {
+  display:flex; align-items:center; gap:5px;
+  padding:5px 11px; border-radius:var(--r-full);
+  border:1px solid var(--bd); background:var(--s2);
+  font-size:11px; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--tx2);
+  white-space:nowrap; flex-shrink:0;
+  transition:background .2s, transform .3s var(--spring);
+}
+.tl-tab:active { transform:scale(.93); }
+.tl-tab-dot { width:6px; height:6px; border-radius:var(--r-full); flex-shrink:0; }
+
+/* Phase header */
 .phase-hdr {
   display:flex; align-items:center; gap:var(--sp2);
   padding:var(--sp6) var(--sp4) var(--sp3);
 }
-.phase-dot {
-  width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0;
-}
-.phase-label {
-  font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
-}
+.phase-dot { width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0; }
+.phase-label { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
 
+/* Day card */
 .day-wrap { padding:0 var(--sp4) var(--sp3); }
 .day-card {
   background:var(--s1); border-radius:var(--r-lg);
   border:1px solid var(--bd); overflow:hidden;
-  transition:background .3s, transform .4s var(--spring);
+  transition:background .3s, border-color .3s;
 }
-.day-card:active { transform:scale(.99); }
-.day-card.today { border-color:rgba(242,100,25,.35); }
+.day-card.today { border-color:rgba(242,100,25,.4); }
+.day-card.past  { opacity:.55; }
 
-.day-hdr {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:var(--sp3) var(--sp4);
-  border-bottom:1px solid var(--bd);
-  background:var(--s2);
-  transition:background .3s;
+/* Tap-to-expand header */
+.day-tog {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp3); cursor:pointer;
+  -webkit-user-select:none; user-select:none;
 }
-.day-hdr.today { background:var(--ac-dim); border-color:rgba(242,100,25,.2); }
-.day-date { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tx3); }
-.day-date.today { color:var(--ac); }
-.day-num  { font-size:11px; font-weight:700; color:var(--tx3); }
-.day-num.today { color:var(--ac); }
+.day-tog:active { background:var(--s2); }
 
-.day-body { padding:var(--sp3) var(--sp4); }
-.day-city {
-  font-size:17px; font-weight:700; letter-spacing:-.02em;
-  color:var(--tx); margin-bottom:var(--sp2);
-  display:flex; align-items:center; gap:var(--sp2);
+/* City thumbnail */
+.day-thumb {
+  width:58px; height:58px; border-radius:var(--r-md);
+  flex-shrink:0; overflow:hidden; position:relative;
 }
-.day-city.today { color:var(--ac); }
-.day-city-em { font-size:18px; }
+.day-thumb-bg { position:absolute; inset:0; }
+.day-thumb-em {
+  position:absolute; inset:0; display:flex;
+  align-items:center; justify-content:center; font-size:24px;
+}
+.day-thumb img {
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; opacity:0; transition:opacity .5s;
+}
+.day-thumb img.vis { opacity:1; }
 
-.day-badges { display:flex; flex-wrap:wrap; gap:var(--sp2); margin-bottom:var(--sp3); }
+/* Text meta */
+.day-tog-meta { flex:1; min-width:0; }
+.day-tog-city {
+  font-size:15px; font-weight:700; letter-spacing:-.01em;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.day-tog-city.ac { color:var(--ac); }
+.day-tog-date { font-size:12px; color:var(--tx2); margin-top:1px; }
+.day-tog-badge { margin-top:5px; }
 
+/* Expand caret */
+.day-caret { font-size:18px; color:var(--tx3); flex-shrink:0;
+  transition:transform .3s var(--spring); }
+.day-card.open .day-caret { transform:rotate(180deg); }
+
+/* Animated body */
+.day-body { overflow:hidden; height:0; transition:height .3s ease; }
+.day-body-inner { padding:var(--sp3); border-top:1px solid var(--bd); }
+
+/* Highlights */
 .day-hl {
   display:flex; align-items:flex-start; gap:var(--sp2);
-  padding:3px 0; font-size:13px; color:var(--tx2); line-height:1.5;
+  padding:2px 0; font-size:13px; color:var(--tx2); line-height:1.5;
 }
 .day-hl::before {
   content:''; width:4px; height:4px; border-radius:var(--r-full);
-  background:var(--tx3); flex-shrink:0; margin-top:6px;
+  background:var(--tx3); flex-shrink:0; margin-top:7px;
 }
 
 /* Flight inline */
@@ -344,6 +383,17 @@ body.light .hero-display {
 .day-flt-code { font-size:20px; font-weight:800; letter-spacing:-.02em; }
 .day-flt-arrow { color:var(--ac); }
 .day-flt-meta  { font-size:12px; color:var(--tx2); font-weight:500; }
+
+/* Guide CTA inside card */
+.cta-sm {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:7px 14px; border-radius:var(--r-full);
+  background:var(--ac-dim); color:var(--ac);
+  border:1px solid rgba(242,100,25,.25);
+  font-size:13px; font-weight:600; margin-top:var(--sp3);
+  transition:opacity .15s, transform .3s var(--spring);
+}
+.cta-sm:active { opacity:.8; transform:scale(.96); }
 
 /* ─── CITIES ─────────────────────────────────────────────── */
 .city-scroll {
@@ -990,64 +1040,147 @@ function renderToday(){
 }
 
 /* ─── TIMELINE ───────────────────────────────────────────── */
+
+var WIKIIMG={}, WIKIFETCH={};
+var WIKI_MAP={
+  Athens:'Athens',Milos:'Milos',Catania:'Catania',Taormina:'Taormina',
+  Bristol:'Bristol',Munich:'Munich',Innsbruck:'Innsbruck',Amsterdam:'Amsterdam',
+  Porto:'Porto',Ericeira:'Ericeira',Madrid:'Madrid',Barcelona:'Barcelona',
+  Ibiza:'Ibiza',Sydney:'Sydney'
+};
+
+function photoCity(c){ var p=c.split(' → '); return p[p.length-1]; }
+function guideCity(c){
+  var p=c.split(' → ');
+  for(var i=p.length-1;i>=0;i--) if(GUIDES[p[i]]) return p[i];
+  return null;
+}
+function jumpPhase(ph){
+  var el=g('ph'+ph), main=g('main');
+  if(!el||!main) return;
+  var r=el.getBoundingClientRect(), mr=main.getBoundingClientRect();
+  main.scrollBy({top:r.top-mr.top-52, behavior:'smooth'});
+}
+function goGuide(city){
+  selCity(city);
+  var btn=document.querySelector('.nbtn[data-icon="ph-compass"]');
+  if(btn) go('Cities',btn);
+}
+function toggleDay(i){
+  var card=g('dc'+i); if(!card) return;
+  var body=card.querySelector('.day-body');
+  var inner=card.querySelector('.day-body-inner');
+  if(card.classList.contains('open')){
+    body.style.height=body.scrollHeight+'px';
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ body.style.height='0'; });
+    });
+    card.classList.remove('open');
+  } else {
+    card.classList.add('open');
+    body.style.height=inner.scrollHeight+'px';
+    body.addEventListener('transitionend',function h(){ body.style.height='auto'; body.removeEventListener('transitionend',h); });
+  }
+}
+function loadTimelinePhotos(){
+  var imgs=document.querySelectorAll('#pTimeline .day-thumb img[data-city]');
+  var needed={};
+  for(var i=0;i<imgs.length;i++){
+    var c=imgs[i].getAttribute('data-city');
+    if(c&&WIKI_MAP[c]&&!WIKIIMG[c]) needed[c]=true;
+  }
+  Object.keys(needed).forEach(function(city){
+    if(WIKIFETCH[city]) return;
+    WIKIFETCH[city]=true;
+    fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(WIKI_MAP[city]))
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var url=(data.originalimage&&data.originalimage.source)||(data.thumbnail&&data.thumbnail.source);
+        if(!url) return;
+        url=url.replace(/\/\d+px-/,'/600px-');
+        WIKIIMG[city]=url;
+        var els=document.querySelectorAll('#pTimeline .day-thumb img[data-city="'+city+'"]');
+        for(var j=0;j<els.length;j++) els[j].src=url;
+      }).catch(function(){});
+  });
+}
+
 function renderTimeline(){
   var ts=TODAY.toISOString().split('T')[0];
+  // Find first upcoming day to auto-open (only if not on trip)
+  var hasToday=false;
+  for(var k=0;k<DAYS.length;k++) if(DAYS[k].d===ts){ hasToday=true; break; }
+  var firstUp=-1;
+  if(!hasToday) for(var k=0;k<DAYS.length;k++) if(DAYS[k].d>=ts){ firstUp=k; break; }
+
   var out='';
+  // Sticky phase jump tabs
+  out+='<div class="tl-tabs">';
+  for(var p=1;p<=4;p++) out+='<button class="tl-tab" onclick="jumpPhase('+p+')"><span class="tl-tab-dot" style="background:'+PC[p]+'"></span>'+PN[p]+'</button>';
+  out+='</div>';
+
   var lp=0;
   for(var i=0;i<DAYS.length;i++){
     var d=DAYS[i];
+    var isToday=d.d===ts, isPast=d.d<ts;
+    var isOpen=isToday||(i===firstUp);
+    var dn=dayNum(d.d);
+    var pc=photoCity(d.c);
+    var gc=guideCity(d.c);
+    var bg=HERO_BG[pc]||HERO_BG[d.c]||'135deg,#444,#222';
+
     if(d.p!==lp){
       lp=d.p;
-      out+='<div class="phase-hdr">';
+      out+='<div class="phase-hdr" id="ph'+d.p+'">';
       out+='<div class="phase-dot" style="background:'+PC[d.p]+'"></div>';
       out+='<span class="phase-label" style="color:'+PC[d.p]+'">'+PN[d.p]+'</span>';
       out+='</div>';
     }
-    var today=d.d===ts;
-    var dn=dayNum(d.d);
-    var noAc=!d.a&&d.t!=='travel'&&d.t!=='home';
 
-    out+='<div class="day-wrap">';
-    out+='<div class="day-card'+(today?' today':'')+'">';
+    out+='<div class="day-wrap"><div class="day-card'+(isToday?' today':'')+(isPast?' past':'')+(isOpen?' open':'')+'" id="dc'+i+'">';
 
-    // Header
-    out+='<div class="day-hdr'+(today?' today':'')+'">';
-    out+='<span class="day-date'+(today?' today':'')+'">'+fmt(d.d)+'</span>';
-    out+='<span class="day-num'+(today?' today':'')+'">Day '+dn+'</span>';
+    // ── Tap header ──
+    out+='<div class="day-tog" onclick="toggleDay('+i+')">';
+    out+='<div class="day-thumb"><div class="day-thumb-bg" style="background:linear-gradient('+bg+')"></div><div class="day-thumb-em">'+d.e+'</div><img data-city="'+pc+'" alt="" onload="this.classList.add(\'vis\')"></div>';
+    out+='<div class="day-tog-meta">';
+    out+='<div class="day-tog-city'+(isToday?' ac':'')+'">'+d.c+'</div>';
+    out+='<div class="day-tog-date">'+fmt(d.d)+'&nbsp;·&nbsp;Day '+dn+'</div>';
+    if(isToday)          out+='<div class="day-tog-badge"><span class="badge b-ac">Today</span></div>';
+    else if(d.t==='event') out+='<div class="day-tog-badge"><span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked</span></div>';
+    else if(d.a&&d.r)    out+='<div class="day-tog-badge"><span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Booked</span></div>';
+    else if(d.a&&!d.r)   out+='<div class="day-tog-badge"><span class="badge b-warn">Unconfirmed</span></div>';
+    else if(!d.a&&d.t!=='travel'&&d.t!=='home') out+='<div class="day-tog-badge"><span class="badge b-warn">Book accomm.</span></div>';
+    out+='</div>';
+    out+='<i class="ph ph-caret-down day-caret"></i>';
     out+='</div>';
 
-    // Body
-    out+='<div class="day-body">';
-    out+='<div class="day-city'+(today?' today':'')+'">';
-    out+='<span class="day-city-em">'+d.e+'</span>';
-    out+=d.c;
-    out+='</div>';
+    // ── Expandable body ──
+    out+='<div class="day-body"'+(isOpen?' style="height:auto"':'')+'>';
+    out+='<div class="day-body-inner">';
 
-    // Badges
-    var bgs=[];
-    if(d.a) bgs.push('<span class="badge '+(d.r?'b-ok':'b-warn')+'">'+(d.r?'<i class="ph-fill ph-check-circle"></i>'+d.a:'<i class="ph-fill ph-warning-circle"></i>'+d.a)+'</span>');
-    if(noAc) bgs.push('<span class="badge b-warn"><i class="ph-fill ph-warning-circle"></i>Book accommodation</span>');
-    if(d.t==='event') bgs.push('<span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked</span>');
-    if(bgs.length) out+='<div class="day-badges">'+bgs.join('')+'</div>';
-
-    // Flight
+    if(d.a){
+      var ok=!!d.r;
+      out+='<div class="list-row"><div class="ico '+(ok?'ico-ok':'')+'"><i class="'+(ok?'ph-fill':'ph')+' ph-bed"></i></div>';
+      out+='<div class="grow1"><div class="cap">Tonight</div><div class="title">'+d.a+'</div>';
+      out+=(ok?'<div class="cap mt1 ok-tx">'+d.r+'</div>':'<div class="cap mt1 warn-tx">Confirm booking</div>');
+      out+='</div></div>';
+    }
     if(d.bk&&BK[d.bk]){
       var b=BK[d.bk];
-      out+='<div class="day-flt">';
-      out+='<div class="day-flt-route"><span class="day-flt-code">'+b.from+'</span><i class="ph-fill ph-airplane-in-flight day-flt-arrow"></i><span class="day-flt-code">'+b.to+'</span></div>';
-      out+='<div class="day-flt-meta">'+b.fl+' · '+b.dep+'–'+b.arr+' · Seat '+b.seat+' · €'+b.eur+'</div>';
-      out+='</div>';
+      out+='<div class="day-flt"><div class="day-flt-route"><span class="day-flt-code">'+b.from+'</span><i class="ph-fill ph-airplane-in-flight day-flt-arrow"></i><span class="day-flt-code">'+b.to+'</span></div>';
+      out+='<div class="day-flt-meta">'+b.fl+' · '+b.dep+'–'+b.arr+' · Seat '+b.seat+' · €'+b.eur+'</div></div>';
     }
-
-    // Highlights
-    for(var j=0;j<d.th.length;j++){
-      var t=d.th[j];
-      out+='<div class="day-hl">'+t.replace('🔒 ','')+'</div>';
+    if(d.th&&d.th.length){
+      out+='<div class="label" style="margin:'+(d.a||d.bk?'12px':'0')+'px 0 6px">Plan</div>';
+      for(var j=0;j<d.th.length;j++) out+='<div class="day-hl">'+d.th[j].replace('🔒 ','')+'</div>';
     }
+    if(gc) out+='<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+gc+'\')"><i class="ph ph-compass"></i>'+gc+' guide</button>';
 
-    out+='</div></div></div>';
+    out+='</div></div></div></div>'; // body-inner, day-body, day-card, day-wrap
   }
+
   g('pTimeline').innerHTML=out;
+  loadTimelinePhotos();
 }
 
 /* ─── CITIES ─────────────────────────────────────────────── */
