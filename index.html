@@ -694,6 +694,73 @@ body.light .hero-display {
 }
 .bk-row:last-child { border-bottom:none; }
 
+/* ─── Weather widget ─────────────────────────────────────── */
+.weather-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
+  margin-bottom:var(--sp4); transition:background .3s;
+}
+.weather-ico { font-size:28px; flex-shrink:0; line-height:1; }
+.weather-temp { font-size:18px; font-weight:800; letter-spacing:-.02em; }
+.weather-desc { font-size:12px; color:var(--tx2); margin-top:2px; }
+
+/* ─── FAB ────────────────────────────────────────────────── */
+.fab {
+  position:fixed; bottom:calc(env(safe-area-inset-bottom,0px) + 80px); right:var(--sp4);
+  width:52px; height:52px; border-radius:50%;
+  background:var(--ac); color:#fff; font-size:30px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 24px rgba(242,100,25,.45); z-index:50;
+  transition:transform .3s var(--spring), opacity .25s;
+}
+.fab:active { transform:scale(.9); }
+.fab.hidden { opacity:0; pointer-events:none; transform:scale(.8); }
+
+/* ─── Expense log ────────────────────────────────────────── */
+.exp-amt-row { position:relative; margin-bottom:var(--sp4); }
+.exp-cur {
+  position:absolute; left:var(--sp4); top:50%; transform:translateY(-50%);
+  font-size:24px; font-weight:700; color:var(--tx3);
+}
+.exp-inp {
+  width:100%; padding:14px var(--sp4) 14px 48px;
+  background:var(--s2); border:1px solid var(--bd2);
+  border-radius:var(--r-md); font-size:38px; font-weight:800;
+  color:var(--tx); text-align:right; outline:none;
+  font-family:var(--font); -webkit-appearance:none;
+  transition:border-color .2s;
+}
+.exp-inp:focus { border-color:var(--ac); }
+.exp-cat-pills { display:flex; flex-wrap:wrap; gap:var(--sp2); margin-bottom:var(--sp4); }
+.exp-pill {
+  padding:7px 13px; border-radius:var(--r-full);
+  background:var(--s2); border:1px solid var(--bd);
+  font-size:13px; font-weight:600; color:var(--tx2);
+  transition:all .15s;
+}
+.exp-pill.on { background:var(--ac-dim); border-color:rgba(242,100,25,.3); color:var(--ac); }
+.exp-note-inp {
+  width:100%; background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
+  font-size:15px; color:var(--tx); font-family:var(--font);
+  outline:none; margin-bottom:var(--sp4); transition:border-color .2s;
+}
+.exp-note-inp:focus { border-color:var(--ac); }
+.exp-log-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:10px 0; border-bottom:1px solid var(--bd);
+}
+.exp-log-row:last-child { border-bottom:none; }
+.exp-log-left { flex:1; min-width:0; }
+.exp-log-cat { font-size:13px; font-weight:600; color:var(--tx); }
+.exp-log-note { font-size:12px; color:var(--tx2); margin-top:1px; }
+.exp-log-amt { font-size:15px; font-weight:700; color:var(--tx); white-space:nowrap; }
+.exp-log-date { font-size:11px; color:var(--tx3); }
+
+/* ─── Spend tile on Today ────────────────────────────────── */
+.spend-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp4); }
+
 /* ─── Reduced motion ─────────────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -751,6 +818,27 @@ body.light .hero-display {
     <button class="cta-btn" onclick="closeSheet()">Got it</button>
   </div>
 </div>
+
+<!-- Expense quick-log sheet -->
+<div class="ovl" id="expOvl" onclick="closeExpSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="row between mb3">
+      <div class="sheet-title" style="text-align:left;margin:0">Log expense</div>
+      <span class="cap" id="expCityLbl" style="color:var(--tx2)"></span>
+    </div>
+    <div class="exp-amt-row">
+      <span class="exp-cur">€</span>
+      <input class="exp-inp" id="expAmt" type="number" inputmode="decimal" placeholder="0">
+    </div>
+    <div class="exp-cat-pills" id="expPills"></div>
+    <input class="exp-note-inp" id="expNote" type="text" placeholder="Note (optional)">
+    <button class="cta-btn" onclick="logExp()" style="margin-top:0">Log it</button>
+  </div>
+</div>
+
+<!-- Floating action button -->
+<button class="fab hidden" id="fab" onclick="openExpSheet()" aria-label="Log expense">+</button>
 
 <script>
 var TODAY = new Date();
@@ -885,7 +973,21 @@ var BICONS={Flights:'ph-airplane',Accommodation:'ph-bed',Food:'ph-fork-knife',
 var dark = localStorage.getItem('lk_t') !== 'light';
 var gs   = JSON.parse(localStorage.getItem('lk_g')||'{}');
 var bs   = JSON.parse(localStorage.getItem('lk_b')||'{}');
+var exps = JSON.parse(localStorage.getItem('lk_exp')||'[]');
 var city = 'Athens';
+
+// WMO weather interpretation codes → emoji + label
+var WMO={
+  0:'☀️ Clear',1:'🌤️ Mainly clear',2:'⛅ Partly cloudy',3:'☁️ Overcast',
+  45:'🌫️ Fog',48:'🌫️ Icy fog',
+  51:'🌦️ Light drizzle',53:'🌦️ Drizzle',55:'🌧️ Heavy drizzle',
+  61:'🌧️ Light rain',63:'🌧️ Rain',65:'🌧️ Heavy rain',
+  71:'🌨️ Light snow',73:'🌨️ Snow',75:'❄️ Heavy snow',77:'❄️ Snow grains',
+  80:'🌦️ Showers',81:'🌧️ Showers',82:'⛈️ Heavy showers',
+  85:'🌨️ Snow showers',86:'❄️ Snow showers',
+  95:'⛈️ Thunderstorm',96:'⛈️ Thunderstorm',99:'⛈️ Thunderstorm'
+};
+var _wxCache={}, _expCat='Food';
 
 function g(id){ return document.getElementById(id); }
 function fmt(s){
@@ -916,10 +1018,88 @@ function boot(){
     document.head.appendChild(ml);
   }
   renderToday();
+  // Show FAB on Today tab (default)
+  var fab=g('fab'); if(fab) fab.classList.remove('hidden');
   renderTimeline();
   renderCities();
   renderGoals();
   renderBudget();
+}
+
+/* ─── Weather ────────────────────────────────────────────── */
+function weatherCityFor(entry){
+  if(!entry) return 'Athens';
+  var parts=entry.c.split(' → ');
+  for(var i=parts.length-1;i>=0;i--){ var ct=parts[i].trim(); if(COORDS[ct]) return ct; }
+  return null;
+}
+function fetchWeather(city){
+  if(!city||!COORDS[city]) return;
+  var key=city+'_'+TODAY.toISOString().split('T')[0];
+  if(_wxCache[key]){ paintWeather(_wxCache[key]); return; }
+  var c=COORDS[city];
+  fetch('https://api.open-meteo.com/v1/forecast?latitude='+c[0]+'&longitude='+c[1]
+    +'&current=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1')
+    .then(function(r){return r.json();})
+    .then(function(d){ _wxCache[key]=d; paintWeather(d); })
+    .catch(function(){ var e=g('wxZone'); if(e) e.style.display='none'; });
+}
+function paintWeather(d){
+  var el=g('wxZone'); if(!el||!d||!d.current) return;
+  var code=d.current.weathercode||0;
+  var cur=Math.round(d.current.temperature_2m);
+  var hi=d.daily?Math.round(d.daily.temperature_2m_max[0]):cur;
+  var lo=d.daily?Math.round(d.daily.temperature_2m_min[0]):cur;
+  var w=WMO[code]||'🌡️ Weather'; var ico=w.split(' ')[0]; var desc=w.split(' ').slice(1).join(' ');
+  el.innerHTML='<div class="weather-row">'
+    +'<div class="weather-ico">'+ico+'</div>'
+    +'<div class="grow1"><div class="weather-temp">'+cur+'°C'
+    +'<span style="font-size:12px;font-weight:500;color:var(--tx2);margin-left:8px">'+lo+'° – '+hi+'°</span></div>'
+    +'<div class="weather-desc">'+desc+'</div></div>'
+    +'</div>';
+}
+
+/* ─── Expense sheet ──────────────────────────────────────── */
+function openExpSheet(){
+  var ts=TODAY.toISOString().split('T')[0];
+  var entry=null; for(var i=0;i<DAYS.length;i++) if(DAYS[i].d===ts){entry=DAYS[i];break;}
+  var lbl=g('expCityLbl'); if(lbl) lbl.textContent=entry?entry.c:'Today';
+  // Build category pills
+  var pills=g('expPills'); if(pills){
+    var ph=''; for(var i=0;i<BCATS.length;i++){
+      ph+='<button class="exp-pill'+(BCATS[i]===_expCat?' on':'')
+        +'" onclick="selExpCat(\''+BCATS[i]+'\')">'+BCATS[i]+'</button>';
+    }
+    pills.innerHTML=ph;
+  }
+  var amt=g('expAmt'); if(amt){ amt.value=''; setTimeout(function(){amt.focus();},300); }
+  var note=g('expNote'); if(note) note.value='';
+  g('expOvl').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeExpSheet(){
+  g('expOvl').classList.remove('on');
+  document.body.style.overflow='';
+}
+function selExpCat(cat){
+  _expCat=cat;
+  var pills=document.querySelectorAll('.exp-pill');
+  for(var i=0;i<pills.length;i++) pills[i].classList.toggle('on',pills[i].textContent===cat);
+}
+function logExp(){
+  var amtEl=g('expAmt'); if(!amtEl) return;
+  var amt=parseFloat(amtEl.value); if(!amt||amt<=0) return;
+  var note=g('expNote'); var noteVal=note?note.value.trim():'';
+  var ts=TODAY.toISOString().split('T')[0];
+  exps.push({d:ts,cat:_expCat,amt:amt,note:noteVal});
+  localStorage.setItem('lk_exp',JSON.stringify(exps));
+  closeExpSheet();
+  renderToday(); renderBudget();
+}
+function deleteExp(idx){
+  exps.splice(idx,1);
+  localStorage.setItem('lk_exp',JSON.stringify(exps));
+  renderBudget(); renderToday();
 }
 
 /* ─── Trip strip ─────────────────────────────────────────── */
@@ -1053,6 +1233,10 @@ function renderToday(){
   out += '<button class="util-btn" onclick="openSheet()" aria-label="Install app"><i class="ph ph-download-simple"></i></button>';
   out += '</div>';
 
+  // Today's logged spend
+  var todayExps=[]; for(var i=0;i<exps.length;i++) if(exps[i].d===ts) todayExps.push(exps[i]);
+  var todayTotal=0; for(var i=0;i<todayExps.length;i++) todayTotal+=todayExps[i].amt;
+
   // Hero zone
   if(!on && left > 0){
     // Pre-trip countdown
@@ -1065,6 +1249,11 @@ function renderToday(){
     out += renderTripVis();
     out += renderPhaseKanban(ts);
     out += '<div class="px">';
+    // Athens weather preview (anticipation!)
+    out += '<div id="wxZone"><div class="weather-row" style="opacity:.6">';
+    out += '<div class="weather-ico">🏛️</div>';
+    out += '<div class="grow1"><div class="weather-temp" style="font-size:14px;color:var(--tx2)">Athens weather</div>';
+    out += '<div class="weather-desc">Loading forecast...</div></div></div></div>';
 
   } else if(entry){
     // On trip
@@ -1126,6 +1315,28 @@ function renderToday(){
         out += '<div class="ico '+(locked?'ico-ac':'')+'"><i class="ph'+(locked?'-fill':'')+' '+(locked?'ph-lock-simple':'ph-caret-right')+'"></i></div>';
         out += '<div class="grow1 body">'+t.replace('🔒 ','')+'</div>';
         out += '</div>';
+      }
+      out += '</div>';
+    }
+
+    // Weather widget (populated async)
+    out += '<div id="wxZone"><div class="weather-row" style="opacity:.5">';
+    out += '<div class="weather-ico">🌡️</div>';
+    out += '<div class="grow1"><div class="weather-temp" style="color:var(--tx2)">Loading weather...</div></div>';
+    out += '</div></div>';
+
+    // Today's logged spend
+    if(todayExps.length>0){
+      out += '<div class="label mb3">Spent today</div>';
+      out += '<div class="card mb4">';
+      out += '<div class="row between mb3"><span class="cap">Total logged</span>'
+        +'<span class="title accent">€'+todayTotal.toFixed(2)+'</span></div>';
+      for(var i=0;i<todayExps.length;i++){
+        var ex=todayExps[i];
+        out+='<div class="exp-log-row">'
+          +'<div class="exp-log-left"><div class="exp-log-cat">'+ex.cat+'</div>'
+          +(ex.note?'<div class="exp-log-note">'+ex.note+'</div>':'')+'</div>'
+          +'<span class="exp-log-amt">€'+ex.amt.toFixed(2)+'</span></div>';
       }
       out += '</div>';
     }
@@ -1223,6 +1434,9 @@ function renderToday(){
     var active=document.querySelector('.pk-card.pk-active');
     if(active) active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});
   });
+  // Fetch weather (async — paints into #wxZone)
+  if(!on && left>0) setTimeout(function(){ fetchWeather('Athens'); },80);
+  else if(entry){ var wc=weatherCityFor(entry); if(wc) setTimeout(function(){ fetchWeather(wc); },80); }
 }
 
 /* ─── TIMELINE ───────────────────────────────────────────── */
@@ -1482,17 +1696,43 @@ function renderGoals(){
 }
 
 function tog(id){
+  var wasOff=!gs[id];
   gs[id]=!gs[id];
   localStorage.setItem('lk_g',JSON.stringify(gs));
+  if(wasOff){
+    // Celebration burst — float a ✓ upward from the tapped row
+    var row=document.querySelector('[onclick*="tog(\''+id+'\')"]');
+    if(row){
+      var r=row.getBoundingClientRect();
+      var b=document.createElement('span');
+      b.textContent='✓';
+      b.style.cssText='position:fixed;left:'+(r.left+24)+'px;top:'+r.top+'px;'
+        +'font-size:24px;font-weight:900;color:#F26419;pointer-events:none;z-index:9999;'
+        +'transition:transform .5s ease,opacity .5s ease;opacity:1;transform:translateY(0) scale(1)';
+      document.body.appendChild(b);
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          b.style.opacity='0'; b.style.transform='translateY(-52px) scale(1.6)';
+        });
+      });
+      setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); },520);
+    }
+  }
   renderGoals(); renderToday();
 }
 
 /* ─── BUDGET ─────────────────────────────────────────────── */
 function renderBudget(){
+  // Compute logged totals per category
+  var loggedByCat={}, loggedTotal=0;
+  for(var i=0;i<exps.length;i++){
+    loggedByCat[exps[i].cat]=(loggedByCat[exps[i].cat]||0)+exps[i].amt;
+    loggedTotal+=exps[i].amt;
+  }
   var tB=0,tA=0;
   for(var i=0;i<BCATS.length;i++){
     tB+=parseFloat(bs[BCATS[i]+'_b']||0);
-    tA+=parseFloat(bs[BCATS[i]+'_a']||0);
+    tA+=parseFloat(bs[BCATS[i]+'_a']||0)+(loggedByCat[BCATS[i]]||0);
   }
   var over=tA>tB&&tB>0;
   var out='<div class="px pt5">';
@@ -1500,33 +1740,57 @@ function renderBudget(){
   // Hero tiles
   out+='<div class="budget-hero">';
   out+='<div class="budget-tile"><div class="budget-tile-label">Budget</div><div class="budget-tile-num accent" id="tB">A$'+Math.round(tB).toLocaleString()+'</div></div>';
-  out+='<div class="budget-tile"><div class="budget-tile-label">Spent</div><div class="budget-tile-num'+(over?' over':'')+'" id="tA">A$'+Math.round(tA).toLocaleString()+'</div></div>';
+  out+='<div class="budget-tile"><div class="budget-tile-label">Logged</div><div class="budget-tile-num'+(over?' over':'')+'" id="tA">€'+loggedTotal.toFixed(2)+'</div></div>';
   out+='</div>';
 
   // Confirmed costs
   out+='<div class="label mb3">Confirmed from bookings</div>';
-  out+='<div class="card card-ok mb5">';
+  out+='<div class="card card-ok mb4">';
   out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div><div class="grow1"><div class="title">BCN → IBZ · Vueling</div><div class="cap mt1">Mon 13 Jul · VY3518</div></div><span class="accent" style="font-weight:700">€65.99</span></div>';
   out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div><div class="grow1"><div class="title">IBZ → BCN · Vueling</div><div class="cap mt1">Wed 15 Jul · VY3511</div></div><span class="accent" style="font-weight:700">€102.99</span></div>';
-  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-bed"></i></div><div class="grow1"><div class="title">Wombat\'s Munich</div><div class="cap mt1">24 Jun · €9.56 online + €56.41 at property</div></div><span class="accent" style="font-weight:700">€64.10</span></div>';
+  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-bed"></i></div><div class="grow1"><div class="title">Wombat\'s Munich</div><div class="cap mt1">24 Jun · €9.56 + €56.41 at property</div></div><span class="accent" style="font-weight:700">€64.10</span></div>';
   out+='</div>';
 
   // Category rows
   out+='<div class="budget-cat-hdr">';
   out+='<div style="flex:1" class="budget-cat-hdr-label">Category</div>';
-  out+='<div style="width:80px;text-align:right" class="budget-cat-hdr-label">Budget</div>';
-  out+='<div style="width:80px;text-align:right" class="budget-cat-hdr-label">Actual</div>';
+  out+='<div style="width:72px;text-align:right" class="budget-cat-hdr-label">Budget A$</div>';
+  out+='<div style="width:64px;text-align:right" class="budget-cat-hdr-label">Logged €</div>';
   out+='</div>';
 
   for(var i=0;i<BCATS.length;i++){
     var cat=BCATS[i];
+    var logged=(loggedByCat[cat]||0);
     out+='<div class="budget-row">';
     out+='<div class="ico"><i class="ph '+(BICONS[cat]||'ph-tag')+'"></i></div>';
     out+='<div class="budget-row-name">'+cat+'</div>';
     out+='<input class="binp" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_b']||'')+'" oninput="savB(\''+cat+'\',\'b\',this.value)">';
-    out+='<input class="binp actual" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_a']||'')+'" oninput="savB(\''+cat+'\',\'a\',this.value)">';
+    out+='<div class="binp actual" style="display:flex;align-items:center;justify-content:flex-end;cursor:default">'
+      +(logged>0?'<span style="font-weight:700">'+logged.toFixed(0)+'</span>':'<span style="color:var(--tx3)">—</span>')+'</div>';
     out+='</div>';
   }
+
+  // Expense log
+  if(exps.length>0){
+    out+='<div class="label mt5 mb3">Recent expenses</div>';
+    out+='<div class="card mb5">';
+    var recent=exps.slice().reverse().slice(0,15);
+    for(var i=0;i<recent.length;i++){
+      var idx=exps.length-1-i;
+      var ex=recent[i];
+      out+='<div class="exp-log-row">'
+        +'<div class="ico" style="width:30px;height:30px"><i class="ph '+(BICONS[ex.cat]||'ph-tag')+'" style="font-size:13px"></i></div>'
+        +'<div class="exp-log-left"><div class="exp-log-cat">'+ex.cat+(ex.note?' · '+ex.note:'')+'</div>'
+        +'<div class="exp-log-date">'+fmt(ex.d)+'</div></div>'
+        +'<span class="exp-log-amt">€'+ex.amt.toFixed(2)+'</span>'
+        +'<button onclick="deleteExp('+idx+')" style="color:var(--tx3);padding:4px 8px;font-size:13px">×</button>'
+        +'</div>';
+    }
+    out+='<div class="row between" style="padding:var(--sp3) 0 0;border-top:1px solid var(--bd)">';
+    out+='<span class="label">Total logged</span><span class="title accent">€'+loggedTotal.toFixed(2)+'</span></div>';
+    out+='</div>';
+  }
+
   out+='</div>';
   g('pBudget').innerHTML=out;
 }
@@ -1564,6 +1828,9 @@ function go(name,btn){
   if(activeIcon) activeIcon.className='ph-fill '+btn.getAttribute('data-icon');
   try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
   if(name==='Timeline') setTimeout(initRouteMap,120);
+  // FAB visible on Today + Budget only
+  var fab=g('fab');
+  if(fab) fab.classList.toggle('hidden', name!=='Today'&&name!=='Budget');
 }
 
 /* ─── Theme ──────────────────────────────────────────────── */
