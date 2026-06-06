@@ -11,6 +11,8 @@
 <title>Luke's Europe 2026</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 /* ─── Design tokens ─────────────────────────────────────── */
 :root {
@@ -624,6 +626,49 @@ body.light .hero-display {
 }
 .cta-btn:active { opacity:.85; transform:scale(.98); }
 
+/* ─── Trip phase strip ───────────────────────────────────── */
+.trip-vis { padding:0 var(--sp4) var(--sp5); }
+.trip-bar { display:flex; gap:2px; height:6px; border-radius:var(--r-full); overflow:hidden; margin-bottom:var(--sp2); }
+.trip-seg { min-width:0; transition:opacity .3s; }
+.trip-legend { display:flex; }
+.trip-legend-item {
+  font-size:9px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  padding:0 1px; opacity:.7;
+}
+
+/* ─── Route map panel ────────────────────────────────────── */
+.map-panel {
+  background:var(--s1); border-bottom:1px solid var(--bd);
+  transition:background .3s;
+}
+.map-toggle {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp3) var(--sp4); cursor:pointer;
+  -webkit-user-select:none; user-select:none;
+}
+.map-toggle:active { background:var(--s2); }
+.map-caret-icon { font-size:16px; color:var(--tx3); transition:transform .3s var(--spring); }
+.map-caret-icon.open { transform:rotate(180deg); }
+#routeMap { height:260px; background:var(--s2); }
+.leaflet-container { background:var(--bg) !important; }
+
+/* ─── Bookings collapse ──────────────────────────────────── */
+.bk-wrap { background:var(--s1); border:1px solid var(--bd); border-radius:var(--r-lg); overflow:hidden; transition:background .3s; }
+.bk-toggle {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp3) var(--sp4); cursor:pointer;
+  -webkit-user-select:none; user-select:none;
+}
+.bk-toggle:active { background:var(--s2); }
+.bk-list { display:none; padding:0 var(--sp4) var(--sp3); border-top:1px solid var(--bd); }
+.bk-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
+  min-height:48px;
+}
+.bk-row:last-child { border-bottom:none; }
+
 /* ─── Reduced motion ─────────────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -693,6 +738,17 @@ var BK = {
   'bcn-ibz':{from:'BCN',to:'IBZ',fl:'VY3518',dep:'17:15',arr:'18:20',date:'Mon 13 Jul',seat:'5C',ref:'JNVDTN',eur:65.99},
   'ibz-bcn':{from:'IBZ',to:'BCN',fl:'VY3511',dep:'14:25',arr:'15:25',date:'Wed 15 Jul',seat:'11B',ref:'DK846G',eur:102.99},
 };
+
+var COORDS={
+  Athens:[37.9838,23.7275],Milos:[36.6980,24.4315],
+  Catania:[37.5079,15.0830],Taormina:[37.8524,15.2866],
+  Bristol:[51.4545,-2.5879],Munich:[48.1351,11.5820],
+  Innsbruck:[47.2692,11.4041],Amsterdam:[52.3676,4.9041],
+  Porto:[41.1579,-8.6291],Ericeira:[38.9627,-9.4160],
+  Madrid:[40.4168,-3.7038],Barcelona:[41.3851,2.1734],
+  Ibiza:[38.9067,1.4323]
+};
+var ROUTE=['Athens','Milos','Catania','Taormina','Bristol','Munich','Innsbruck','Munich','Amsterdam','Porto','Ericeira','Madrid','Barcelona','Ibiza','Barcelona'];
 
 var DAYS=[
   {d:'2026-06-09',c:'Sydney → Athens',e:'✈️',p:1,t:'travel',pp:['B','K','R','L'],a:null,r:null,th:['24hr+ long haul','Arrive Athens morning']},
@@ -841,6 +897,79 @@ function boot(){
   renderBudget();
 }
 
+/* ─── Trip strip ─────────────────────────────────────────── */
+function renderTripVis(){
+  var ts=TODAY.toISOString().split('T')[0];
+  var out='<div class="trip-vis"><div class="trip-bar">';
+  var lp=0;
+  for(var i=0;i<DAYS.length;i++){
+    var d=DAYS[i];
+    if(d.p!==lp&&lp!==0) out+='<div style="width:3px;flex-shrink:0"></div>';
+    lp=d.p;
+    var isT=d.d===ts, isPast=d.d<ts;
+    var op=isPast?'.2':isT?'1':'.5';
+    out+='<div class="trip-seg" style="flex:1;background:'+PC[d.p]+';opacity:'+op+'"'+(isT?' id="tvToday"':'')+' title="'+d.c+' · '+fmt(d.d)+'"></div>';
+  }
+  out+='</div><div class="trip-legend">';
+  lp=0;
+  for(var i=0;i<DAYS.length;i++){
+    var d=DAYS[i];
+    if(d.p!==lp){
+      if(lp!==0) out+='<div style="width:3px;flex-shrink:0"></div>';
+      lp=d.p;
+      var cnt=0; for(var k=0;k<DAYS.length;k++) if(DAYS[k].p===lp) cnt++;
+      out+='<div class="trip-legend-item" style="flex:'+cnt+';color:'+PC[lp]+'">'+PN[lp]+'</div>';
+    }
+  }
+  out+='</div></div>';
+  return out;
+}
+
+/* ─── Bookings toggle ────────────────────────────────────── */
+function toggleBookings(){
+  var list=document.getElementById('bkList');
+  var caret=document.getElementById('bkCaret');
+  if(!list) return;
+  var open=list.style.display==='block';
+  list.style.display=open?'none':'block';
+  if(caret) caret.style.transform=open?'':'rotate(180deg)';
+}
+
+/* ─── Route map ───────────────────────────────────────────── */
+var _mapInited=false, _mapOpen=true;
+function initRouteMap(){
+  if(_mapInited||typeof L==='undefined') return;
+  var el=document.getElementById('routeMap');
+  if(!el) return;
+  _mapInited=true;
+  var map=L.map('routeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19}).addTo(map);
+  var coords=ROUTE.map(function(c){return COORDS[c];});
+  L.polyline(coords,{color:'#F26419',weight:2.5,opacity:.85,dashArray:'5 7'}).addTo(map);
+  var seen={};
+  ROUTE.forEach(function(c){
+    if(seen[c]||!COORDS[c]) return; seen[c]=true;
+    L.circleMarker(COORDS[c],{radius:5,fillColor:'#F26419',color:'#0d0d0d',weight:2,fillOpacity:1})
+      .addTo(map).bindPopup('<strong style="font-size:12px;color:#0d0d0d">'+c+'</strong>');
+  });
+  var bounds=L.latLngBounds(coords);
+  map.fitBounds(bounds,{padding:[20,20]});
+}
+function toggleMap(){
+  _mapOpen=!_mapOpen;
+  var wrap=document.getElementById('mapWrap');
+  var caret=document.getElementById('mapCaret');
+  if(!wrap) return;
+  if(_mapOpen){
+    wrap.style.height='260px';
+    if(caret) caret.classList.add('open');
+    setTimeout(initRouteMap,50);
+  } else {
+    wrap.style.height='0';
+    if(caret) caret.classList.remove('open');
+  }
+}
+
 /* ─── TODAY ─────────────────────────────────────────────── */
 function renderToday(){
   var ts  = TODAY.toISOString().split('T')[0];
@@ -864,28 +993,9 @@ function renderToday(){
     out += '<div class="hero-display">'+left+'</div>';
     out += '<div class="hero-sub">days &nbsp;·&nbsp; Tue 9 June · Sydney → Athens</div>';
     out += '</div>';
-
-    // Trip progress strip
-    var pct = 0;
+    // Trip phase strip
+    out += renderTripVis();
     out += '<div class="px">';
-    out += '<div class="card mb4">';
-    out += '<div class="row between mb3"><span class="label">Trip progress</span><span class="label accent">0 of 39 days</span></div>';
-    out += '<div class="prog-rail"><div class="prog-bar" style="width:0%"></div></div>';
-    out += '</div>';
-
-    // First days preview
-    out += '<div class="row between mb3"><span class="label">First stops</span></div>';
-    for(var i=0;i<4;i++){
-      var d=DAYS[i];
-      out += '<div class="list-row">';
-      out += '<div class="ico"><span style="font-size:18px">'+d.e+'</span></div>';
-      out += '<div class="grow1">';
-      out += '<div class="cap mb2">'+fmt(d.d)+'</div>';
-      out += '<div class="title">'+d.c+'</div>';
-      out += '</div>';
-      out += '</div>';
-    }
-    out += '</div>';
 
   } else if(entry){
     // On trip
@@ -897,14 +1007,9 @@ function renderToday(){
       out += '<div class="hero-sub">→ '+entry.c.split(' → ')[1]+'</div>';
     }
     out += '</div>';
+    // Trip phase strip
+    out += renderTripVis();
     out += '<div class="px">';
-
-    // Trip progress
-    var pct=Math.round((dn-1)/39*100);
-    out += '<div class="card mb4">';
-    out += '<div class="row between mb3"><span class="label">Trip progress</span><span class="label accent">Day '+dn+' of 39</span></div>';
-    out += '<div class="prog-rail"><div class="prog-bar" style="width:'+pct+'%"></div></div>';
-    out += '</div>';
 
     // Tonight
     if(entry.a){
@@ -955,8 +1060,6 @@ function renderToday(){
       out += '</div>';
     }
 
-    out += '</div>';
-
   } else if(TODAY > TE){
     // Post trip
     out += '<div class="today-hero">';
@@ -964,15 +1067,15 @@ function renderToday(){
     out += '<div class="hero-display">🎉</div>';
     out += '<div class="hero-sub">39 days · 13 cities · Europe 2026</div>';
     out += '</div>';
+    out += renderTripVis();
     out += '<div class="px">';
     out += '<div class="card card-ok mb4 row">';
     out += '<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
     out += '<div class="grow1"><div class="title ok-tx">Back in Sydney</div><div class="cap mt1">Trip finished '+fmt('2026-07-17')+'</div></div>';
-    out += '</div></div>';
+    out += '</div>';
   }
 
   // Locked events — always show
-  out += '<div class="px">';
   out += '<div class="label mb3">Locked in</div>';
   var locked=[{d:'2026-06-23',l:'Hike with Ismael',city:'Innsbruck'},{d:'2026-06-26',l:'Defqon.1',city:'Amsterdam'}];
   out += '<div class="card mb4">';
@@ -980,7 +1083,7 @@ function renderToday(){
     var ev=locked[i];
     var diff=Math.ceil((new Date(ev.d+'T00:00:00')-TODAY)/86400000);
     out += '<div class="list-row">';
-    out += '<div class="ico ico-ac"><i class="ph-fill ph-lock-simple accent"></i></div>';
+    out += '<div class="ico ico-ac"><i class="ph-fill ph-lock-simple"></i></div>';
     out += '<div class="grow1">';
     out += '<div class="cap mb1">'+fmt(ev.d)+' · '+ev.city+'</div>';
     out += '<div class="title">'+ev.l+'</div>';
@@ -990,7 +1093,7 @@ function renderToday(){
   }
   out += '</div>';
 
-  // Goals progress
+  // Goals progress — compact
   out += '<div class="label mb3">Goals</div>';
   out += '<div class="card card-ac mb4">';
   out += '<div class="row between mb3">';
@@ -1000,38 +1103,45 @@ function renderToday(){
   out += '<div class="prog-rail"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%"></div></div>';
   out += '</div>';
 
-  // Confirmed bookings
-  out += '<div class="label mb3">Confirmed bookings</div>';
-  out += '<div class="card mb4">';
+  // Confirmed bookings — collapsed
+  var totalBk=2+8; // flights + stays
+  out += '<div class="bk-wrap mb4">';
+  out += '<div class="bk-toggle" onclick="toggleBookings()">';
+  out += '<div class="row gap3"><div class="ico ico-ok" style="width:32px;height:32px"><i class="ph-fill ph-check-circle"></i></div>';
+  out += '<div><div class="title">Confirmed bookings</div><div class="cap mt1">'+totalBk+' confirmed</div></div></div>';
+  out += '<i class="ph ph-caret-down" id="bkCaret" style="color:var(--tx3);font-size:16px;transition:transform .3s var(--spring)"></i>';
+  out += '</div>';
+  out += '<div class="bk-list" id="bkList">';
   var bkeys=['bcn-ibz','ibz-bcn'];
   for(var i=0;i<bkeys.length;i++){
     var b=BK[bkeys[i]];
-    out += '<div class="list-row">';
-    out += '<div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div>';
+    out += '<div class="bk-row">';
+    out += '<div class="ico ico-ok" style="width:32px;height:32px"><i class="ph-fill ph-airplane"></i></div>';
     out += '<div class="grow1"><div class="title">'+b.from+' → '+b.to+'</div><div class="cap mt1">'+b.date+' · '+b.fl+' · €'+b.eur+'</div></div>';
-    out += '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>'+b.ref+'</span>';
+    out += '<span class="badge b-ok">'+b.ref+'</span>';
     out += '</div>';
   }
   var stays=[
-    {i:'ph-bed',t:"Wombat's Munich",s:'24 Jun',e:'€64.10'},
-    {i:'ph-bed',t:'Hans Brinker Amsterdam',s:'25–28 Jun',e:null},
-    {i:'ph-bed',t:'MEININGER Innsbruck',s:'22–24 Jun',e:null},
-    {i:'ph-bed',t:'Generator Madrid',s:'8–10 Jul',e:null},
-    {i:'ph-bed',t:'Itaca Barcelona',s:'11–13 Jul',e:null},
-    {i:'ph-bed',t:'Giramundo Ibiza',s:'13–15 Jul',e:null},
-    {i:'ph-airplane',t:'Transavia AMS→OPO',s:'IE43SW',e:null},
-    {i:'ph-airplane',t:'TAP Portugal',s:'Z7GFA9',e:null},
+    {i:'ph-bed',t:"Wombat's Munich",s:'24 Jun · €64.10'},
+    {i:'ph-bed',t:'Hans Brinker Amsterdam',s:'25–28 Jun'},
+    {i:'ph-bed',t:'MEININGER Innsbruck',s:'22–24 Jun'},
+    {i:'ph-bed',t:'Generator Madrid',s:'8–10 Jul'},
+    {i:'ph-bed',t:'Itaca Barcelona',s:'11–13 Jul'},
+    {i:'ph-bed',t:'Giramundo Ibiza',s:'13–15 Jul'},
+    {i:'ph-airplane',t:'Transavia AMS → OPO',s:'IE43SW'},
+    {i:'ph-airplane',t:'TAP Portugal OPO → LIS',s:'Z7GFA9'},
   ];
   for(var i=0;i<stays.length;i++){
     var s=stays[i];
-    out += '<div class="list-row">';
-    out += '<div class="ico ico-ok"><i class="ph-fill '+s.i+'"></i></div>';
-    out += '<div class="grow1"><div class="title">'+s.t+'</div><div class="cap mt1">'+s.s+(s.e?' · '+s.e:'')+'</div></div>';
+    out += '<div class="bk-row">';
+    out += '<div class="ico ico-ok" style="width:32px;height:32px"><i class="ph-fill '+s.i+'"></i></div>';
+    out += '<div class="grow1"><div class="title">'+s.t+'</div><div class="cap mt1">'+s.s+'</div></div>';
     out += '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i></span>';
     out += '</div>';
   }
-  out += '</div>';
-  out += '</div>';
+  out += '</div>'; // bkList
+  out += '</div>'; // bkWrap
+  out += '</div>'; // px
 
   g('pToday').innerHTML = out;
   // Update theme icon
@@ -1095,9 +1205,11 @@ function loadTimelinePhotos(){
     fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(WIKI_MAP[city]))
       .then(function(r){return r.json();})
       .then(function(data){
-        var url=(data.originalimage&&data.originalimage.source)||(data.thumbnail&&data.thumbnail.source);
+        var url=data.thumbnail&&data.thumbnail.source;
         if(!url) return;
-        url=url.replace(/\/\d+px-/,'/600px-');
+        var file=url.split('/').pop().toLowerCase();
+        if(/flag|coat|map|logo|seal|emblem|locator/.test(file)) return;
+        if(url.indexOf('/thumb/')>-1) url=url.replace(/\/\d+px-/,'/640px-');
         WIKIIMG[city]=url;
         var els=document.querySelectorAll('#pTimeline .day-thumb img[data-city="'+city+'"]');
         for(var j=0;j<els.length;j++) els[j].src=url;
@@ -1114,6 +1226,16 @@ function renderTimeline(){
   if(!hasToday) for(var k=0;k<DAYS.length;k++) if(DAYS[k].d>=ts){ firstUp=k; break; }
 
   var out='';
+
+  // Route map panel (collapsible, open by default)
+  out+='<div class="map-panel">';
+  out+='<div class="map-toggle" onclick="toggleMap()">';
+  out+='<div class="row gap2"><i class="ph-fill ph-map-pin" style="color:var(--ac);font-size:16px"></i><span class="label">Route map</span><span class="cap" style="margin-left:4px">15 cities · Europe</span></div>';
+  out+='<i class="ph ph-caret-down map-caret-icon open" id="mapCaret"></i>';
+  out+='</div>';
+  out+='<div id="mapWrap" style="height:260px;overflow:hidden;transition:height .3s ease"><div id="routeMap"></div></div>';
+  out+='</div>';
+
   // Sticky phase jump tabs
   out+='<div class="tl-tabs">';
   for(var p=1;p<=4;p++) out+='<button class="tl-tab" onclick="jumpPhase('+p+')"><span class="tl-tab-dot" style="background:'+PC[p]+'"></span>'+PN[p]+'</button>';
@@ -1181,6 +1303,7 @@ function renderTimeline(){
 
   g('pTimeline').innerHTML=out;
   loadTimelinePhotos();
+  setTimeout(initRouteMap, 100);
 }
 
 /* ─── CITIES ─────────────────────────────────────────────── */
