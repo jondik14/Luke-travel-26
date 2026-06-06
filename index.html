@@ -637,6 +637,31 @@ body.light .hero-display {
   padding:0 1px; opacity:.7;
 }
 
+/* ─── Phase kanban strip ─────────────────────────────────── */
+.phase-scroll {
+  display:flex; gap:var(--sp3); overflow-x:auto;
+  padding:0 var(--sp4) var(--sp5);
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+}
+.pk-card {
+  min-width:150px; max-width:175px; flex-shrink:0;
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp3) var(--sp4);
+  scroll-snap-align:start;
+  transition:background .3s, border-color .3s, opacity .3s;
+}
+.pk-card.pk-active { border-color:rgba(242,100,25,.45); }
+.pk-card.pk-past { opacity:.42; }
+.pk-hdr { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
+.pk-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.pk-name { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; flex:1; }
+.pk-dates { font-size:11px; color:var(--tx2); margin-bottom:var(--sp3); }
+.pk-cities { display:flex; flex-wrap:wrap; gap:4px; }
+.pk-city { font-size:11px; font-weight:600; padding:2px 7px; border-radius:var(--r-full); background:var(--s3); color:var(--tx2); white-space:nowrap; }
+.pk-city.pk-city-now { background:var(--ac-dim); color:var(--ac); }
+.pk-footer { margin-top:var(--sp3); }
+
 /* ─── Route map panel ────────────────────────────────────── */
 .map-panel {
   background:var(--s1); border-bottom:1px solid var(--bd);
@@ -936,24 +961,26 @@ function toggleBookings(){
 }
 
 /* ─── Route map ───────────────────────────────────────────── */
-var _mapInited=false, _mapOpen=true;
+var _map=null, _mapInited=false, _mapOpen=true;
 function initRouteMap(){
-  if(_mapInited||typeof L==='undefined') return;
+  if(typeof L==='undefined') return;
   var el=document.getElementById('routeMap');
   if(!el) return;
+  // If already created, just fix dimensions (re-entering hidden pane)
+  if(_mapInited&&_map){ _map.invalidateSize(true); return; }
   _mapInited=true;
-  var map=L.map('routeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19}).addTo(map);
+  _map=L.map('routeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:true});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_map);
   var coords=ROUTE.map(function(c){return COORDS[c];});
-  L.polyline(coords,{color:'#F26419',weight:2.5,opacity:.85,dashArray:'5 7'}).addTo(map);
+  L.polyline(coords,{color:'#F26419',weight:2.5,opacity:.9,dashArray:'5 7'}).addTo(_map);
   var seen={};
-  ROUTE.forEach(function(c){
-    if(seen[c]||!COORDS[c]) return; seen[c]=true;
-    L.circleMarker(COORDS[c],{radius:5,fillColor:'#F26419',color:'#0d0d0d',weight:2,fillOpacity:1})
-      .addTo(map).bindPopup('<strong style="font-size:12px;color:#0d0d0d">'+c+'</strong>');
-  });
-  var bounds=L.latLngBounds(coords);
-  map.fitBounds(bounds,{padding:[20,20]});
+  for(var ri=0;ri<ROUTE.length;ri++){
+    var c=ROUTE[ri];
+    if(seen[c]||!COORDS[c]) continue; seen[c]=true;
+    L.circleMarker(COORDS[c],{radius:6,fillColor:'#F26419',color:'#1a1a1a',weight:2,fillOpacity:1})
+      .addTo(_map).bindPopup('<strong style="font-size:13px">'+c+'</strong>');
+  }
+  _map.fitBounds(L.latLngBounds(coords),{padding:[24,24]});
 }
 function toggleMap(){
   _mapOpen=!_mapOpen;
@@ -963,11 +990,52 @@ function toggleMap(){
   if(_mapOpen){
     wrap.style.height='260px';
     if(caret) caret.classList.add('open');
-    setTimeout(initRouteMap,50);
+    setTimeout(initRouteMap,80);
   } else {
     wrap.style.height='0';
     if(caret) caret.classList.remove('open');
   }
+}
+
+/* ─── Phase kanban ───────────────────────────────────────── */
+function renderPhaseKanban(ts){
+  var out='<div class="phase-scroll">';
+  for(var ph=1;ph<=4;ph++){
+    var pDays=[]; for(var k=0;k<DAYS.length;k++) if(DAYS[k].p===ph) pDays.push(DAYS[k]);
+    if(!pDays.length) continue;
+    var start=pDays[0].d, end=pDays[pDays.length-1].d;
+    var isPast=end<ts, isActive=start<=ts&&end>=ts;
+    var cls='pk-card'+(isActive?' pk-active':isPast?' pk-past':'');
+    // Collect unique cities
+    var cities=[], seen={};
+    for(var i=0;i<pDays.length;i++){
+      var parts=pDays[i].c.split(' → ');
+      for(var j=0;j<parts.length;j++){
+        var ct=parts[j].trim();
+        if(ct&&!seen[ct]){seen[ct]=true;cities.push(ct);}
+      }
+    }
+    var sd=new Date(start+'T00:00:00'), ed=new Date(end+'T00:00:00');
+    var sf=sd.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+    var ef=ed.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+    out+='<div class="'+cls+'" id="pk'+ph+'">';
+    out+='<div class="pk-hdr"><div class="pk-dot" style="background:'+PC[ph]+'"></div>';
+    out+='<span class="pk-name" style="color:'+PC[ph]+'">'+PN[ph]+'</span></div>';
+    out+='<div class="pk-dates">'+sf+' – '+ef+'</div>';
+    out+='<div class="pk-cities">';
+    for(var i=0;i<cities.length;i++){
+      var isCurrent=isActive&&pDays.some(function(d){return d.d===ts&&d.c.indexOf(cities[i])!==-1;});
+      out+='<span class="pk-city'+(isCurrent?' pk-city-now':'')+'">'+cities[i]+'</span>';
+    }
+    out+='</div>';
+    out+='<div class="pk-footer">';
+    if(isActive) out+='<span class="badge b-ac">Active</span>';
+    else if(isPast) out+='<span class="badge b-dim">Done ✓</span>';
+    else{ var dLeft=Math.ceil((new Date(start+'T00:00:00')-new Date(ts+'T00:00:00'))/86400000); out+='<span class="badge b-dim">in '+dLeft+'d</span>'; }
+    out+='</div></div>';
+  }
+  out+='</div>';
+  return out;
 }
 
 /* ─── TODAY ─────────────────────────────────────────────── */
@@ -993,8 +1061,9 @@ function renderToday(){
     out += '<div class="hero-display">'+left+'</div>';
     out += '<div class="hero-sub">days &nbsp;·&nbsp; Tue 9 June · Sydney → Athens</div>';
     out += '</div>';
-    // Trip phase strip
+    // Phase strip + kanban
     out += renderTripVis();
+    out += renderPhaseKanban(ts);
     out += '<div class="px">';
 
   } else if(entry){
@@ -1007,8 +1076,9 @@ function renderToday(){
       out += '<div class="hero-sub">→ '+entry.c.split(' → ')[1]+'</div>';
     }
     out += '</div>';
-    // Trip phase strip
+    // Phase strip + kanban
     out += renderTripVis();
+    out += renderPhaseKanban(ts);
     out += '<div class="px">';
 
     // Tonight
@@ -1068,6 +1138,7 @@ function renderToday(){
     out += '<div class="hero-sub">39 days · 13 cities · Europe 2026</div>';
     out += '</div>';
     out += renderTripVis();
+    out += renderPhaseKanban(ts);
     out += '<div class="px">';
     out += '<div class="card card-ok mb4 row">';
     out += '<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
@@ -1147,6 +1218,11 @@ function renderToday(){
   // Update theme icon
   var tb=g('themeBtn');
   if(tb) tb.querySelector('i').className = dark ? 'ph ph-moon' : 'ph ph-sun';
+  // Scroll active phase card into view
+  requestAnimationFrame(function(){
+    var active=document.querySelector('.pk-card.pk-active');
+    if(active) active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});
+  });
 }
 
 /* ─── TIMELINE ───────────────────────────────────────────── */
@@ -1207,9 +1283,9 @@ function loadTimelinePhotos(){
       .then(function(data){
         var url=data.thumbnail&&data.thumbnail.source;
         if(!url) return;
-        var file=url.split('/').pop().toLowerCase();
-        if(/flag|coat|map|logo|seal|emblem|locator/.test(file)) return;
-        if(url.indexOf('/thumb/')>-1) url=url.replace(/\/\d+px-/,'/640px-');
+        // Filter coats-of-arms, flags, locator maps — check full URL path not just filename
+        if(/(coat_of_arms|locator_map|location_map|flag_of|Flag_of|administrative_map)/i.test(url)) return;
+        if(url.indexOf('/thumb/')>-1) url=url.replace(/\/\d+px-[^/]*$/,'/640px-'+url.split('/').pop());
         WIKIIMG[city]=url;
         var els=document.querySelectorAll('#pTimeline .day-thumb img[data-city="'+city+'"]');
         for(var j=0;j<els.length;j++) els[j].src=url;
@@ -1303,7 +1379,6 @@ function renderTimeline(){
 
   g('pTimeline').innerHTML=out;
   loadTimelinePhotos();
-  setTimeout(initRouteMap, 100);
 }
 
 /* ─── CITIES ─────────────────────────────────────────────── */
@@ -1488,6 +1563,7 @@ function go(name,btn){
   var activeIcon=btn.querySelector('i');
   if(activeIcon) activeIcon.className='ph-fill '+btn.getAttribute('data-icon');
   try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
+  if(name==='Timeline') setTimeout(initRouteMap,120);
 }
 
 /* ─── Theme ──────────────────────────────────────────────── */
