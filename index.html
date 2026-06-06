@@ -1074,7 +1074,7 @@ function selCity(c){
 function renderGuide(){
   var gu=GUIDES[city]; if(!gu)return;
   var days=DAYS.filter(function(d){return d.c.indexOf(city)!==-1;});
-  var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' nights'):'';
+  var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' nights':''):'';
   var bg=HERO_BG[city]||'135deg,#555,#333';
 
   var out='<div class="city-hero">';
