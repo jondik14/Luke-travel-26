@@ -480,49 +480,86 @@ body.light .hero-display {
 .review-txt { font-size:13px; color:var(--tx2); line-height:1.6; margin-top:4px; }
 .stars { letter-spacing:.05em; }
 
-/* ─── GOALS ──────────────────────────────────────────────── */
-.goal-cat-hdr {
-  font-size:11px; font-weight:700; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--tx3);
-  padding: var(--sp5) 0 var(--sp3);
-  border-bottom:1px solid var(--bd);
-  margin-bottom:2px;
+/* ─── GOALS — Airbnb-style card grid ────────────────────── */
+.goal-cats {
+  display:flex; gap:var(--sp2); overflow-x:auto;
+  padding:0 var(--sp4) var(--sp4);
 }
+.goal-cat-pill {
+  display:flex; align-items:center; gap:5px;
+  padding:7px 14px; border-radius:var(--r-full);
+  border:1px solid var(--bd); background:var(--s2);
+  font-size:12px; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--tx2); white-space:nowrap; flex-shrink:0;
+  transition:all .2s, transform .3s var(--spring);
+}
+.goal-cat-pill.on { background:var(--ac); border-color:var(--ac); color:#fff; }
+.goal-cat-pill:active { transform:scale(.94); }
 
-.goal-item {
-  display:flex; align-items:center; gap:var(--sp3);
-  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
-  min-height:52px; cursor:pointer;
+.goal-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:var(--sp3);
+  padding:0 var(--sp4) var(--sp4);
+}
+.gc {
+  position:relative; border-radius:var(--r-lg); overflow:hidden;
+  height:160px; cursor:pointer;
+  transition:transform .3s var(--spring), opacity .2s;
   -webkit-user-select:none; user-select:none;
-  transition: opacity .2s;
 }
-.goal-item:last-child { border-bottom:none; }
-.goal-item:active { opacity:.7; }
-
-.goal-chk {
-  width:24px; height:24px; border-radius:8px;
-  border:2px solid var(--bd2); flex-shrink:0;
+.gc:active { transform:scale(.96); }
+.gc.gc-done { opacity:.65; }
+.gc-bg { position:absolute; inset:0; }
+.gc-shine {
+  position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,.08) 0%, transparent 55%);
+}
+.gc-grad {
+  position:absolute; inset:0;
+  background:linear-gradient(to top, rgba(0,0,0,.75) 0%, rgba(0,0,0,.2) 50%, transparent 100%);
+}
+.gc-done-ovl {
+  position:absolute; inset:0; background:rgba(242,100,25,.85);
   display:flex; align-items:center; justify-content:center;
-  transition: background .2s, border-color .2s, transform .5s var(--spring);
+  font-size:44px; font-weight:900; color:#fff;
 }
-.goal-chk.on {
-  background:var(--ac); border-color:var(--ac);
-  transform:scale(1.08);
+.gc-em {
+  position:absolute; top:var(--sp3); left:var(--sp3);
+  font-size:34px; line-height:1; filter:drop-shadow(0 2px 5px rgba(0,0,0,.4));
 }
-.goal-chk.on::after {
-  content:''; width:10px; height:6px;
-  border-left:2px solid #fff; border-bottom:2px solid #fff;
-  transform:rotate(-45deg) translateY(-1px); display:block;
+.gc-badge {
+  position:absolute; top:var(--sp2); right:var(--sp2);
+  font-size:9px; font-weight:700; padding:2px 7px;
+  border-radius:var(--r-full); background:rgba(0,0,0,.45);
+  color:rgba(255,255,255,.85); display:flex; align-items:center; gap:3px;
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
 }
-.goal-lbl {
-  flex:1; font-size:15px; font-weight:500; line-height:1.35;
-  transition:color .2s;
+.gc-info { position:absolute; bottom:0; left:0; right:0; padding:var(--sp3); }
+.gc-lbl {
+  font-size:13px; font-weight:700; color:#fff; line-height:1.3;
+  letter-spacing:-.01em; margin-bottom:3px;
+  text-shadow:0 1px 4px rgba(0,0,0,.6);
 }
-.goal-lbl.done { color:var(--tx3); text-decoration:line-through; }
-.goal-locked {
-  font-size:10px; font-weight:700; letter-spacing:.06em;
-  text-transform:uppercase; color:var(--ac); flex-shrink:0;
+.gc-city {
+  font-size:9px; font-weight:700; color:rgba(255,255,255,.6);
+  letter-spacing:.06em; text-transform:uppercase;
 }
+
+/* ─── GOALS — Discover suggestions ──────────────────────── */
+.sugg-grid-g {
+  display:grid; grid-template-columns:1fr 1fr; gap:var(--sp3);
+  padding:0 var(--sp4) var(--sp5);
+}
+.sugg-card-g {
+  background:var(--s1); border:1.5px dashed var(--bd2);
+  border-radius:var(--r-lg); padding:var(--sp4);
+  display:flex; flex-direction:column; gap:var(--sp2);
+  transition:background .2s, border-color .2s, transform .3s var(--spring);
+  cursor:pointer; min-height:110px;
+}
+.sugg-card-g:active { background:var(--ac-dim); border-color:rgba(242,100,25,.4); transform:scale(.96); }
+.sugg-card-g-em { font-size:26px; line-height:1; }
+.sugg-card-g-lbl { font-size:12px; font-weight:600; color:var(--tx); line-height:1.45; flex:1; }
+.sugg-card-g-add { font-size:11px; font-weight:700; color:var(--ac); display:flex; align-items:center; gap:3px; margin-top:2px; }
 
 /* ─── BUDGET ─────────────────────────────────────────────── */
 .budget-hero {
@@ -1022,26 +1059,26 @@ var GSECS=[
 ];
 
 var GOALS=[
-  {id:'defqon',   l:'Defqon.1',                   cat:'Travel',      locked:true},
-  {id:'allianz',  l:'Allianz Arena',               cat:'Travel'},
-  {id:'jersey',   l:'Bayern Munich jersey',        cat:'Travel'},
-  {id:'hike',     l:'Innsbruck mountain hike',     cat:'Travel',      locked:true},
-  {id:'amsmuse',  l:'Amsterdam art museums',       cat:'Travel'},
-  {id:'barcarch', l:'Barcelona architecture day',  cat:'Travel'},
-  {id:'ibizabch', l:'Ibiza beach day',             cat:'Travel'},
-  {id:'cali',     l:'Calisthenics in another country',cat:'Fitness'},
-  {id:'mtnhike',  l:'Mountain hike',               cat:'Fitness'},
-  {id:'med',      l:'Swim in Mediterranean',       cat:'Fitness'},
-  {id:'outdoor',  l:'Train outdoors in Europe',    cat:'Fitness'},
-  {id:'street',   l:'Street photography',          cat:'Photography'},
-  {id:'footy',    l:'Football culture photos',     cat:'Photography'},
-  {id:'mtnphoto', l:'Mountain photography',        cat:'Photography'},
-  {id:'archphoto',l:'Architecture photos',         cat:'Photography'},
-  {id:'night',    l:'Nightlife photos',             cat:'Photography'},
-  {id:'desmuse',  l:'Visit design museums',        cat:'Design'},
-  {id:'wayf',     l:'Photograph wayfinding/signage',cat:'Design'},
-  {id:'ui',       l:'Save UI inspiration',         cat:'Design'},
-  {id:'transport',l:'Observe transport systems',   cat:'Design'},
+  {id:'defqon',   l:'Defqon.1',                    cat:'Travel',      locked:true, e:'🎵', city:'Amsterdam'},
+  {id:'allianz',  l:'Allianz Arena',               cat:'Travel',                   e:'🏟️', city:'Munich'},
+  {id:'jersey',   l:'Bayern Munich jersey',        cat:'Travel',                   e:'🧣', city:'Munich'},
+  {id:'hike',     l:'Innsbruck mountain hike',     cat:'Travel',      locked:true, e:'⛰️', city:'Innsbruck'},
+  {id:'amsmuse',  l:'Amsterdam art museums',       cat:'Travel',                   e:'🎨', city:'Amsterdam'},
+  {id:'barcarch', l:'Barcelona architecture day',  cat:'Travel',                   e:'🏗️', city:'Barcelona'},
+  {id:'ibizabch', l:'Ibiza beach day',             cat:'Travel',                   e:'🏖️', city:'Ibiza'},
+  {id:'cali',     l:'Calisthenics in Europe',      cat:'Fitness',                  e:'💪', city:'Europe'},
+  {id:'mtnhike',  l:'Mountain hike',               cat:'Fitness',                  e:'🥾', city:'Innsbruck'},
+  {id:'med',      l:'Swim in Mediterranean',       cat:'Fitness',                  e:'🏊', city:'Milos'},
+  {id:'outdoor',  l:'Train outdoors in Europe',    cat:'Fitness',                  e:'🏋️', city:'Europe'},
+  {id:'street',   l:'Street photography',          cat:'Photography',              e:'📸', city:'Europe'},
+  {id:'footy',    l:'Football culture photos',     cat:'Photography',              e:'⚽', city:'Madrid'},
+  {id:'mtnphoto', l:'Mountain photography',        cat:'Photography',              e:'📷', city:'Innsbruck'},
+  {id:'archphoto',l:'Architecture photos',         cat:'Photography',              e:'🏛️', city:'Barcelona'},
+  {id:'night',    l:'Nightlife photos',            cat:'Photography',              e:'🌃', city:'Amsterdam'},
+  {id:'desmuse',  l:'Visit design museums',        cat:'Design',                   e:'🏛️', city:'Amsterdam'},
+  {id:'wayf',     l:'Photograph wayfinding/signage',cat:'Design',                  e:'🗺️', city:'Europe'},
+  {id:'ui',       l:'Save UI inspiration',         cat:'Design',                   e:'📱', city:'Europe'},
+  {id:'transport',l:'Observe transport systems',   cat:'Design',                   e:'🚇', city:'Amsterdam'},
 ];
 
 var BCATS=['Flights','Accommodation','Food','Transport','Activities','Shopping','Emergency'];
@@ -1066,7 +1103,7 @@ var WMO={
   85:'🌨️ Snow showers',86:'❄️ Snow showers',
   95:'⛈️ Thunderstorm',96:'⛈️ Thunderstorm',99:'⛈️ Thunderstorm'
 };
-var _wxCache={}, _expCat='Food';
+var _wxCache={}, _expCat='Food', _goalCat='All';
 
 function g(id){ return document.getElementById(id); }
 function fmt(s){
@@ -1839,39 +1876,86 @@ function renderGuide(){
 }
 
 /* ─── GOALS ──────────────────────────────────────────────── */
+function setGoalCat(c){ _goalCat=c; renderGoals(); }
+
 function renderGoals(){
   var done=0; for(var i=0;i<GOALS.length;i++) if(gs[GOALS[i].id]) done++;
-  var out='<div class="px pt5">';
-  out+='<div class="card card-ac mb5">';
-  out+='<div class="row between mb3"><span class="title accent">Non-negotiables</span><span class="title accent">'+done+' / '+GOALS.length+'</span></div>';
-  out+='<div class="prog-rail" style="height:5px"><div class="prog-bar" style="width:'+Math.round(done/GOALS.length*100)+'%;height:100%"></div></div>';
+  var pct=Math.round(done/GOALS.length*100);
+
+  // Card gradient per category
+  var GC_GRD={
+    Travel:'155deg,#1C3870,#0A1E45',
+    Fitness:'155deg,#134C2E,#072818',
+    Photography:'155deg,#6A2418,#3A0E08',
+    Design:'155deg,#5C3A0A,#2E1C04'
+  };
+
+  var out='';
+
+  // ── Header ──
+  out+='<div class="px pt5 pb4">';
+  out+='<div class="row between mb2"><span class="head" style="letter-spacing:-.03em">Bucket List</span>';
+  out+='<span class="title accent">'+done+'/'+GOALS.length+'</span></div>';
+  out+='<div class="prog-rail" style="height:6px"><div class="prog-bar" style="width:'+pct+'%;height:100%"></div></div>';
+  out+='<div class="cap mt2" style="color:var(--tx3)">'+pct+'% complete · '+done+' done · '+(GOALS.length-done)+' to go</div>';
   out+='</div>';
 
-  var cats=['Travel','Fitness','Photography','Design'];
-  var catIcons={Travel:'ph-airplane',Fitness:'ph-barbell',Photography:'ph-aperture',Design:'ph-ruler'};
-  for(var c=0;c<cats.length;c++){
-    var cat=cats[c];
-    var catDone=0;
-    for(var i=0;i<GOALS.length;i++) if(GOALS[i].cat===cat&&gs[GOALS[i].id]) catDone++;
-    var catTotal=0;
-    for(var i=0;i<GOALS.length;i++) if(GOALS[i].cat===cat) catTotal++;
-
-    out+='<div class="goal-cat-hdr"><div class="row between">';
-    out+='<div class="row gap2"><i class="ph '+catIcons[cat]+'" style="color:var(--tx3)"></i>'+cat+'</div>';
-    out+='<span>'+catDone+' / '+catTotal+'</span>';
-    out+='</div></div>';
-
-    for(var i=0;i<GOALS.length;i++){
-      var go=GOALS[i]; if(go.cat!==cat) continue;
-      var on=!!gs[go.id];
-      out+='<div class="goal-item" onclick="tog(\''+go.id+'\')">'+
-             '<div class="goal-chk'+(on?' on':'')+'"></div>'+
-             '<div class="goal-lbl'+(on?' done':'')+'">'+go.l+'</div>'+
-             (go.locked?'<span class="goal-locked"><i class="ph-fill ph-lock-simple"></i> Locked</span>':'')+
-           '</div>';
-    }
+  // ── Category filter ──
+  var FILTER_CATS=['All','Travel','Fitness','Photography','Design'];
+  var F_ICO={All:'ph-squares-four',Travel:'ph-airplane',Fitness:'ph-barbell',Photography:'ph-aperture',Design:'ph-ruler'};
+  out+='<div class="goal-cats">';
+  for(var i=0;i<FILTER_CATS.length;i++){
+    var fc=FILTER_CATS[i];
+    out+='<button class="goal-cat-pill'+(_goalCat===fc?' on':'')+'" onclick="setGoalCat(\''+fc+'\')">';
+    out+='<i class="ph '+F_ICO[fc]+'" style="font-size:12px"></i>'+fc+'</button>';
   }
   out+='</div>';
+
+  // ── Card grid ──
+  out+='<div class="goal-grid">';
+  for(var i=0;i<GOALS.length;i++){
+    var goal=GOALS[i];
+    if(_goalCat!=='All'&&goal.cat!==_goalCat) continue;
+    var isDone=!!gs[goal.id];
+    var grd=GC_GRD[goal.cat]||'155deg,#222,#111';
+    out+='<div class="gc'+(isDone?' gc-done':'')+'" onclick="tog(\''+goal.id+'\')">';
+    out+='<div class="gc-bg" style="background:linear-gradient('+grd+')"></div>';
+    out+='<div class="gc-shine"></div>';
+    out+='<div class="gc-grad"></div>';
+    if(isDone) out+='<div class="gc-done-ovl">✓</div>';
+    out+='<div class="gc-em">'+goal.e+'</div>';
+    if(goal.locked) out+='<div class="gc-badge"><i class="ph-fill ph-lock-simple" style="font-size:8px"></i>Locked</div>';
+    out+='<div class="gc-info"><div class="gc-lbl">'+goal.l+'</div><div class="gc-city">'+goal.city+'</div></div>';
+    out+='</div>';
+  }
+  out+='</div>';
+
+  // ── Discover more ──
+  var SUGG=[
+    {l:'Catch sunrise from a hilltop',    e:'🌅', cat:'Photography'},
+    {l:'Try a dish you can\'t pronounce', e:'🥙', cat:'Travel'},
+    {l:'Take a spontaneous train ride',   e:'🚂', cat:'Travel'},
+    {l:'Film a city timelapse',           e:'🎬', cat:'Photography'},
+    {l:'Outdoor workout at a scenic spot',e:'💪', cat:'Fitness'},
+    {l:'Spot 3 design systems IRL',       e:'👁️', cat:'Design'},
+    {l:'Visit a Sunday local market',     e:'🛒', cat:'Travel'},
+    {l:'Street portrait photography',     e:'📸', cat:'Photography'},
+  ];
+  var filtSugg=_goalCat==='All'?SUGG:SUGG.filter(function(s){return s.cat===_goalCat;});
+  if(filtSugg.length){
+    out+='<div class="px"><div class="label mb3">Discover more</div></div>';
+    out+='<div class="sugg-grid-g">';
+    for(var i=0;i<filtSugg.length;i++){
+      var sg=filtSugg[i];
+      out+='<div class="sugg-card-g">';
+      out+='<div class="sugg-card-g-em">'+sg.e+'</div>';
+      out+='<div class="sugg-card-g-lbl">'+sg.l+'</div>';
+      out+='<div class="sugg-card-g-add"><i class="ph ph-plus" style="font-size:10px"></i>Add</div>';
+      out+='</div>';
+    }
+    out+='</div>';
+  }
+
   g('pGoals').innerHTML=out;
 }
 
