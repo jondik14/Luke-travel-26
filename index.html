@@ -877,6 +877,58 @@ body.light .hero-display {
   font-size:14px; font-weight:700; color:var(--ac); display:block; margin-bottom:2px;
 }
 
+/* ─── Find your people (community links) ────────────────── */
+.intel-grid { display:flex; flex-direction:column; gap:var(--sp2); }
+.intel-link {
+  display:flex; align-items:center; gap:var(--sp3);
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp3);
+  transition:background .2s, transform .3s var(--spring);
+  text-decoration:none;
+}
+.intel-link:active { transform:scale(.97); background:var(--s3); }
+.intel-link-ico {
+  width:36px; height:36px; border-radius:var(--r-sm);
+  background:var(--ac-dim); border:1px solid rgba(242,100,25,.18);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; color:var(--ac); font-size:16px;
+}
+.intel-link-info { flex:1; min-width:0; }
+.intel-link-lbl { font-size:13px; font-weight:600; color:var(--tx); }
+.intel-link-sub { font-size:11px; color:var(--tx2); margin-top:1px; }
+
+/* ─── Packing list sheet ─────────────────────────────────── */
+.pack-summary { display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--sp3); }
+.pack-cat-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--tx3); padding:var(--sp4) 0 var(--sp2);
+  border-bottom:1px solid var(--bd); margin-bottom:2px;
+}
+.pack-item {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp2) 0; cursor:pointer;
+  -webkit-user-select:none; user-select:none;
+}
+.pack-chk {
+  width:22px; height:22px; border-radius:7px;
+  border:2px solid var(--bd2); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s, border-color .2s, transform .4s var(--spring);
+}
+.pack-chk.on { background:var(--ac); border-color:var(--ac); transform:scale(1.05); }
+.pack-chk.on::after {
+  content:''; width:9px; height:5px;
+  border-left:2px solid #fff; border-bottom:2px solid #fff;
+  transform:rotate(-45deg) translateY(-1px); display:block;
+}
+.pack-lbl { font-size:14px; color:var(--tx); transition:color .2s; }
+.pack-lbl.done { color:var(--tx3); text-decoration:line-through; }
+.util-btn-dot {
+  position:absolute; top:6px; right:6px; width:7px; height:7px;
+  border-radius:50%; background:var(--ac); border:1.5px solid var(--bg);
+}
+
 /* ─── Reduced motion ─────────────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -950,6 +1002,15 @@ body.light .hero-display {
     <div class="exp-cat-pills" id="expPills"></div>
     <input class="exp-note-inp" id="expNote" type="text" placeholder="Note (optional)">
     <button class="cta-btn" onclick="logExp()" style="margin-top:0">Log it</button>
+  </div>
+</div>
+
+<!-- Packing list sheet -->
+<div class="ovl" id="packOvl" onclick="closePackSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div id="packInner"></div>
+    <button class="cta-btn" onclick="closePackSheet()">Done</button>
   </div>
 </div>
 
@@ -1085,11 +1146,21 @@ var BCATS=['Flights','Accommodation','Food','Transport','Activities','Shopping',
 var BICONS={Flights:'ph-airplane',Accommodation:'ph-bed',Food:'ph-fork-knife',
             Transport:'ph-train',Activities:'ph-ticket',Shopping:'ph-shopping-bag',Emergency:'ph-first-aid'};
 
+var PACK_CATS=[
+  {cat:'Documents',  ico:'ph-identification-card', items:['Passport','Travel insurance docs','Flight confirmations','Hostel/accom confirmations','Driver\'s licence (ID)']},
+  {cat:'Electronics',ico:'ph-camera',              items:['Phone + charger','Camera + lenses','Power bank','EU plug adapter','Headphones','Spare SD cards','Cables']},
+  {cat:'Clothing',   ico:'ph-t-shirt',             items:['Swimwear','Comfortable walking shoes','Light rain jacket','Festival outfit (Defqon)','Warm layers (Innsbruck)','Workout gear','Sleepwear']},
+  {cat:'Toiletries', ico:'ph-drop',                items:['Toothbrush + toothpaste','Sunscreen (high SPF)','Deodorant','Any medication','Basic first aid']},
+  {cat:'Fitness',    ico:'ph-barbell',             items:['Resistance bands','Gym/running shoes','Gym towel']},
+  {cat:'Misc',       ico:'ph-bag',                 items:['Reusable water bottle','Daypack','Padlock (hostel lockers)','Earplugs','Portable phone tripod']},
+];
+
 // State
 var dark = localStorage.getItem('lk_t') !== 'light';
 var gs   = JSON.parse(localStorage.getItem('lk_g')||'{}');
 var bs   = JSON.parse(localStorage.getItem('lk_b')||'{}');
 var exps = JSON.parse(localStorage.getItem('lk_exp')||'[]');
+var pks  = JSON.parse(localStorage.getItem('lk_pack')||'{}');
 var city = 'Athens';
 
 // WMO weather interpretation codes → emoji + label
@@ -1196,6 +1267,52 @@ function openExpSheet(){
 function closeExpSheet(){
   g('expOvl').classList.remove('on');
   document.body.style.overflow='';
+}
+function packKey(cat,item){ return cat+'_'+item; }
+function renderPackList(){
+  var done=0,total=0;
+  for(var i=0;i<PACK_CATS.length;i++) for(var j=0;j<PACK_CATS[i].items.length;j++){
+    total++; if(pks[packKey(PACK_CATS[i].cat,PACK_CATS[i].items[j])]) done++;
+  }
+  var out='<div class="pack-summary"><span class="title">Packing list</span><span class="title accent">'+done+' / '+total+'</span></div>';
+  out+='<div class="prog-rail mb4" style="height:5px"><div class="prog-bar" style="width:'+Math.round(done/total*100)+'%;height:100%"></div></div>';
+  for(var i=0;i<PACK_CATS.length;i++){
+    var pc=PACK_CATS[i];
+    var cDone=0; for(var j=0;j<pc.items.length;j++) if(pks[packKey(pc.cat,pc.items[j])]) cDone++;
+    out+='<div class="pack-cat-hdr"><span class="row gap2"><i class="ph '+pc.ico+'"></i>'+pc.cat+'</span><span>'+cDone+'/'+pc.items.length+'</span></div>';
+    for(var j=0;j<pc.items.length;j++){
+      var it=pc.items[j], key=packKey(pc.cat,it), on=!!pks[key];
+      out+='<div class="pack-item" onclick="togPack(\''+key.replace(/'/g,"\\'")+'\')">'
+        +'<div class="pack-chk'+(on?' on':'')+'"></div>'
+        +'<div class="pack-lbl'+(on?' done':'')+'">'+it+'</div></div>';
+    }
+  }
+  g('packInner').innerHTML=out;
+}
+function openPackSheet(){
+  renderPackList();
+  g('packOvl').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closePackSheet(){ g('packOvl').classList.remove('on'); document.body.style.overflow=''; }
+function togPack(key){
+  pks[key]=!pks[key];
+  localStorage.setItem('lk_pack',JSON.stringify(pks));
+  var inner=g('packInner');
+  var st = inner?inner.scrollTop:0;
+  renderPackList();
+  if(inner) inner.scrollTop = st;
+}
+function communityLinks(cityName){
+  var q=encodeURIComponent(cityName);
+  return [
+    {ico:'ph-barbell', lbl:'Calisthenics & outdoor gyms', sub:'Reddit search for '+cityName,
+     url:'https://www.reddit.com/search/?q=calisthenics%20'+q},
+    {ico:'ph-vinyl-record', lbl:'Techno & nightlife', sub:'Resident Advisor listings',
+     url:'https://ra.co/search/'+q},
+    {ico:'ph-aperture', lbl:'Photo spots locals love', sub:'Reddit r/'+cityName+' top posts',
+     url:'https://www.reddit.com/r/'+q+'/search/?q=best%20photo%20spot&restrict_sr=1&sort=top'},
+  ];
 }
 function selExpCat(cat){
   _expCat=cat;
@@ -1356,6 +1473,14 @@ function renderToday(){
 
   // Utility bar
   out += '<div class="today-util">';
+  if(!on){
+    var pkDone=0,pkTotal=0;
+    for(var i=0;i<PACK_CATS.length;i++) for(var j=0;j<PACK_CATS[i].items.length;j++){
+      pkTotal++; if(pks[packKey(PACK_CATS[i].cat,PACK_CATS[i].items[j])]) pkDone++;
+    }
+    out += '<button class="util-btn" style="position:relative" onclick="openPackSheet()" aria-label="Packing list"><i class="ph ph-suitcase-rolling"></i>'
+      +(pkDone<pkTotal?'<span class="util-btn-dot"></span>':'')+'</button>';
+  }
   out += '<button class="util-btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme"><i class="ph ph-sun"></i></button>';
   out += '<button class="util-btn" onclick="openSheet()" aria-label="Install app"><i class="ph ph-download-simple"></i></button>';
   out += '</div>';
@@ -1870,6 +1995,21 @@ function renderGuide(){
     }
     out+='</div></div>';
   }
+
+  // ── Find your people ──
+  var clinks=communityLinks(city);
+  out+='<div class="guide-sec">';
+  out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-users-three"></i></div><span class="guide-hdr-label">Find your people</span></div>';
+  out+='<div class="intel-grid">';
+  for(var i=0;i<clinks.length;i++){
+    var cl=clinks[i];
+    out+='<a class="intel-link" href="'+cl.url+'" target="_blank" rel="noopener">';
+    out+='<div class="intel-link-ico"><i class="ph '+cl.ico+'"></i></div>';
+    out+='<div class="intel-link-info"><div class="intel-link-lbl">'+cl.lbl+'</div><div class="intel-link-sub">'+cl.sub+'</div></div>';
+    out+='<i class="ph ph-arrow-up-right" style="color:var(--tx3)"></i>';
+    out+='</a>';
+  }
+  out+='</div></div>';
 
   out+='</div>';
   g('gInner').innerHTML=out;
