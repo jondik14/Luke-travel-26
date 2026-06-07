@@ -186,6 +186,7 @@ body.light #nav { background: rgba(244,242,239,.9); }
 .b-warn { background:var(--warn-dim); color:var(--warn); border:1px solid rgba(251,191,36,.2); }
 .b-ac   { background:var(--ac-dim);   color:var(--ac);   border:1px solid rgba(242,100,25,.25); }
 .b-dim  { background:var(--s2);       color:var(--tx2);  border:1px solid var(--bd); }
+.b-err  { background:rgba(248,113,113,.12); color:var(--err); border:1px solid rgba(248,113,113,.2); }
 
 /* ─── Icon container ─────────────────────────────────────── */
 .ico {
@@ -578,6 +579,28 @@ body.light .hero-display {
 }
 .budget-tile-num.accent { color:var(--ac); }
 .budget-tile-num.over   { color:var(--err); }
+
+.budget-pace {
+  display:flex; align-items:center; gap:var(--sp3);
+  background:var(--s1); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp4);
+  margin-bottom:var(--sp4);
+}
+.budget-pace-ico {
+  width:42px; height:42px; border-radius:var(--r-md); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:19px;
+}
+.budget-pace-txt { flex:1; min-width:0; }
+.budget-pace-num { font-size:14px; font-weight:700; color:var(--tx); }
+.budget-pace-sub { font-size:12px; color:var(--tx2); margin-top:2px; line-height:1.4; }
+
+.budget-cat-prog { margin-top:var(--sp2); }
+.budget-cat-prog-row {
+  display:flex; justify-content:space-between;
+  font-size:11px; color:var(--tx3); margin-bottom:4px;
+}
+.prog-bar.near { background:var(--warn); }
+.prog-bar.over { background:var(--err); }
 
 .budget-cat-hdr {
   display:flex; align-items:center; justify-content:space-between;
@@ -1215,6 +1238,7 @@ var WMO={
   95:'⛈️ Thunderstorm',96:'⛈️ Thunderstorm',99:'⛈️ Thunderstorm'
 };
 var _wxCache={}, _expCat='Food', _goalCat='All';
+var _xr=parseFloat(localStorage.getItem('lk_xr'))||1.64, _xrFetched=false; // EUR → AUD
 
 function g(id){ return document.getElementById(id); }
 function fmt(s){
@@ -1284,6 +1308,22 @@ function paintWeather(d){
     +'<span style="font-size:12px;font-weight:500;color:var(--tx2);margin-left:8px">'+lo+'° – '+hi+'°</span></div>'
     +'<div class="weather-desc">'+desc+'</div></div>'
     +'</div>';
+}
+
+/* ─── Currency (EUR → AUD) ───────────────────────────────── */
+function fetchXR(){
+  if(_xrFetched) return;
+  _xrFetched=true;
+  fetch('https://api.frankfurter.app/latest?from=EUR&to=AUD')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.rates&&d.rates.AUD){
+        _xr=d.rates.AUD;
+        localStorage.setItem('lk_xr',_xr);
+        renderBudget();
+      }
+    })
+    .catch(function(){});
 }
 
 /* ─── Expense sheet ──────────────────────────────────────── */
@@ -2175,51 +2215,94 @@ function tog(id){
 }
 
 /* ─── BUDGET ─────────────────────────────────────────────── */
+var CONFIRMED_COSTS=[
+  {ico:'ph-airplane',t:'BCN → IBZ · Vueling',sub:'Mon 13 Jul · VY3518',eur:65.99},
+  {ico:'ph-airplane',t:'IBZ → BCN · Vueling',sub:'Wed 15 Jul · VY3511',eur:102.99},
+  {ico:'ph-bed',t:'Wombat\'s Munich',sub:'24 Jun · €9.56 + €56.41 at property',eur:64.10},
+];
 function renderBudget(){
-  // Compute logged totals per category
+  fetchXR();
+  // Compute logged totals per category (in EUR, as logged on the trip)
   var loggedByCat={}, loggedTotal=0;
   for(var i=0;i<exps.length;i++){
     loggedByCat[exps[i].cat]=(loggedByCat[exps[i].cat]||0)+exps[i].amt;
     loggedTotal+=exps[i].amt;
   }
-  var tB=0,tA=0;
-  for(var i=0;i<BCATS.length;i++){
-    tB+=parseFloat(bs[BCATS[i]+'_b']||0);
-    tA+=parseFloat(bs[BCATS[i]+'_a']||0)+(loggedByCat[BCATS[i]]||0);
-  }
-  var over=tA>tB&&tB>0;
+  var confirmedTotal=0; for(var i=0;i<CONFIRMED_COSTS.length;i++) confirmedTotal+=CONFIRMED_COSTS[i].eur;
+
+  // Everything converted to AUD (the currency the budget is set in) for fair comparison
+  var spentEUR = loggedTotal+confirmedTotal;
+  var spentAUD = spentEUR*_xr;
+  var tB=0; for(var i=0;i<BCATS.length;i++) tB+=parseFloat(bs[BCATS[i]+'_b']||0);
+  var over = spentAUD>tB && tB>0;
+
   var out='<div class="px pt5">';
 
   // Hero tiles
   out+='<div class="budget-hero">';
-  out+='<div class="budget-tile"><div class="budget-tile-label">Budget</div><div class="budget-tile-num accent" id="tB">A$'+Math.round(tB).toLocaleString()+'</div></div>';
-  out+='<div class="budget-tile"><div class="budget-tile-label">Logged</div><div class="budget-tile-num'+(over?' over':'')+'" id="tA">€'+loggedTotal.toFixed(2)+'</div></div>';
+  out+='<div class="budget-tile"><div class="budget-tile-label">Trip budget</div><div class="budget-tile-num accent" id="tB">A$'+Math.round(tB).toLocaleString()+'</div></div>';
+  out+='<div class="budget-tile"><div class="budget-tile-label">Spent so far</div><div class="budget-tile-num'+(over?' over':'')+'" id="tA">A$'+Math.round(spentAUD).toLocaleString()+'</div>';
+  out+='<div class="cap mt1" style="color:var(--tx3)">€'+spentEUR.toFixed(0)+' · 1€ ≈ A$'+_xr.toFixed(2)+'</div></div>';
   out+='</div>';
+
+  // Daily spending pace (TravelSpend-style projection — only meaningful once on the trip and logging)
+  var ts=TODAY.toISOString().split('T')[0];
+  var tripOn = TODAY>=TS && TODAY<=TE;
+  if(tripOn && loggedTotal>0){
+    var dn=Math.min(Math.max(dayNum(ts),1),39);
+    var avgEUR = loggedTotal/dn;
+    var projAUD = (avgEUR*39+confirmedTotal)*_xr;
+    var paceOver = tB>0 && projAUD>tB;
+    var pcol = paceOver?'var(--err)':'var(--ok)';
+    out+='<div class="budget-pace">';
+    out+='<div class="budget-pace-ico" style="background:'+pcol+'1a;color:'+pcol+'"><i class="ph-fill ph-'+(paceOver?'warning-circle':'check-circle')+'"></i></div>';
+    out+='<div class="budget-pace-txt">';
+    out+='<div class="budget-pace-num">€'+avgEUR.toFixed(0)+' / day average · day '+dn+' of 39</div>';
+    out+='<div class="budget-pace-sub">'+(paceOver
+      ? 'Projected to land around <strong style="color:'+pcol+'">A$'+Math.round(projAUD).toLocaleString()+'</strong> — over your A$'+Math.round(tB).toLocaleString()+' budget'
+      : (tB>0
+        ? 'Tracking to ≈A$'+Math.round(projAUD).toLocaleString()+' by day 39 — within your A$'+Math.round(tB).toLocaleString()+' budget'
+        : 'Set a trip budget below to see if you\'re on pace'))+'</div>';
+    out+='</div></div>';
+  }
 
   // Confirmed costs
   out+='<div class="label mb3">Confirmed from bookings</div>';
   out+='<div class="card card-ok mb4">';
-  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div><div class="grow1"><div class="title">BCN → IBZ · Vueling</div><div class="cap mt1">Mon 13 Jul · VY3518</div></div><span class="accent" style="font-weight:700">€65.99</span></div>';
-  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-airplane"></i></div><div class="grow1"><div class="title">IBZ → BCN · Vueling</div><div class="cap mt1">Wed 15 Jul · VY3511</div></div><span class="accent" style="font-weight:700">€102.99</span></div>';
-  out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill ph-bed"></i></div><div class="grow1"><div class="title">Wombat\'s Munich</div><div class="cap mt1">24 Jun · €9.56 + €56.41 at property</div></div><span class="accent" style="font-weight:700">€64.10</span></div>';
+  for(var i=0;i<CONFIRMED_COSTS.length;i++){
+    var cf=CONFIRMED_COSTS[i];
+    out+='<div class="list-row"><div class="ico ico-ok"><i class="ph-fill '+cf.ico+'"></i></div><div class="grow1"><div class="title">'+cf.t+'</div><div class="cap mt1">'+cf.sub+'</div></div><span class="accent" style="font-weight:700">€'+cf.eur.toFixed(2)+'</span></div>';
+  }
+  out+='<div class="row between" style="padding:var(--sp3) 0 0;margin-top:4px;border-top:1px solid var(--bd)">';
+  out+='<span class="cap">Pre-paid total</span><span class="cap" style="font-weight:700">€'+confirmedTotal.toFixed(2)+' · ≈A$'+Math.round(confirmedTotal*_xr).toLocaleString()+'</span></div>';
   out+='</div>';
 
-  // Category rows
+  // Category rows w/ progress bars (logged converted to AUD against the AUD budget)
   out+='<div class="budget-cat-hdr">';
   out+='<div style="flex:1" class="budget-cat-hdr-label">Category</div>';
-  out+='<div style="width:72px;text-align:right" class="budget-cat-hdr-label">Budget A$</div>';
-  out+='<div style="width:64px;text-align:right" class="budget-cat-hdr-label">Logged €</div>';
+  out+='<div style="width:88px;text-align:right" class="budget-cat-hdr-label">Budget A$</div>';
   out+='</div>';
 
   for(var i=0;i<BCATS.length;i++){
     var cat=BCATS[i];
-    var logged=(loggedByCat[cat]||0);
-    out+='<div class="budget-row">';
+    var loggedEUR=(loggedByCat[cat]||0);
+    var loggedAUD=loggedEUR*_xr;
+    var budgetAUD=parseFloat(bs[cat+'_b']||0);
+    var pct = budgetAUD>0 ? Math.min(100,Math.round(loggedAUD/budgetAUD*100)) : (loggedAUD>0?100:0);
+    var barCls = budgetAUD>0 && loggedAUD>budgetAUD ? 'over' : (pct>=80 ? 'near' : '');
+    out+='<div class="budget-row" style="flex-direction:column;align-items:stretch;min-height:0;padding:var(--sp3) 0">';
+    out+='<div class="row gap3">';
     out+='<div class="ico"><i class="ph '+(BICONS[cat]||'ph-tag')+'"></i></div>';
     out+='<div class="budget-row-name">'+cat+'</div>';
-    out+='<input class="binp" type="number" inputmode="numeric" placeholder="0" value="'+(bs[cat+'_b']||'')+'" oninput="savB(\''+cat+'\',\'b\',this.value)">';
-    out+='<div class="binp actual" style="display:flex;align-items:center;justify-content:flex-end;cursor:default">'
-      +(logged>0?'<span style="font-weight:700">'+logged.toFixed(0)+'</span>':'<span style="color:var(--tx3)">—</span>')+'</div>';
+    out+='<input class="binp" type="number" inputmode="numeric" placeholder="0" data-cat="'+cat+'" value="'+(bs[cat+'_b']||'')+'" oninput="savB(\''+cat+'\',\'b\',this.value)">';
+    out+='</div>';
+    if(budgetAUD>0||loggedAUD>0){
+      out+='<div class="budget-cat-prog">';
+      out+='<div class="budget-cat-prog-row"><span>≈A$'+Math.round(loggedAUD).toLocaleString()+' logged'+(loggedEUR>0?' (€'+loggedEUR.toFixed(0)+')':'')+'</span>'
+        +(budgetAUD>0?'<span>'+pct+'%</span>':'')+'</div>';
+      out+='<div class="prog-rail" style="height:5px"><div class="prog-bar'+(barCls?' '+barCls:'')+'" style="width:'+pct+'%;height:100%"></div></div>';
+      out+='</div>';
+    }
     out+='</div>';
   }
 
@@ -2240,7 +2323,7 @@ function renderBudget(){
         +'</div>';
     }
     out+='<div class="row between" style="padding:var(--sp3) 0 0;border-top:1px solid var(--bd)">';
-    out+='<span class="label">Total logged</span><span class="title accent">€'+loggedTotal.toFixed(2)+'</span></div>';
+    out+='<span class="label">Total logged</span><span class="title accent">€'+loggedTotal.toFixed(2)+' · ≈A$'+Math.round(loggedTotal*_xr).toLocaleString()+'</span></div>';
     out+='</div>';
   }
 
@@ -2251,16 +2334,13 @@ function renderBudget(){
 function savB(cat,f,v){
   bs[cat+'_'+f]=v;
   localStorage.setItem('lk_b',JSON.stringify(bs));
-  var tB=0,tA=0;
-  for(var i=0;i<BCATS.length;i++){
-    tB+=parseFloat(bs[BCATS[i]+'_b']||0);
-    tA+=parseFloat(bs[BCATS[i]+'_a']||0);
-  }
-  var b=g('tB'),a=g('tA');
-  if(b) b.textContent='A$'+Math.round(tB).toLocaleString();
-  if(a){
-    a.textContent='A$'+Math.round(tA).toLocaleString();
-    a.className='budget-tile-num'+(tA>tB&&tB>0?' over':'');
+  var active=document.activeElement;
+  var pos = active&&active.setSelectionRange ? [active.selectionStart,active.selectionEnd] : null;
+  var activeCat = active&&active.dataset?active.dataset.cat:null;
+  renderBudget();
+  if(activeCat){
+    var el=document.querySelector('.binp[data-cat="'+activeCat+'"]');
+    if(el){ el.focus(); if(pos) el.setSelectionRange(pos[0],pos[1]); }
   }
 }
 
