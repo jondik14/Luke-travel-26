@@ -97,7 +97,7 @@ body {
 #app { display:flex; flex-direction:column; height:100vh; height:100dvh; }
 #main {
   flex:1; overflow-y:auto; overscroll-behavior:contain;
-  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 68px);
+  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 52px);
 }
 
 /* ─── Panes ──────────────────────────────────────────────── */
@@ -121,7 +121,7 @@ body.light #nav { background: rgba(244,242,239,.9); }
 .nbtn {
   flex:1; display:flex; flex-direction:column; align-items:center;
   justify-content:center; gap:3px;
-  padding:10px 0 11px;
+  padding:8px 0 6px;
   color:var(--tx3); font-size:9px; font-weight:700;
   letter-spacing:.07em; text-transform:uppercase;
   transition: color .2s, transform .4s var(--spring);
@@ -215,7 +215,7 @@ body.light #nav { background: rgba(244,242,239,.9); }
 /* ─── TODAY — Hero ───────────────────────────────────────── */
 .today-util {
   display:flex; justify-content:flex-end; gap:var(--sp2);
-  padding: calc(env(safe-area-inset-top,0px) + 10px) var(--sp4) 0;
+  padding: calc(env(safe-area-inset-top,0px) + 6px) var(--sp4) 0;
 }
 .util-btn {
   width:36px; height:36px; border-radius:var(--r-full);
@@ -228,8 +228,8 @@ body.light #nav { background: rgba(244,242,239,.9); }
 .util-btn i { font-size:17px; }
 
 .today-hero {
-  padding: var(--sp6) var(--sp4) var(--sp4);
-  min-height:220px;
+  padding: var(--sp4) var(--sp4) var(--sp4);
+  min-height:150px;
   display:flex; flex-direction:column; justify-content:flex-end;
 }
 .hero-eyebrow {
@@ -1021,8 +1021,48 @@ body.light .hero-display {
 var TODAY = new Date();
 var TS = new Date('2026-06-09');
 var TE = new Date('2026-07-17');
-var PC = {1:'#E07B5A',2:'#4A9E7A',3:'#E8A23C',4:'#5A7EC4'};
-var PN = {1:'Family',2:'Bucks + Solo',3:'Portugal',4:'Spain'};
+var CITY_COUNTRY = {
+  Athens:'Greece', Milos:'Greece',
+  Catania:'Italy', Taormina:'Italy',
+  Bristol:'United Kingdom',
+  Innsbruck:'Austria',
+  Munich:'Germany',
+  Amsterdam:'Netherlands',
+  Porto:'Portugal', Ericeira:'Portugal',
+  Madrid:'Spain', Barcelona:'Spain', Ibiza:'Spain',
+  Sydney:'Australia'
+};
+var CN = {
+  Greece:         {f:'🇬🇷', c:'#5B9BD5'},
+  Italy:          {f:'🇮🇹', c:'#4A9E7A'},
+  'United Kingdom':{f:'🇬🇧', c:'#8C7AE6'},
+  Austria:        {f:'🇦🇹', c:'#E8617A'},
+  Germany:        {f:'🇩🇪', c:'#D6B656'},
+  Netherlands:    {f:'🇳🇱', c:'#E8893C'},
+  Portugal:       {f:'🇵🇹', c:'#4AC4B0'},
+  Spain:          {f:'🇪🇸', c:'#E07B5A'},
+  Australia:      {f:'🇦🇺', c:'#9C9CA8'}
+};
+function dayCountry(d){
+  var c=d.c;
+  if(c.indexOf(' → ')!==-1){
+    var parts=c.split(' → ');
+    var from=CITY_COUNTRY[parts[0].trim()], to=CITY_COUNTRY[parts[1].trim()];
+    return (to==='Australia') ? from : (to||from);
+  }
+  return CITY_COUNTRY[c];
+}
+// Contiguous runs of days spent in the same country, in itinerary order
+function tripSegments(){
+  var segs=[];
+  for(var i=0;i<DAYS.length;i++){
+    var ctry=dayCountry(DAYS[i]);
+    var last=segs[segs.length-1];
+    if(!last||last.country!==ctry) segs.push({country:ctry, idx:segs.length, days:[DAYS[i]]});
+    else last.days.push(DAYS[i]);
+  }
+  return segs;
+}
 
 var BK = {
   'bcn-ibz':{from:'BCN',to:'IBZ',fl:'VY3518',dep:'17:15',arr:'18:20',date:'Mon 13 Jul',seat:'5C',ref:'JNVDTN',eur:65.99},
@@ -1338,26 +1378,23 @@ function deleteExp(idx){
 /* ─── Trip strip ─────────────────────────────────────────── */
 function renderTripVis(){
   var ts=TODAY.toISOString().split('T')[0];
+  var segs=tripSegments();
+  var segOf={}; for(var s=0;s<segs.length;s++) for(var k=0;k<segs[s].days.length;k++) segOf[segs[s].days[k].d]=s;
   var out='<div class="trip-vis"><div class="trip-bar">';
-  var lp=0;
+  var lp=-1;
   for(var i=0;i<DAYS.length;i++){
-    var d=DAYS[i];
-    if(d.p!==lp&&lp!==0) out+='<div style="width:3px;flex-shrink:0"></div>';
-    lp=d.p;
+    var d=DAYS[i], si=segOf[d.d];
+    if(si!==lp&&lp!==-1) out+='<div style="width:3px;flex-shrink:0"></div>';
+    lp=si;
     var isT=d.d===ts, isPast=d.d<ts;
     var op=isPast?'.2':isT?'1':'.5';
-    out+='<div class="trip-seg" style="flex:1;background:'+PC[d.p]+';opacity:'+op+'"'+(isT?' id="tvToday"':'')+' title="'+d.c+' · '+fmt(d.d)+'"></div>';
+    out+='<div class="trip-seg" style="flex:1;background:'+CN[dayCountry(d)].c+';opacity:'+op+'"'+(isT?' id="tvToday"':'')+' title="'+d.c+' · '+fmt(d.d)+'"></div>';
   }
   out+='</div><div class="trip-legend">';
-  lp=0;
-  for(var i=0;i<DAYS.length;i++){
-    var d=DAYS[i];
-    if(d.p!==lp){
-      if(lp!==0) out+='<div style="width:3px;flex-shrink:0"></div>';
-      lp=d.p;
-      var cnt=0; for(var k=0;k<DAYS.length;k++) if(DAYS[k].p===lp) cnt++;
-      out+='<div class="trip-legend-item" style="flex:'+cnt+';color:'+PC[lp]+'">'+PN[lp]+'</div>';
-    }
+  for(var s=0;s<segs.length;s++){
+    if(s>0) out+='<div style="width:3px;flex-shrink:0"></div>';
+    var seg=segs[s], cn=CN[seg.country];
+    out+='<div class="trip-legend-item" style="flex:'+seg.days.length+';color:'+cn.c+'">'+cn.f+' '+seg.country+'</div>';
   }
   out+='</div></div>';
   return out;
@@ -1412,21 +1449,26 @@ function toggleMap(){
 
 function zoomMapToCity(c){
   if(!COORDS[c]) return;
+  var wasOpen=_mapOpen;
   if(!_mapOpen) toggleMap();
   var main=g('main'); if(main) main.scrollTo({top:0,behavior:'smooth'});
-  if(_mapInited&&_map){
+  var fly=function(){
+    if(!_map) return;
+    // Container size may have just changed (map opened / pane scrolled into view) —
+    // Leaflet must recompute its dimensions before centering, or flyTo lands off-target
+    _map.invalidateSize(true);
     _map.flyTo(COORDS[c],11,{duration:1.2});
-  } else {
-    setTimeout(function(){ if(_map) _map.flyTo(COORDS[c],11,{duration:1.2}); },350);
-  }
+  };
+  if(wasOpen&&_mapInited&&_map) fly();
+  else setTimeout(fly,420); // wait out the .3s height transition + map init
 }
 
 /* ─── Phase kanban ───────────────────────────────────────── */
 function renderPhaseKanban(ts){
   var out='<div class="phase-scroll">';
-  for(var ph=1;ph<=4;ph++){
-    var pDays=[]; for(var k=0;k<DAYS.length;k++) if(DAYS[k].p===ph) pDays.push(DAYS[k]);
-    if(!pDays.length) continue;
+  var segs=tripSegments();
+  for(var si=0;si<segs.length;si++){
+    var seg=segs[si], pDays=seg.days, cn=CN[seg.country];
     var start=pDays[0].d, end=pDays[pDays.length-1].d;
     var isPast=end<ts, isActive=start<=ts&&end>=ts;
     var cls='pk-card'+(isActive?' pk-active':isPast?' pk-past':'');
@@ -1442,9 +1484,9 @@ function renderPhaseKanban(ts){
     var sd=new Date(start+'T00:00:00'), ed=new Date(end+'T00:00:00');
     var sf=sd.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
     var ef=ed.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
-    out+='<div class="'+cls+'" id="pk'+ph+'">';
-    out+='<div class="pk-hdr"><div class="pk-dot" style="background:'+PC[ph]+'"></div>';
-    out+='<span class="pk-name" style="color:'+PC[ph]+'">'+PN[ph]+'</span></div>';
+    out+='<div class="'+cls+'" id="pk'+seg.idx+'">';
+    out+='<div class="pk-hdr"><div class="pk-dot" style="background:'+cn.c+'"></div>';
+    out+='<span class="pk-name" style="color:'+cn.c+'">'+cn.f+' '+seg.country+'</span></div>';
     out+='<div class="pk-dates">'+sf+' – '+ef+'</div>';
     out+='<div class="pk-cities">';
     for(var i=0;i<cities.length;i++){
@@ -1799,11 +1841,16 @@ function renderTimeline(){
   out+='</div>';
 
   // Sticky phase jump tabs
+  var segs=tripSegments();
+  var segOf={}; for(var s=0;s<segs.length;s++) for(var k=0;k<segs[s].days.length;k++) segOf[segs[s].days[k].d]=s;
   out+='<div class="tl-tabs">';
-  for(var p=1;p<=4;p++) out+='<button class="tl-tab" onclick="jumpPhase('+p+')"><span class="tl-tab-dot" style="background:'+PC[p]+'"></span>'+PN[p]+'</button>';
+  for(var s=0;s<segs.length;s++){
+    var cn=CN[segs[s].country];
+    out+='<button class="tl-tab" onclick="jumpPhase('+s+')"><span class="tl-tab-dot" style="background:'+cn.c+'"></span>'+cn.f+' '+segs[s].country+'</button>';
+  }
   out+='</div>';
 
-  var lp=0;
+  var lp=-1;
   for(var i=0;i<DAYS.length;i++){
     var d=DAYS[i];
     var isToday=d.d===ts, isPast=d.d<ts;
@@ -1813,11 +1860,13 @@ function renderTimeline(){
     var gc=guideCity(d.c);
     var bg=HERO_BG[pc]||HERO_BG[d.c]||'135deg,#444,#222';
 
-    if(d.p!==lp){
-      lp=d.p;
-      out+='<div class="phase-hdr" id="ph'+d.p+'">';
-      out+='<div class="phase-dot" style="background:'+PC[d.p]+'"></div>';
-      out+='<span class="phase-label" style="color:'+PC[d.p]+'">'+PN[d.p]+'</span>';
+    var si=segOf[d.d];
+    if(si!==lp){
+      lp=si;
+      var cn=CN[segs[si].country];
+      out+='<div class="phase-hdr" id="ph'+si+'">';
+      out+='<div class="phase-dot" style="background:'+cn.c+'"></div>';
+      out+='<span class="phase-label" style="color:'+cn.c+'">'+cn.f+' '+segs[si].country+'</span>';
       out+='</div>';
     }
 
@@ -1875,21 +1924,21 @@ function renderTimeline(){
 /* ─── CITIES ─────────────────────────────────────────────── */
 function renderCities(){
   var keys=Object.keys(GUIDES);
-  // Build city → phase map
-  var cityPhase={};
+  // Build city → country map
+  var cityCountry={};
   for(var i=0;i<DAYS.length;i++){
     var parts=DAYS[i].c.split(' → ');
     for(var j=0;j<parts.length;j++){
       var ct=parts[j].trim();
-      if(ct&&GUIDES[ct]&&!cityPhase[ct]) cityPhase[ct]=DAYS[i].p;
+      if(ct&&GUIDES[ct]&&!cityCountry[ct]) cityCountry[ct]=CITY_COUNTRY[ct];
     }
   }
   var chips='<div class="city-scroll">';
   for(var i=0;i<keys.length;i++){
     var k=keys[i];
-    var ph=cityPhase[k]||1;
+    var cn=CN[cityCountry[k]]||CN.Greece;
     chips+='<button class="city-chip'+(k===city?' on':'')+'" onclick="selCity(\''+k+'\')">';
-    chips+='<span class="city-chip-dot" style="background:'+(k===city?'rgba(255,255,255,.55)':PC[ph])+'"></span>';
+    chips+='<span class="city-chip-dot" style="background:'+(k===city?'rgba(255,255,255,.55)':cn.c)+'"></span>';
     chips+=k+'</button>';
   }
   chips+='</div>';
@@ -1912,9 +1961,9 @@ function renderGuide(){
   var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' nights':''):'';
   var bg=HERO_BG[city]||'135deg,#555,#333';
 
-  // Detect phase of this city
-  var phOfCity=1;
-  for(var i=0;i<DAYS.length;i++){ if(DAYS[i].c.indexOf(city)!==-1){phOfCity=DAYS[i].p;break;} }
+  // Detect country of this city
+  var countryOfCity=CITY_COUNTRY[city]||'Greece';
+  var cnOfCity=CN[countryOfCity];
 
   var out='<div class="city-hero">';
   out+='<div class="city-hero-bg" style="background:linear-gradient('+bg+')"></div>';
@@ -1928,13 +1977,13 @@ function renderGuide(){
   // ── My Visit ──
   if(days.length){
     var firstD=days[0];
-    var pCol=PC[phOfCity]||'var(--ac)';
+    var pCol=cnOfCity.c;
     out+='<div class="visit-card mb5">';
     out+='<div class="visit-hdr">';
     out+='<div class="guide-hdr-icon" style="background:'+pCol+'1a;border-color:'+pCol+'40">';
     out+='<i class="ph-fill ph-calendar-check" style="color:'+pCol+'"></i></div>';
     out+='<span class="guide-hdr-label">My Visit</span>';
-    out+='<span class="badge b-dim" style="margin-left:auto;color:'+pCol+'">'+PN[phOfCity]+'</span>';
+    out+='<span class="badge b-dim" style="margin-left:auto;color:'+pCol+'">'+cnOfCity.f+' '+countryOfCity+'</span>';
     out+='</div>';
     if(firstD.a){
       out+='<div class="visit-meta"><div class="row gap2">';
