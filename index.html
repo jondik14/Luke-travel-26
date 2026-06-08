@@ -870,21 +870,40 @@ body.light .hero-display {
   text-transform:uppercase; color:var(--tx3);
 }
 
-/* ─── Coming up cards (Today dashboard) ─────────────────── */
-.coming-card {
-  display:flex; align-items:center; gap:var(--sp3);
+/* ─── Up next carousel — airline-style trip cards ───────── */
+.upnext-scroll {
+  display:flex; gap:var(--sp3); overflow-x:auto;
+  margin:0 calc(-1 * var(--sp4)); padding:0 var(--sp4) var(--sp1);
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+}
+.upnext-card {
+  min-width:184px; max-width:184px; flex-shrink:0;
   background:var(--s1); border:1px solid var(--bd);
-  border-radius:var(--r-lg); padding:var(--sp3) var(--sp4);
-  transition:background .3s;
+  border-radius:var(--r-lg); overflow:hidden;
+  scroll-snap-align:start;
+  transition:background .3s, border-color .3s;
 }
-.coming-thumb {
-  width:52px; height:52px; border-radius:var(--r-md); flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
+.upnext-img {
+  position:relative; height:80px;
+  display:flex; align-items:flex-start; justify-content:space-between;
+  padding:var(--sp2) var(--sp3);
 }
-.coming-info { flex:1; min-width:0; }
-.coming-city { font-size:15px; font-weight:700; color:var(--tx); letter-spacing:-.01em; }
-.coming-date { font-size:12px; color:var(--tx2); margin-top:2px; }
-.coming-plan { font-size:12px; color:var(--tx3); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.upnext-emoji { font-size:27px; filter:drop-shadow(0 3px 10px rgba(0,0,0,.35)); position:relative; }
+.upnext-pill {
+  position:relative; font-size:10px; font-weight:700; letter-spacing:.02em; white-space:nowrap;
+  background:rgba(0,0,0,.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  color:#fff; padding:4px 8px; border-radius:99px;
+}
+.upnext-body { padding:var(--sp3); }
+.upnext-kind { font-size:9px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--ac); }
+.upnext-route { font-size:14px; font-weight:800; letter-spacing:-.01em; color:var(--tx); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.upnext-date { font-size:11px; color:var(--tx2); margin-top:2px; }
+.upnext-plan {
+  font-size:11px; color:var(--tx3); margin-top:6px; padding-top:6px;
+  border-top:1px solid var(--bd);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 
 /* ─── City visit card (Cities tab) ──────────────────────── */
 .visit-card {
@@ -1762,22 +1781,29 @@ function renderToday(){
   out += '<div class="stat-tile"><div class="stat-tile-val">'+dayTileVal+'</div><div class="stat-tile-lbl">'+dayTileLbl+'</div></div>';
   out += '</div>';
 
-  // Coming up — next 3 upcoming days
-  var upcoming=[];
-  for(var i=0;i<DAYS.length;i++){ if(DAYS[i].d>ts){ upcoming.push(DAYS[i]); if(upcoming.length>=3) break; } }
-  if(upcoming.length){
-    out += '<div class="label mb3">Coming up</div>';
-    for(var i=0;i<upcoming.length;i++){
-      var ud=upcoming[i];
-      var ubg=HERO_BG[photoCity(ud.c)]||'135deg,#444,#222';
-      out += '<div class="coming-card mb3">';
-      out += '<div class="coming-thumb" style="background:linear-gradient('+ubg+')"><span style="font-size:26px">'+ud.e+'</span></div>';
-      out += '<div class="coming-info">';
-      out += '<div class="coming-city">'+ud.c+'</div>';
-      out += '<div class="coming-date">'+fmt(ud.d)+'&nbsp;·&nbsp;Day '+dayNum(ud.d)+'</div>';
-      if(ud.th&&ud.th.length) out += '<div class="coming-plan">'+ud.th[0].replace('🔒 ','')+'</div>';
+  // Up next — airline-style swipeable carousel of upcoming moments
+  var moments=upcomingMoments(ts, 8);
+  if(moments.length){
+    out += '<div class="label mb3">Up next</div>';
+    out += '<div class="upnext-scroll mb4">';
+    for(var i=0;i<moments.length;i++){
+      var mo=moments[i];
+      var mbg=HERO_BG[mo.city]||'135deg,#444,#222';
+      var mdiff=Math.round((new Date(mo.d+'T00:00:00')-TODAY)/86400000);
+      var mlbl = mdiff<=0 ? 'Today' : mdiff===1 ? 'Tomorrow' : 'In '+mdiff+'d';
+      out += '<div class="upnext-card">';
+      out += '<div class="upnext-img" style="background:linear-gradient('+mbg+')">';
+      out += '<span class="upnext-emoji">'+mo.ico+'</span>';
+      out += '<span class="upnext-pill">'+mlbl+'</span>';
+      out += '</div>';
+      out += '<div class="upnext-body">';
+      out += '<div class="upnext-kind">'+mo.kind+'</div>';
+      out += '<div class="upnext-route">'+mo.route+'</div>';
+      out += '<div class="upnext-date">'+fmt(mo.d)+' · Day '+mo.dn+'</div>';
+      if(mo.plan) out += '<div class="upnext-plan">'+mo.plan+'</div>';
       out += '</div></div>';
     }
+    out += '</div>';
   }
 
   // Confirmed bookings — collapsed
@@ -1858,6 +1884,22 @@ function currentStay(idx){
     checkIn:DAYS[s].d, checkOut:checkOut.toISOString().split('T')[0],
     nights:e-s+1, nightNum:idx-s+1
   };
+}
+// Next N noteworthy moments ahead — flights, new-city arrivals, locked events
+function upcomingMoments(ts, limit){
+  var out=[], prevCity=null;
+  for(var i=0;i<DAYS.length;i++){
+    var d=DAYS[i], city=photoCity(d.c);
+    if(d.d<=ts){ prevCity=city; continue; }
+    var plan=(d.th&&d.th[0])?d.th[0].replace('🔒 ',''):'';
+    var m=null;
+    if(d.t==='travel') m={kind:'Flight day',ico:d.e,route:d.c,plan:plan,city:city};
+    else if(d.t==='event') m={kind:'Locked in',ico:d.e,route:plan,plan:city,city:city};
+    else if(city!==prevCity) m={kind:'Arriving',ico:d.e,route:city,plan:plan,city:city};
+    prevCity=city;
+    if(m){ m.d=d.d; m.dn=dayNum(d.d); out.push(m); if(out.length>=limit) break; }
+  }
+  return out;
 }
 function photoCity(c){ var p=c.split(' → '); return p[p.length-1]; }
 function guideCity(c){
