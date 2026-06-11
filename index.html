@@ -104,6 +104,16 @@ body {
 .pane { display:none; }
 .pane.on { display:block; }
 
+/* ─── Offline banner ─────────────────────────────────────── */
+#offlineBanner {
+  display:none; align-items:center; justify-content:center; gap:6px;
+  padding:6px var(--sp4); padding-top:calc(env(safe-area-inset-top,0px) + 6px);
+  background:var(--warn); color:#1a1300;
+  font-size:11px; font-weight:700; letter-spacing:.02em;
+  text-align:center; flex-shrink:0;
+}
+#offlineBanner.show { display:flex; }
+
 /* ─── Bottom Nav ─────────────────────────────────────────── */
 #nav {
   position:fixed; bottom:0; left:50%; transform:translateX(-50%);
@@ -1009,6 +1019,7 @@ body.light .hero-display {
 <body>
 
 <div id="app">
+  <div id="offlineBanner"><i class="ph ph-wifi-slash"></i>&nbsp;Offline — showing saved data</div>
   <main id="main">
     <div id="pToday"    class="pane on"></div>
     <div id="pTimeline" class="pane"></div>
@@ -1272,7 +1283,14 @@ var gs   = JSON.parse(localStorage.getItem('lk_g')||'{}');
 var bs   = JSON.parse(localStorage.getItem('lk_b')||'{}');
 var exps = JSON.parse(localStorage.getItem('lk_exp')||'[]');
 var pks  = JSON.parse(localStorage.getItem('lk_pack')||'{}');
+var todos = JSON.parse(localStorage.getItem('lk_todo')||'{}');
 var city = 'Athens';
+
+// Things still to book/confirm — each links straight to where to sort it
+var TODO_ITEMS=[
+  {id:'quad-milos', t:'Book quad bike rental', city:'Milos', note:'Best way to reach Sarakiniko & Kleftiko viewpoints', link:'https://www.google.com/search?q=quad+bike+rental+milos+greece'},
+  {id:'vangogh-ams', t:'Book Van Gogh Museum tickets', city:'Amsterdam', note:'Sells out weeks ahead — book a timed slot', link:'https://www.vangoghmuseum.nl/en/tickets'}
+];
 
 // WMO weather interpretation codes → emoji + label
 var WMO={
@@ -1302,11 +1320,19 @@ function dayNum(d){
   return Math.floor((new Date(d+'T00:00:00')-TS)/86400000)+1;
 }
 
+function updateOnlineStatus(){
+  var b=g('offlineBanner'); if(!b) return;
+  b.classList.toggle('show', !navigator.onLine);
+}
+
 function boot(){
   applyTheme();
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js').catch(function(){});
   }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
   g('urlBox').textContent = window.location.href;
   if(!document.querySelector('link[rel="manifest"]')){
     var mf={name:"Luke's Europe 2026",short_name:"Luke Europe",start_url:"./",display:"standalone",
@@ -1430,6 +1456,12 @@ function togPack(key){
   var st = inner?inner.scrollTop:0;
   renderPackList();
   if(inner) inner.scrollTop = st;
+}
+
+function togTodo(id){
+  todos[id]=!todos[id];
+  localStorage.setItem('lk_todo',JSON.stringify(todos));
+  renderToday();
 }
 function communityLinks(cityName){
   var q=encodeURIComponent(cityName);
@@ -1748,6 +1780,25 @@ function renderToday(){
     out += '<div class="card card-ok mb4 row">';
     out += '<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
     out += '<div class="grow1"><div class="title ok-tx">Back in Sydney</div><div class="cap mt1">Trip finished '+fmt('2026-07-17')+'</div></div>';
+    out += '</div>';
+  }
+
+  // To book — action list, only shown while items remain
+  var todoLeft=0; for(var i=0;i<TODO_ITEMS.length;i++) if(!todos[TODO_ITEMS[i].id]) todoLeft++;
+  if(todoLeft>0){
+    out += '<div class="row between mb3"><span class="label" style="margin-bottom:0">To book</span><span class="badge b-warn">'+todoLeft+' left</span></div>';
+    out += '<div class="card mb4">';
+    for(var i=0;i<TODO_ITEMS.length;i++){
+      var td=TODO_ITEMS[i], tdone=!!todos[td.id];
+      out += '<div class="list-row">';
+      out += '<div class="pack-chk'+(tdone?' on':'')+'" onclick="togTodo(\''+td.id+'\')"></div>';
+      out += '<div class="grow1">';
+      out += '<div class="pack-lbl'+(tdone?' done':'')+'">'+td.t+'</div>';
+      out += '<div class="cap mt1">'+td.city+' · '+td.note+'</div>';
+      out += '</div>';
+      out += '<a class="cta-sm" style="margin-top:0" href="'+td.link+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Book</a>';
+      out += '</div>';
+    }
     out += '</div>';
   }
 
