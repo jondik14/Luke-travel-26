@@ -1037,7 +1037,7 @@ body.light .hero-display {
     <div id="pToday"    class="pane on"></div>
     <div id="pTimeline" class="pane"></div>
     <div id="pCities"   class="pane"></div>
-    <div id="pGoals"    class="pane"></div>
+    <div id="pBook"     class="pane"></div>
     <div id="pBudget"   class="pane"></div>
   </main>
 
@@ -1051,8 +1051,8 @@ body.light .hero-display {
     <button class="nbtn" onclick="go('Cities',this)"    data-icon="ph-compass">
       <i class="ph ph-compass"></i>Cities
     </button>
-    <button class="nbtn" onclick="go('Goals',this)"     data-icon="ph-check-square">
-      <i class="ph ph-check-square"></i>Goals
+    <button class="nbtn" onclick="go('Book',this)"      data-icon="ph-ticket">
+      <i class="ph ph-ticket"></i>To Book
     </button>
     <button class="nbtn" onclick="go('Budget',this)"    data-icon="ph-wallet">
       <i class="ph ph-wallet"></i>Budget
@@ -1106,6 +1106,15 @@ body.light .hero-display {
     <div class="sheet-handle"></div>
     <div id="packInner"></div>
     <button class="cta-btn" onclick="closePackSheet()">Done</button>
+  </div>
+</div>
+
+<!-- Bucket list sheet -->
+<div class="ovl" id="goalsOvl" onclick="closeGoalsSheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div id="goalsInner"></div>
+    <button class="cta-btn" onclick="closeGoalsSheet()">Done</button>
   </div>
 </div>
 
@@ -1298,6 +1307,7 @@ var bs   = JSON.parse(localStorage.getItem('lk_b')||'{}');
 var exps = JSON.parse(localStorage.getItem('lk_exp')||'[]');
 var pks  = JSON.parse(localStorage.getItem('lk_pack')||'{}');
 var todos = JSON.parse(localStorage.getItem('lk_todo')||'{}');
+var booked = JSON.parse(localStorage.getItem('lk_booked')||'{}');
 var city = 'Athens';
 
 // Things still to book/confirm — each links straight to where to sort it
@@ -1306,6 +1316,14 @@ var TODO_ITEMS=[
   {id:'vangogh-ams', t:'Book Van Gogh Museum tickets', city:'Amsterdam', note:'Time-slot entry, sells out weeks ahead — try the 9am slot', link:'https://www.vangoghmuseum.nl/en/tickets'},
   {id:'annefrank-ams', t:'Book Anne Frank House tickets', city:'Amsterdam', note:'#1 priority — tickets drop ~6wks ahead and sell out fast, check now', link:'https://www.google.com/search?q=anne+frank+house+tickets'},
   {id:'sagrada-bcn', t:'Book Sagrada Família timed entry', city:'Barcelona', note:'Tower access sells out weeks ahead — pick an exact slot, bring headphones for audio tour', link:'https://www.google.com/search?q=sagrada+familia+tickets'}
+];
+
+// Curated extras worth booking ahead — "Book now" opens an external link, "Mark booked" tracks it manually
+var SUGGESTIONS=[
+  {id:'parkguell-bcn', t:'Park Güell timed entry', city:'Barcelona', e:'🌳', note:'Sells out like Sagrada Família — book a slot for 11–12 Jul', link:'https://www.google.com/search?q=park+guell+tickets'},
+  {id:'nordkette-ibk', t:'Nordkette Cable Car tickets', city:'Innsbruck', e:'🚡', note:'Skip the queue on your 22 Jun day trip — book online ahead', link:'https://www.google.com/search?q=nordkette+cable+car+tickets'},
+  {id:'campnou-bcn', t:'Camp Nou Experience tour', city:'Barcelona', e:'⚽', note:'Stadium tour + museum for your football culture goal — 12 Jul', link:'https://www.google.com/search?q=camp+nou+experience+tickets'},
+  {id:'bernabeu-mad', t:'Bernabéu Stadium Tour', city:'Madrid', e:'🏟️', note:'Self-guided tour — book a time slot for 9 Jul', link:'https://www.google.com/search?q=santiago+bernabeu+tour+tickets'}
 ];
 
 // WMO weather interpretation codes → emoji + label
@@ -1363,7 +1381,7 @@ function boot(){
   var fab=g('fab'); if(fab) fab.classList.remove('hidden');
   renderTimeline();
   renderCities();
-  renderGoals();
+  renderBook();
   renderBudget();
 }
 
@@ -1478,6 +1496,16 @@ function togTodo(id){
   todos[id]=!todos[id];
   localStorage.setItem('lk_todo',JSON.stringify(todos));
   renderToday();
+  renderBook();
+}
+function togBooked(id){
+  booked[id]=!booked[id];
+  localStorage.setItem('lk_booked',JSON.stringify(booked));
+  renderBook();
+}
+function goBook(){
+  var btn=document.querySelector('.nbtn[data-icon="ph-ticket"]');
+  if(btn) go('Book',btn);
 }
 function communityLinks(cityName){
   var q=encodeURIComponent(cityName);
@@ -1803,22 +1831,13 @@ function renderToday(){
     out += '</div>';
   }
 
-  // To book — action list, only shown while items remain
+  // To book — compact summary, links through to the To Book tab
   var todoLeft=0; for(var i=0;i<TODO_ITEMS.length;i++) if(!todos[TODO_ITEMS[i].id]) todoLeft++;
   if(todoLeft>0){
-    out += '<div class="row between mb3"><span class="label" style="margin-bottom:0">To book</span><span class="badge b-warn">'+todoLeft+' left</span></div>';
-    out += '<div class="card mb4">';
-    for(var i=0;i<TODO_ITEMS.length;i++){
-      var td=TODO_ITEMS[i], tdone=!!todos[td.id];
-      out += '<div class="list-row">';
-      out += '<div class="pack-chk'+(tdone?' on':'')+'" onclick="togTodo(\''+td.id+'\')"></div>';
-      out += '<div class="grow1">';
-      out += '<div class="pack-lbl'+(tdone?' done':'')+'">'+td.t+'</div>';
-      out += '<div class="cap mt1">'+td.city+' · '+td.note+'</div>';
-      out += '</div>';
-      out += '<a class="cta-sm" style="margin-top:0" href="'+td.link+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Book</a>';
-      out += '</div>';
-    }
+    out += '<div class="card card-wn mb4 row" onclick="goBook()" style="cursor:pointer">';
+    out += '<div class="ico" style="background:var(--warn-dim);border-color:rgba(251,191,36,.2)"><i class="ph-fill ph-ticket" style="color:var(--warn)"></i></div>';
+    out += '<div class="grow1"><div class="title">'+todoLeft+' thing'+(todoLeft===1?'':'s')+' to book</div><div class="cap mt1">Tap to view your action list</div></div>';
+    out += '<i class="ph ph-caret-right" style="color:var(--tx3)"></i>';
     out += '</div>';
   }
 
@@ -2317,10 +2336,102 @@ function renderGuide(){
   loadCityPhotos();
 }
 
-/* ─── GOALS ──────────────────────────────────────────────── */
-function setGoalCat(c){ _goalCat=c; renderGoals(); }
+/* ─── TO BOOK ────────────────────────────────────────────── */
+function renderBook(){
+  var todoLeft=0; for(var i=0;i<TODO_ITEMS.length;i++) if(!todos[TODO_ITEMS[i].id]) todoLeft++;
+  var openSugg=SUGGESTIONS.filter(function(s){return !booked[s.id];});
+  var doneSugg=SUGGESTIONS.filter(function(s){return booked[s.id];});
+  var totalLeft=todoLeft+openSugg.length;
+  var doneGoals=0; for(var i=0;i<GOALS.length;i++) if(gs[GOALS[i].id]) doneGoals++;
 
-function renderGoals(){
+  var out='<div class="px pt5 pb4">';
+  out+='<div class="row between mb2"><span class="head" style="letter-spacing:-.03em">To Book</span>';
+  out+= totalLeft>0
+    ? '<span class="badge b-warn">'+totalLeft+' open</span>'
+    : '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>All sorted</span>';
+  out+='</div>';
+  out+='<div class="cap" style="color:var(--tx3)">Tickets to lock in, plus ideas worth adding to the trip.</div>';
+  out+='</div>';
+
+  out+='<div class="px">';
+
+  // ── Action list ──
+  if(TODO_ITEMS.length){
+    out+='<div class="row between mb3"><span class="label" style="margin-bottom:0">Action list</span><span class="badge b-warn">'+todoLeft+' left</span></div>';
+    out+='<div class="card mb4">';
+    for(var i=0;i<TODO_ITEMS.length;i++){
+      var td=TODO_ITEMS[i], tdone=!!todos[td.id];
+      out+='<div class="list-row">';
+      out+='<div class="pack-chk'+(tdone?' on':'')+'" onclick="togTodo(\''+td.id+'\')"></div>';
+      out+='<div class="grow1">';
+      out+='<div class="pack-lbl'+(tdone?' done':'')+'">'+td.t+'</div>';
+      out+='<div class="cap mt1">'+td.city+' · '+td.note+'</div>';
+      out+='</div>';
+      out+='<a class="cta-sm" style="margin-top:0" href="'+td.link+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Book</a>';
+      out+='</div>';
+    }
+    out+='</div>';
+  }
+
+  // ── Suggestions ──
+  if(openSugg.length){
+    out+='<div class="label mb3">Suggestions</div>';
+    out+='<div class="card mb4">';
+    for(var i=0;i<openSugg.length;i++){
+      var s=openSugg[i];
+      out+='<div class="list-row" style="align-items:flex-start">';
+      out+='<div class="ico">'+s.e+'</div>';
+      out+='<div class="grow1">';
+      out+='<div class="pack-lbl">'+s.t+'</div>';
+      out+='<div class="cap mt1">'+s.city+' · '+s.note+'</div>';
+      out+='<div class="row gap2 mt2">';
+      out+='<a class="cta-sm" style="margin-top:0" href="'+s.link+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Book now</a>';
+      out+='<button class="cta-sm" style="margin-top:0" onclick="togBooked(\''+s.id+'\')"><i class="ph ph-check"></i>Mark booked</button>';
+      out+='</div>';
+      out+='</div>';
+      out+='</div>';
+    }
+    out+='</div>';
+  }
+
+  // ── Booked extras ──
+  if(doneSugg.length){
+    out+='<div class="label mb3">Booked extras</div>';
+    out+='<div class="card mb4">';
+    for(var i=0;i<doneSugg.length;i++){
+      var s=doneSugg[i];
+      out+='<div class="list-row">';
+      out+='<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
+      out+='<div class="grow1"><div class="pack-lbl done">'+s.t+'</div><div class="cap mt1">'+s.city+'</div></div>';
+      out+='<button class="cta-sm" style="margin-top:0" onclick="togBooked(\''+s.id+'\')"><i class="ph ph-arrow-counter-clockwise"></i></button>';
+      out+='</div>';
+    }
+    out+='</div>';
+  }
+
+  // ── Bucket list entry ──
+  out+='<div class="label mb3">More to explore</div>';
+  out+='<div class="card row mb4" onclick="openGoalsSheet()" style="cursor:pointer">';
+  out+='<div class="ico ico-ac"><i class="ph-fill ph-trophy"></i></div>';
+  out+='<div class="grow1"><div class="title">Bucket List</div><div class="cap mt1">'+doneGoals+' / '+GOALS.length+' done · goals & ideas for the trip</div></div>';
+  out+='<i class="ph ph-caret-right" style="color:var(--tx3)"></i>';
+  out+='</div>';
+
+  out+='</div>';
+  g('pBook').innerHTML=out;
+}
+
+/* ─── BUCKET LIST (sheet) ────────────────────────────────── */
+function setGoalCat(c){ _goalCat=c; renderGoalsSheet(); }
+
+function openGoalsSheet(){
+  renderGoalsSheet();
+  g('goalsOvl').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeGoalsSheet(){ g('goalsOvl').classList.remove('on'); document.body.style.overflow=''; }
+
+function renderGoalsSheet(){
   var done=0; for(var i=0;i<GOALS.length;i++) if(gs[GOALS[i].id]) done++;
   var pct=Math.round(done/GOALS.length*100);
 
@@ -2335,17 +2446,15 @@ function renderGoals(){
   var out='';
 
   // ── Header ──
-  out+='<div class="px pt5 pb4">';
-  out+='<div class="row between mb2"><span class="head" style="letter-spacing:-.03em">Bucket List</span>';
+  out+='<div class="row between mb2"><span class="sheet-title" style="margin-bottom:0;text-align:left">Bucket List</span>';
   out+='<span class="title accent">'+done+'/'+GOALS.length+'</span></div>';
-  out+='<div class="prog-rail" style="height:6px"><div class="prog-bar" style="width:'+pct+'%;height:100%"></div></div>';
-  out+='<div class="cap mt2" style="color:var(--tx3)">'+pct+'% complete · '+done+' done · '+(GOALS.length-done)+' to go</div>';
-  out+='</div>';
+  out+='<div class="prog-rail mb3" style="height:6px"><div class="prog-bar" style="width:'+pct+'%;height:100%"></div></div>';
+  out+='<div class="cap mb4" style="color:var(--tx3)">'+pct+'% complete · '+done+' done · '+(GOALS.length-done)+' to go</div>';
 
   // ── Category filter ──
   var FILTER_CATS=['All','Travel','Fitness','Photography','Design'];
   var F_ICO={All:'ph-squares-four',Travel:'ph-airplane',Fitness:'ph-barbell',Photography:'ph-aperture',Design:'ph-ruler'};
-  out+='<div class="goal-cats">';
+  out+='<div class="goal-cats" style="padding-left:0;padding-right:0">';
   for(var i=0;i<FILTER_CATS.length;i++){
     var fc=FILTER_CATS[i];
     out+='<button class="goal-cat-pill'+(_goalCat===fc?' on':'')+'" onclick="setGoalCat(\''+fc+'\')">';
@@ -2354,7 +2463,7 @@ function renderGoals(){
   out+='</div>';
 
   // ── Card grid ──
-  out+='<div class="goal-grid">';
+  out+='<div class="goal-grid" style="padding-left:0;padding-right:0">';
   for(var i=0;i<GOALS.length;i++){
     var goal=GOALS[i];
     if(_goalCat!=='All'&&goal.cat!==_goalCat) continue;
@@ -2385,8 +2494,8 @@ function renderGoals(){
   ];
   var filtSugg=_goalCat==='All'?SUGG:SUGG.filter(function(s){return s.cat===_goalCat;});
   if(filtSugg.length){
-    out+='<div class="px"><div class="label mb3">Discover more</div></div>';
-    out+='<div class="sugg-grid-g">';
+    out+='<div class="label mb3 mt2">Discover more</div>';
+    out+='<div class="sugg-grid-g" style="padding-left:0;padding-right:0">';
     for(var i=0;i<filtSugg.length;i++){
       var sg=filtSugg[i];
       out+='<div class="sugg-card-g">';
@@ -2398,7 +2507,7 @@ function renderGoals(){
     out+='</div>';
   }
 
-  g('pGoals').innerHTML=out;
+  g('goalsInner').innerHTML=out;
 }
 
 function tog(id){
@@ -2424,7 +2533,7 @@ function tog(id){
       setTimeout(function(){ if(b.parentNode) b.parentNode.removeChild(b); },520);
     }
   }
-  renderGoals(); renderToday();
+  renderGoalsSheet(); renderBook();
 }
 
 /* ─── BUDGET ─────────────────────────────────────────────── */
