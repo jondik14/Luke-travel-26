@@ -1108,6 +1108,85 @@ body {
   border-radius:50%; background:var(--ac); border:1.5px solid var(--bg);
 }
 
+/* ─── Inspector Mode ─────────────────────────────────────── */
+.insp-fab {
+  position:fixed; bottom:calc(env(safe-area-inset-bottom,0px) + 80px); left:var(--sp4);
+  width:52px; height:52px; border-radius:50%;
+  background:var(--s1); color:var(--tx2); border:1px solid var(--bd2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; box-shadow:0 4px 20px rgba(0,0,0,.2); z-index:150;
+  transition:transform .3s var(--spring), background .2s, color .2s, border-color .2s;
+}
+.insp-fab.on { background:var(--ac); color:#fff; border-color:var(--ac); }
+.insp-fab:active { transform:scale(.9); }
+.insp-badge {
+  position:absolute; top:-4px; right:-4px;
+  min-width:20px; height:20px; border-radius:999px;
+  background:var(--err); color:#fff; font-size:11px; font-weight:800;
+  display:flex; align-items:center; justify-content:center; padding:0 5px;
+  border:2px solid var(--bg);
+}
+
+.insp-banner {
+  position:fixed; top:0; left:50%;
+  width:100%; max-width:430px; z-index:160;
+  display:flex; align-items:center; justify-content:space-between; gap:var(--sp2);
+  padding: calc(env(safe-area-inset-top,0px) + var(--sp2)) var(--sp4) var(--sp2);
+  background:var(--ac); color:#fff;
+  font-size:12px; font-weight:700;
+  transform:translateX(-50%) translateY(-100%);
+  transition:transform .3s var(--spring);
+}
+.insp-banner.on { transform:translateX(-50%) translateY(0); }
+.insp-banner span { display:flex; align-items:center; gap:6px; }
+.insp-banner button {
+  background:rgba(255,255,255,.18); color:#fff; border-radius:var(--r-full);
+  padding:6px 12px; font-size:11px; font-weight:700; white-space:nowrap;
+}
+.insp-banner button:active { background:rgba(255,255,255,.3); }
+
+.insp-highlight {
+  position:fixed; display:none; pointer-events:none; z-index:155;
+  border:2px solid var(--ac); background:rgba(242,100,25,.15);
+  border-radius:6px; transition:all .15s ease;
+}
+
+.insp-note-target {
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
+  font-size:12px; color:var(--tx2); margin-bottom:var(--sp4); line-height:1.5;
+}
+.insp-note-target b { color:var(--ac); font-weight:700; }
+.insp-note-inp {
+  width:100%; background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
+  font-size:15px; color:var(--tx); font-family:var(--font);
+  outline:none; margin-bottom:var(--sp4); transition:border-color .2s;
+}
+.insp-note-inp:focus { border-color:var(--ac); }
+
+.insp-item {
+  display:flex; align-items:flex-start; gap:var(--sp3);
+  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
+}
+.insp-item:last-child { border-bottom:none; }
+.insp-item-info { flex:1; min-width:0; }
+.insp-item-sel { font-size:12px; font-weight:700; color:var(--ac); word-break:break-all; }
+.insp-item-scr { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tx3); margin-top:2px; }
+.insp-item-note { font-size:13px; color:var(--tx); margin-top:4px; line-height:1.4; }
+.insp-item-del { color:var(--tx3); font-size:18px; padding:4px; flex-shrink:0; }
+.insp-empty { text-align:center; padding:var(--sp6) 0; color:var(--tx3); font-size:13px; line-height:1.6; }
+
+.insp-toast {
+  position:fixed; bottom:calc(env(safe-area-inset-bottom,0px) + 140px); left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--tx); color:var(--bg);
+  padding:10px 18px; border-radius:var(--r-full);
+  font-size:13px; font-weight:700; z-index:300; opacity:0;
+  transition:opacity .25s, transform .25s; white-space:nowrap;
+}
+.insp-toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+
 /* ─── Reduced motion ─────────────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -1225,6 +1304,47 @@ superballs.register();
 <!-- Floating action button -->
 <button class="fab hidden" id="fab" onclick="openExpSheet()" aria-label="Log expense">+</button>
 <button class="fab hidden" id="cityFab" onclick="openCitySheet()" aria-label="Switch city"><i class="ph-fill ph-map-pin"></i></button>
+
+<!-- Inspector Mode -->
+<div class="insp-banner" id="inspBanner">
+  <span><i class="ph-fill ph-crosshair-simple"></i> Tap anything to flag it</span>
+  <div class="row gap2">
+    <button onclick="openInspectList()">List (<span id="inspCountB">0</span>)</button>
+    <button onclick="toggleInspect()">Done</button>
+  </div>
+</div>
+<div class="insp-highlight" id="inspHighlight"></div>
+<button class="insp-fab" id="inspFab" onclick="toggleInspect()" aria-label="Inspect mode">
+  <i class="ph ph-crosshair-simple"></i>
+  <span class="insp-badge" id="inspBadge" style="display:none">0</span>
+</button>
+
+<!-- Inspector note sheet -->
+<div class="ovl" id="inspNoteOvl" onclick="closeInspectNote()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" style="text-align:left;margin-bottom:var(--sp3)">What needs to change?</div>
+    <div class="insp-note-target" id="inspNoteTarget"></div>
+    <input class="insp-note-inp" id="inspNoteInp" type="text" placeholder="e.g. make this bigger, broken on tap...">
+    <button class="cta-btn" onclick="addInspectNote()">Add to list</button>
+  </div>
+</div>
+
+<!-- Inspector feedback list sheet -->
+<div class="ovl" id="inspListOvl" onclick="closeInspectList()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="row between mb3">
+      <div class="sheet-title" style="text-align:left;margin:0">Feedback (<span id="inspCount">0</span>)</div>
+      <button onclick="clearInspectItems()" style="font-size:12px;color:var(--tx3);font-weight:600">Clear all</button>
+    </div>
+    <div id="inspListInner"></div>
+    <button class="cta-btn" onclick="copyInspectFeedback()">Copy feedback</button>
+    <button class="cta-btn" style="background:var(--s2);color:var(--tx);margin-top:var(--sp2)" onclick="submitInspectIssue()">
+      <i class="ph ph-github-logo"></i>&nbsp; Submit as GitHub issue
+    </button>
+  </div>
+</div>
 
 <script>
 var TODAY = new Date();
@@ -1585,6 +1705,7 @@ function boot(){
   renderBook();
   renderBudget();
   hideSplash();
+  updateInspBadge();
 }
 
 /* ─── Weather ────────────────────────────────────────────── */
@@ -3092,6 +3213,192 @@ function toggleTheme(){
 
 function openSheet(){ g('installOvl').classList.add('on'); document.body.style.overflow='hidden'; }
 function closeSheet(){ g('installOvl').classList.remove('on'); document.body.style.overflow=''; }
+
+/* ─── Inspector Mode ─────────────────────────────────────── */
+var INSP_ON = false;
+var inspectItems = JSON.parse(localStorage.getItem('lk_insp')||'[]');
+var inspCurrentTarget = null;
+var PANE_NAMES = {pToday:'Today', pTimeline:'Trip', pCities:'Cities', pGoals:'Goals', pBudget:'Budget'};
+
+function saveInsp(){ localStorage.setItem('lk_insp', JSON.stringify(inspectItems)); }
+
+function updateInspBadge(){
+  var n = inspectItems.length;
+  var b = g('inspBadge'), cb = g('inspCountB'), c = g('inspCount');
+  if(b){ b.style.display = n>0 ? 'flex' : 'none'; b.textContent = n; }
+  if(cb) cb.textContent = n;
+  if(c) c.textContent = n;
+}
+
+function toggleInspect(){
+  INSP_ON = !INSP_ON;
+  g('inspFab').classList.toggle('on', INSP_ON);
+  g('inspBanner').classList.toggle('on', INSP_ON);
+  if(INSP_ON){
+    document.addEventListener('click', handleInspectClick, true);
+  } else {
+    document.removeEventListener('click', handleInspectClick, true);
+    g('inspHighlight').style.display = 'none';
+  }
+}
+
+function getClasses(el){
+  return (el.className && typeof el.className==='string') ? el.className.trim().split(/\s+/).filter(Boolean) : [];
+}
+
+function describeElement(el){
+  var tag = el.tagName.toLowerCase();
+  var cls = getClasses(el);
+  var id = el.id;
+  if(!id && !cls.length){
+    var p = el.parentElement;
+    while(p && p!==document.body){
+      var pcls = getClasses(p);
+      if(p.id || pcls.length){ id=p.id; cls=pcls; tag=p.tagName.toLowerCase(); break; }
+      p = p.parentElement;
+    }
+  }
+  var pane = el.closest('.pane');
+  var screen = pane ? (PANE_NAMES[pane.id]||pane.id) : '';
+  var selector = id ? '#'+id : (cls.length ? '.'+cls.slice(0,2).join('.') : tag);
+  var text = (el.textContent||'').trim().replace(/\s+/g,' ').slice(0,50);
+  return { selector:selector, screen:screen, text:text };
+}
+
+function handleInspectClick(e){
+  var el = e.target;
+  if(el.closest && el.closest('.insp-fab, #inspBanner, .ovl')) return;
+  e.preventDefault();
+  e.stopPropagation();
+
+  var r = el.getBoundingClientRect();
+  var hl = g('inspHighlight');
+  hl.style.display = 'block';
+  hl.style.left = r.left+'px';
+  hl.style.top = r.top+'px';
+  hl.style.width = r.width+'px';
+  hl.style.height = r.height+'px';
+
+  inspCurrentTarget = describeElement(el);
+  var t = g('inspNoteTarget');
+  t.innerHTML = '<b>'+inspCurrentTarget.selector+'</b>'
+    + (inspCurrentTarget.screen ? ' · '+inspCurrentTarget.screen : '')
+    + (inspCurrentTarget.text ? '<br>"'+inspCurrentTarget.text+'"' : '');
+
+  var inp = g('inspNoteInp');
+  inp.value = '';
+  g('inspNoteOvl').classList.add('on');
+  setTimeout(function(){ inp.focus(); }, 300);
+}
+
+function closeInspectNote(){
+  g('inspNoteOvl').classList.remove('on');
+  g('inspHighlight').style.display = 'none';
+}
+
+function addInspectNote(){
+  var note = g('inspNoteInp').value.trim();
+  if(note && inspCurrentTarget){
+    inspectItems.push({
+      selector: inspCurrentTarget.selector,
+      screen: inspCurrentTarget.screen,
+      text: inspCurrentTarget.text,
+      note: note
+    });
+    saveInsp();
+    updateInspBadge();
+  }
+  closeInspectNote();
+}
+
+function openInspectList(){
+  renderInspectList();
+  g('inspListOvl').classList.add('on');
+}
+function closeInspectList(){ g('inspListOvl').classList.remove('on'); }
+
+function renderInspectList(){
+  var wrap = g('inspListInner');
+  if(!inspectItems.length){
+    wrap.innerHTML = '<div class="insp-empty">No feedback yet.<br>Turn on Inspect mode and tap anything on screen to flag it.</div>';
+    return;
+  }
+  wrap.innerHTML = inspectItems.map(function(item, i){
+    return '<div class="insp-item">'
+      + '<div class="insp-item-info">'
+        + '<div class="insp-item-sel">'+item.selector+'</div>'
+        + (item.screen ? '<div class="insp-item-scr">'+item.screen+'</div>' : '')
+        + '<div class="insp-item-note">'+item.note+'</div>'
+      + '</div>'
+      + '<button class="insp-item-del" onclick="removeInspectItem('+i+')"><i class="ph ph-x"></i></button>'
+    + '</div>';
+  }).join('');
+}
+
+function removeInspectItem(i){
+  inspectItems.splice(i,1);
+  saveInsp();
+  updateInspBadge();
+  renderInspectList();
+}
+
+function clearInspectItems(){
+  inspectItems = [];
+  saveInsp();
+  updateInspBadge();
+  renderInspectList();
+}
+
+function formatInspectFeedback(){
+  var lines = ['## App feedback — index.html', ''];
+  inspectItems.forEach(function(item, i){
+    lines.push((i+1)+'. `'+item.selector+'`'+(item.screen?' — '+item.screen:''));
+    lines.push('   Note: '+item.note);
+    if(item.text) lines.push('   Element text: "'+item.text+'"');
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+function copyInspectFeedback(){
+  var text = formatInspectFeedback();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      showInspToast('Copied '+inspectItems.length+' item'+(inspectItems.length===1?'':'s'));
+    }, function(){ fallbackCopy(text); });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); showInspToast('Copied'); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+function submitInspectIssue(){
+  if(!inspectItems.length) return;
+  var title = 'App feedback — '+inspectItems.length+' item'+(inspectItems.length===1?'':'s');
+  var body = formatInspectFeedback();
+  var url = 'https://github.com/jondik14/luke-travel-26/issues/new?title='
+    + encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+  window.open(url, '_blank');
+}
+
+function showInspToast(msg){
+  var el = document.createElement('div');
+  el.className = 'insp-toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.classList.add('on'); }, 10);
+  setTimeout(function(){
+    el.classList.remove('on');
+    setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 300);
+  }, 1800);
+}
 
 try {
   boot();
