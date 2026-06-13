@@ -799,7 +799,38 @@ body {
   transition: transform .25s var(--spring), background .2s, color .2s;
 }
 .map-pin-num.active { background:#fff; color:var(--ac); transform:scale(1.35); z-index:2; }
+.map-pin-num.done { background:var(--ok); opacity:.6; }
 .map-hint { padding:0 var(--sp4) var(--sp3); }
+
+/* ─── Today: confirmed/suggestion legend + expandable suggestions ── */
+.legend-row { display:flex; gap:var(--sp4); flex-wrap:wrap; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--tx2); font-weight:500; }
+.legend-item .badge { padding:2px 7px; font-size:10px; }
+.sugg-row { cursor:pointer; -webkit-user-select:none; user-select:none; }
+.sugg-row:active { background:var(--s2); }
+.sugg-row.sugg-row-open { border-bottom:none; }
+.sugg-detail { padding:0 0 var(--sp3) 52px; border-bottom:1px solid var(--bd); }
+.sugg-detail:last-child { border-bottom:none; }
+
+/* ─── Cities: per-place map & tick-off list ──────────────── */
+#placeMap { height:100%; background:var(--s2); }
+.place-list { display:flex; flex-direction:column; }
+.place-item {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
+  cursor:pointer; -webkit-user-select:none; user-select:none;
+}
+.place-item:last-child { border-bottom:none; }
+.place-item:active { background:var(--s2); }
+.place-item.done .place-item-title { color:var(--tx3); text-decoration:line-through; }
+.place-item-num {
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  background:var(--s2); border:1px solid var(--bd);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800; color:var(--tx2);
+}
+.place-item-title { font-size:14px; font-weight:600; color:var(--tx); }
+.place-item-desc { font-size:12px; color:var(--tx2); line-height:1.45; margin-top:2px; }
 
 /* Numbered stop badge — links a day in the trip list to its map pin */
 .stop-num {
@@ -1310,6 +1341,52 @@ var GSECS=[
   {k:'football',ph:'ph-trophy',     l:'Football'},
 ];
 
+// Deduped list of guide ideas for a city — {title, desc, cat} — used as
+// "suggestion" items on Today and pins on the per-place map
+function cityItems(c){
+  var gu=GUIDES[c]; if(!gu) return [];
+  var out=[], seen={};
+  for(var i=0;i<GSECS.length;i++){
+    var arr=gu[GSECS[i].k]; if(!arr) continue;
+    for(var j=0;j<arr.length;j++){
+      var parts=arr[j].split(' — ');
+      var title=parts[0].replace(/🔒.*$/,'').trim();
+      if(seen[title]) continue;
+      seen[title]=true;
+      out.push({title:title, desc:parts.slice(1).join(' — '), cat:GSECS[i].k});
+    }
+  }
+  return out;
+}
+function poiKey(c,title){ return c+'|'+title; }
+// Find the Insider Tips review matching a suggestion title, if any
+function findReview(c,title){
+  var gu=GUIDES[c]; if(!gu||!gu.reviews) return null;
+  var tl=title.toLowerCase();
+  for(var i=0;i<gu.reviews.length;i++){
+    var pl=gu.reviews[i].p.toLowerCase();
+    if(pl===tl||tl.indexOf(pl)>-1||pl.indexOf(tl)>-1) return gu.reviews[i];
+  }
+  return null;
+}
+// Extra ideas for today, pulled from the guide, excluding anything already on the confirmed plan
+function todaySuggestions(entry){
+  var cities=entry.c.split(' → '), thText=(entry.th||[]).join(' | ').toLowerCase();
+  var out=[], seen={};
+  for(var ci=0;ci<cities.length;ci++){
+    var c=cities[ci].trim(), items=cityItems(c);
+    for(var i=0;i<items.length;i++){
+      var it=items[i];
+      if(seen[it.title]) continue;
+      if(thText.indexOf(it.title.toLowerCase())>-1) continue;
+      seen[it.title]=true;
+      out.push({title:it.title, desc:it.desc, city:c});
+      if(out.length>=4) return out;
+    }
+  }
+  return out;
+}
+
 var GOALS=[
   {id:'defqon',   l:'Defqon.1',                    cat:'Travel',      locked:true, e:'🎵', city:'Amsterdam'},
   {id:'allianz',  l:'Allianz Arena',               cat:'Travel',                   e:'🏟️', city:'Munich'},
@@ -1354,6 +1431,9 @@ var exps = JSON.parse(localStorage.getItem('lk_exp')||'[]');
 var pks  = JSON.parse(localStorage.getItem('lk_pack')||'{}');
 var todos = JSON.parse(localStorage.getItem('lk_todo')||'{}');
 var booked = JSON.parse(localStorage.getItem('lk_booked')||'{}');
+var POIS = JSON.parse(localStorage.getItem('lk_poi')||'{}');
+var GEO  = JSON.parse(localStorage.getItem('lk_geo')||'{}');
+var openSugg = {};
 var city = 'Athens';
 
 // Things still to book/confirm — each links straight to where to sort it
@@ -1556,6 +1636,17 @@ function togBooked(id){
   localStorage.setItem('lk_booked',JSON.stringify(booked));
   renderBook();
 }
+// Tick off a suggested place on the per-city map / list
+function togPoi(key){
+  POIS[key]=!POIS[key];
+  localStorage.setItem('lk_poi',JSON.stringify(POIS));
+  renderGuide();
+}
+// Expand/collapse a "more info" suggestion row on Today
+function toggleSugg(key){
+  openSugg[key]=!openSugg[key];
+  renderToday();
+}
 function goBook(){
   var btn=document.querySelector('.nbtn[data-icon="ph-ticket"]');
   if(btn) go('Book',btn);
@@ -1715,6 +1806,54 @@ function zoomMapToCity(c){
   else setTimeout(fly,420); // wait out the .3s height transition + map init
 }
 
+/* ─── Per-place map (Cities → Explore on map) ───────────────
+   Geocodes each suggestion's title via Nominatim (cached in localStorage)
+   so they can be plotted alongside the stay, with a Google Maps export. */
+var _placeMap=null, _placeMarkers={};
+function geocodePOI(c,title,cb){
+  var key=poiKey(c,title);
+  if(GEO.hasOwnProperty(key)){ if(GEO[key]) cb(GEO[key]); return; }
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(title+', '+c))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      GEO[key]=(data&&data[0])?{lat:+data[0].lat,lng:+data[0].lon}:null;
+      localStorage.setItem('lk_geo',JSON.stringify(GEO));
+      if(GEO[key]) cb(GEO[key]);
+    }).catch(function(){});
+}
+function initPlaceMap(c, items){
+  if(typeof L==='undefined') return;
+  var el=document.getElementById('placeMap'); if(!el) return;
+  if(_placeMap){ _placeMap.remove(); _placeMap=null; }
+  _placeMarkers={};
+  var center=COORDS[c]; if(!center) return;
+  _placeMap=L.map('placeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:true}).setView(center,13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_placeMap);
+  L.marker(center,{icon:L.divIcon({className:'map-pin',html:'<div class="map-pin-num" style="background:var(--tx2)"><i class="ph-fill ph-house-line" style="font-size:11px"></i></div>',iconSize:[24,24],iconAnchor:[12,12]})})
+    .addTo(_placeMap).bindPopup('<strong style="font-size:13px">Where you\'re staying</strong>');
+  for(var i=0;i<items.length;i++){
+    (function(it,idx){
+      geocodePOI(c,it.title,function(coords){
+        if(!_placeMap) return;
+        var done=!!POIS[poiKey(c,it.title)];
+        var icon=L.divIcon({className:'map-pin',html:'<div class="map-pin-num'+(done?' done':'')+'">'+(idx+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+        var m=L.marker([coords.lat,coords.lng],{icon:icon}).addTo(_placeMap)
+          .bindPopup('<strong style="font-size:13px">'+(idx+1)+'. '+it.title+'</strong>');
+        _placeMarkers[it.title]=m;
+        var bounds=[center]; for(var k in _placeMarkers) bounds.push(_placeMarkers[k].getLatLng());
+        _placeMap.fitBounds(L.latLngBounds(bounds),{padding:[28,28]});
+      });
+    })(items[i],i);
+  }
+}
+// Google Maps multi-stop directions link for a set of suggestion items
+function gmapsUrl(c, items){
+  var qs=items.map(function(it){ return encodeURIComponent(it.title+', '+c); });
+  if(qs.length===1) return 'https://www.google.com/maps/search/?api=1&query='+qs[0];
+  var dest=qs[qs.length-1], wps=qs.slice(0,-1).join('|');
+  return 'https://www.google.com/maps/dir/?api=1&destination='+dest+'&waypoints='+wps+'&travelmode=walking';
+}
+
 /* ─── Phase kanban ───────────────────────────────────────── */
 function renderPhaseKanban(ts){
   var out='<div class="phase-scroll">';
@@ -1816,6 +1955,72 @@ function renderToday(){
     out += renderPhaseKanban(ts);
     out += '<div class="px">';
 
+    // Travel
+    if(entry.t==='travel'){
+      var ti=travelInfo(entry);
+      var hasTimes=!!(ti.dep&&ti.arr);
+      out += '<div class="label mb3">Travel today</div>';
+      out += '<div class="flt-card mb4">';
+      out += '<div class="flt-route">';
+      out += '<span class="flt-code">'+ti.from+'</span>';
+      out += '<i class="ph-fill ph-airplane-in-flight flt-arrow"></i>';
+      out += '<span class="flt-code">'+ti.to+'</span>';
+      out += '</div>';
+      out += '<div class="row gap2 mb3">';
+      out += hasTimes ? '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Confirmed</span>' : '<span class="badge b-warn"><i class="ph ph-clock"></i>Details TBC</span>';
+      if(ti.ref) out += '<span class="badge b-dim">'+ti.ref+'</span>';
+      if(ti.seat) out += '<span class="badge b-dim">Seat '+ti.seat+'</span>';
+      out += '</div>';
+      out += hasTimes
+        ? '<div class="row between"><span class="cap">Dep '+ti.dep+'</span><span class="cap">Arr '+ti.arr+'</span>'+(ti.eur?'<span class="cap accent">€'+ti.eur+'</span>':'')+'</div>'
+        : '<div class="cap" style="color:var(--tx2)">Times to be confirmed</div>';
+      out += '</div>';
+    }
+
+    // Today plan — confirmed items, plus extra ideas pulled from the guide
+    var todaySugg = todaySuggestions(entry);
+    if((entry.th && entry.th.length) || todaySugg.length){
+      out += '<div class="label mb3">Today</div>';
+      if(entry.th && entry.th.length){
+        out += '<div class="card mb3">';
+        for(var i=0;i<entry.th.length;i++){
+          var t=entry.th[i];
+          var locked=t.indexOf('🔒')===0;
+          out += '<div class="list-row">';
+          out += '<div class="ico '+(locked?'ico-ac':'')+'"><i class="ph'+(locked?'-fill':'')+' '+(locked?'ph-lock-simple':'ph-caret-right')+'"></i></div>';
+          out += '<div class="grow1 body">'+t.replace('🔒 ','')+'</div>';
+          if(todaySugg.length) out += '<span class="badge b-ok">Confirmed</span>';
+          out += '</div>';
+        }
+        out += '</div>';
+      }
+      if(todaySugg.length){
+        out += '<div class="legend-row mb3">';
+        out += '<span class="legend-item"><span class="badge b-ok">Confirmed</span> on the plan</span>';
+        out += '<span class="legend-item"><span class="badge b-dim">Suggestion</span> tap for more info</span>';
+        out += '</div>';
+        out += '<div class="card mb4">';
+        for(var i=0;i<todaySugg.length;i++){
+          var sg=todaySugg[i], skey=poiKey(sg.city,sg.title), sopen=!!openSugg[skey];
+          var rv=findReview(sg.city,sg.title);
+          out += '<div class="list-row sugg-row'+(sopen?' sugg-row-open':'')+'" onclick="toggleSugg(\''+skey.replace(/'/g,"\\'")+'\')">';
+          out += '<div class="ico"><i class="ph ph-sparkle"></i></div>';
+          out += '<div class="grow1 body">'+sg.title+'</div>';
+          out += '<span class="badge b-dim">Suggestion</span>';
+          out += '<i class="ph ph-caret-'+(sopen?'up':'down')+'" style="color:var(--tx3)"></i>';
+          out += '</div>';
+          if(sopen){
+            out += '<div class="sugg-detail">';
+            if(sg.desc) out += '<div class="cap mb2" style="color:var(--tx2)">'+sg.desc+'</div>';
+            if(rv) out += '<div class="review-card" style="margin-bottom:0"><div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div><div class="review-txt">'+rv.t+'</div></div>';
+            out += '<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+sg.city+'\')"><i class="ph ph-book-open"></i>View '+sg.city+' guide</button>';
+            out += '</div>';
+          }
+        }
+        out += '</div>';
+      }
+    }
+
     // Tonight — Airbnb-style stay board
     if(entry.a){
       var stay=currentStay(entryIdx);
@@ -1842,43 +2047,6 @@ function renderToday(){
       out += '<span class="cap" style="color:'+(ok?'var(--ok)':'var(--warn)')+'">'+(ok?stay.ref:'Booking needs confirming')+'</span>';
       out += '<a class="cta-sm" style="margin-top:0" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(stay.name+' '+stay.city)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="ph ph-map-trifold"></i>Directions</a>';
       out += '</div></div></div>';
-    }
-
-    // Travel
-    if(entry.t==='travel'){
-      var ti=travelInfo(entry);
-      var hasTimes=!!(ti.dep&&ti.arr);
-      out += '<div class="label mb3">Travel today</div>';
-      out += '<div class="flt-card mb4">';
-      out += '<div class="flt-route">';
-      out += '<span class="flt-code">'+ti.from+'</span>';
-      out += '<i class="ph-fill ph-airplane-in-flight flt-arrow"></i>';
-      out += '<span class="flt-code">'+ti.to+'</span>';
-      out += '</div>';
-      out += '<div class="row gap2 mb3">';
-      out += hasTimes ? '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Confirmed</span>' : '<span class="badge b-warn"><i class="ph ph-clock"></i>Details TBC</span>';
-      if(ti.ref) out += '<span class="badge b-dim">'+ti.ref+'</span>';
-      if(ti.seat) out += '<span class="badge b-dim">Seat '+ti.seat+'</span>';
-      out += '</div>';
-      out += hasTimes
-        ? '<div class="row between"><span class="cap">Dep '+ti.dep+'</span><span class="cap">Arr '+ti.arr+'</span>'+(ti.eur?'<span class="cap accent">€'+ti.eur+'</span>':'')+'</div>'
-        : '<div class="cap" style="color:var(--tx2)">Times to be confirmed</div>';
-      out += '</div>';
-    }
-
-    // Today plan
-    if(entry.th && entry.th.length){
-      out += '<div class="label mb3">Today</div>';
-      out += '<div class="card mb4">';
-      for(var i=0;i<entry.th.length;i++){
-        var t=entry.th[i];
-        var locked=t.indexOf('🔒')===0;
-        out += '<div class="list-row">';
-        out += '<div class="ico '+(locked?'ico-ac':'')+'"><i class="ph'+(locked?'-fill':'')+' '+(locked?'ph-lock-simple':'ph-caret-right')+'"></i></div>';
-        out += '<div class="grow1 body">'+t.replace('🔒 ','')+'</div>';
-        out += '</div>';
-      }
-      out += '</div>';
     }
 
     // Weather widget (populated async)
@@ -2366,6 +2534,27 @@ function renderGuide(){
     out+='</div>';
   }
 
+  // ── Explore on map ──
+  var mapItems = COORDS[city] ? cityItems(city).slice(0,8) : [];
+  if(mapItems.length){
+    out+='<div class="guide-sec">';
+    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-map-trifold"></i></div><span class="guide-hdr-label">Explore on map</span>';
+    out+='<a class="cap accent" style="margin-left:auto;font-weight:700;display:inline-flex;align-items:center;gap:4px" href="'+gmapsUrl(city,mapItems)+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Open in Maps</a>';
+    out+='</div>';
+    out+='<div class="cap mb3" style="color:var(--tx3)">Pins show ideas near your stay — tick off the ones you\'ve done, or open them all in Google Maps to plan a route.</div>';
+    out+='<div id="placeMapWrap" style="height:220px;border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--sp3)"><div id="placeMap" style="height:100%"></div></div>';
+    out+='<div class="place-list">';
+    for(var i=0;i<mapItems.length;i++){
+      var it=mapItems[i], pkey=poiKey(city,it.title), pdone=!!POIS[pkey];
+      out+='<div class="place-item'+(pdone?' done':'')+'" onclick="togPoi(\''+pkey.replace(/'/g,"\\'")+'\')">';
+      out+='<div class="pack-chk'+(pdone?' on':'')+'"></div>';
+      out+='<div class="place-item-num">'+(i+1)+'</div>';
+      out+='<div class="grow1"><div class="place-item-title">'+it.title+'</div>'+(it.desc?'<div class="place-item-desc">'+it.desc+'</div>':'')+'</div>';
+      out+='</div>';
+    }
+    out+='</div></div>';
+  }
+
   // ── Insider Tips ──
   if(gu.reviews&&gu.reviews.length){
     out+='<div class="guide-sec">';
@@ -2426,6 +2615,7 @@ function renderGuide(){
   out+='</div>';
   g('gInner').innerHTML=out;
   loadCityPhotos();
+  if(mapItems.length) setTimeout(function(){ initPlaceMap(city, mapItems); }, 50);
 }
 
 /* ─── TO BOOK ────────────────────────────────────────────── */
