@@ -61,7 +61,7 @@
   );
 }
 
-body.light {
+:root.light {
   --bg:  #f4f2ef;
   --s1:  #ffffff;
   --s2:  #edeae5;
@@ -75,7 +75,7 @@ body.light {
 
 /* ─── Reset ─────────────────────────────────────────────── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-html { -webkit-text-size-adjust:100%; }
+html { -webkit-text-size-adjust:100%; background:var(--bg); height:100%; transition:background .3s; }
 * { -webkit-tap-highlight-color:transparent; }
 ::-webkit-scrollbar { display:none; }
 * { scrollbar-width:none; }
@@ -128,7 +128,7 @@ body {
   z-index:100; display:flex;
   transition: background .3s;
 }
-body.light #nav { background: rgba(244,242,239,.9); }
+:root.light #nav { background: rgba(244,242,239,.9); }
 
 .nbtn {
   flex:1; display:flex; flex-direction:column; align-items:center;
@@ -259,7 +259,7 @@ body.light #nav { background: rgba(244,242,239,.9); }
     0 2px 0 rgba(0,0,0,.3),
     0 6px 20px rgba(242,100,25,.25);
 }
-body.light .hero-display {
+:root.light .hero-display {
   text-shadow:
     0 2px 0 rgba(0,0,0,.1),
     0 6px 20px rgba(242,100,25,.2);
@@ -1735,7 +1735,7 @@ function renderToday(){
       var sbg=HERO_BG[stay.city]||'135deg,#555,#333';
       var sgu=GUIDES[stay.city];
       out += '<div class="label mb3">Where you\'re staying</div>';
-      out += '<div class="stay-board mb4">';
+      out += '<div class="stay-board mb4"'+(sgu?' onclick="goGuide(\''+stay.city+'\')" style="cursor:pointer"':'')+'>';
       out += '<div class="stay-board-hero" style="background:linear-gradient('+sbg+')">';
       out += '<img class="bg-photo" data-city="'+stay.city+'" alt="" onload="this.classList.add(\'vis\')">';
       out += '<div class="stay-board-hero-grad"></div>';
@@ -1752,7 +1752,7 @@ function renderToday(){
       out += '</div>';
       out += '<div class="stay-board-foot">';
       out += '<span class="cap" style="color:'+(ok?'var(--ok)':'var(--warn)')+'">'+(ok?stay.ref:'Booking needs confirming')+'</span>';
-      out += '<a class="cta-sm" style="margin-top:0" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(stay.name+' '+stay.city)+'" target="_blank" rel="noopener"><i class="ph ph-map-trifold"></i>Directions</a>';
+      out += '<a class="cta-sm" style="margin-top:0" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(stay.name+' '+stay.city)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()"><i class="ph ph-map-trifold"></i>Directions</a>';
       out += '</div></div></div>';
     }
 
@@ -1881,7 +1881,7 @@ function renderToday(){
       var mbg=HERO_BG[mo.city]||'135deg,#444,#222';
       var mdiff=Math.round((new Date(mo.d+'T00:00:00')-TODAY)/86400000);
       var mlbl = mdiff<=0 ? 'Today' : mdiff===1 ? 'Tomorrow' : 'In '+mdiff+'d';
-      out += '<div class="upnext-card">';
+      out += '<div class="upnext-card"'+(GUIDES[mo.city]?' onclick="goGuide(\''+mo.city+'\')" style="cursor:pointer"':'')+'>';
       out += '<div class="upnext-img" style="background:linear-gradient('+mbg+')">';
       out += '<img class="bg-photo" data-city="'+mo.city+'" alt="" onload="this.classList.add(\'vis\')">';
       out += '<div class="upnext-img-grad"></div>';
@@ -2060,14 +2060,15 @@ function loadCityPhotos(){
   Object.keys(needed).forEach(function(city){
     if(WIKIFETCH[city]) return;
     WIKIFETCH[city]=true;
-    fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(WIKI_MAP[city]))
+    fetch('https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&pithumbsize=640&titles='+encodeURIComponent(WIKI_MAP[city]))
       .then(function(r){return r.json();})
       .then(function(data){
-        var url=data.thumbnail&&data.thumbnail.source;
+        var pages=data.query&&data.query.pages;
+        var page=pages&&pages[Object.keys(pages)[0]];
+        var url=page&&page.thumbnail&&page.thumbnail.source;
         if(!url) return;
-        // Filter coats-of-arms, flags, locator maps — check full URL path not just filename
-        if(/(coat_of_arms|locator_map|location_map|flag_of|Flag_of|administrative_map)/i.test(url)) return;
-        if(url.indexOf('/thumb/')>-1) url=url.replace(/\/\d+px-[^/]*$/,'/640px-'+url.split('/').pop());
+        // Skip coats-of-arms, flags, maps and other non-photo assets
+        if(/(coat_of_arms|locator_map|location_map|flag_of|administrative_map|\.svg)/i.test(url)) return;
         WIKIIMG[city]=url;
         var els=document.querySelectorAll('img[data-city="'+city+'"]');
         for(var j=0;j<els.length;j++) els[j].src=url;
@@ -2691,7 +2692,7 @@ function go(name,btn){
 
 /* ─── Theme ──────────────────────────────────────────────── */
 function applyTheme(){
-  document.body.classList.toggle('light',!dark);
+  document.documentElement.classList.toggle('light',!dark);
   g('themeColor').content = dark ? '#0d0d0d' : '#f4f2ef';
   var tb=g('themeBtn');
   if(tb) tb.querySelector('i').className = dark ? 'ph ph-moon' : 'ph ph-sun';
