@@ -789,6 +789,30 @@ body {
 .map-caret-icon.open { transform:rotate(180deg); }
 #routeMap { height:260px; background:var(--s2); }
 .leaflet-container { background:var(--bg) !important; }
+.map-pin { background:none; border:none; }
+.map-pin-num {
+  width:22px; height:22px; border-radius:50%;
+  background:var(--ac); color:#fff;
+  border:2px solid #1a1a1a; box-shadow:0 1px 4px rgba(0,0,0,.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; font-family:var(--font);
+  transition: transform .25s var(--spring), background .2s, color .2s;
+}
+.map-pin-num.active { background:#fff; color:var(--ac); transform:scale(1.35); z-index:2; }
+.map-hint { padding:0 var(--sp4) var(--sp3); }
+
+/* Numbered stop badge — links a day in the trip list to its map pin */
+.stop-num {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:17px; height:17px; border-radius:50%; flex-shrink:0;
+  background:var(--ac-dim); color:var(--ac);
+  border:1px solid rgba(242,100,25,.25);
+  font-size:9px; font-weight:800; margin-right:5px;
+  vertical-align:middle; position:relative; top:-1px;
+  transition: transform .2s var(--spring), background .2s, color .2s;
+}
+.stop-num:active { transform:scale(.85); }
+.stop-num.active { background:var(--ac); color:#fff; }
 
 /* ─── Bookings collapse ──────────────────────────────────── */
 .bk-wrap { background:var(--s1); border:1px solid var(--bd); border-radius:var(--r-lg); overflow:hidden; transition:background .3s; }
@@ -1227,6 +1251,28 @@ var DAYS=[
   {d:'2026-07-17',c:'Sydney',e:'🏠',p:4,t:'home',pp:['L'],a:null,r:null,th:['Home 🎉 Back to Zuip Co']},
 ];
 
+// Numbered stops shown on the route map — one per unique city in ROUTE,
+// linked to the first/last day it's visited so the map and the day list
+// can highlight & jump to each other.
+var STOPS=(function(){
+  var seen={}, out=[];
+  for(var ri=0;ri<ROUTE.length;ri++){
+    var c=ROUTE[ri];
+    if(seen[c]||!COORDS[c]) continue;
+    seen[c]=true;
+    var first=-1, last=-1;
+    for(var i=0;i<DAYS.length;i++){
+      if(DAYS[i].c.split(' → ').indexOf(c)>-1){
+        if(first===-1) first=i;
+        last=i;
+      }
+    }
+    out.push({city:c, num:out.length+1, first:first, last:last});
+  }
+  return out;
+})();
+var STOP_BY_CITY={}; for(var _si=0;_si<STOPS.length;_si++) STOP_BY_CITY[STOPS[_si].city]=STOPS[_si];
+
 var HERO_BG = {
   Athens:'135deg,#8B7355,#5A4A35',Milos:'160deg,#1E6A8A,#0D3F57',
   Catania:'135deg,#8B2500,#5A1500',Taormina:'150deg,#2E7A2B,#1A4A18',
@@ -1346,6 +1392,13 @@ function fmt(s){
 }
 function fmtLong(s){
   return new Date(s+'T00:00:00').toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});
+}
+function fmtShort(s){
+  return new Date(s+'T00:00:00').toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+}
+function stopRange(stop){
+  var a=DAYS[stop.first].d, b=DAYS[stop.last].d;
+  return a===b ? fmtShort(a) : fmtShort(a)+' – '+fmtShort(b);
 }
 function stars(r){
   var f=Math.round(r); return '★'.repeat(f)+'☆'.repeat(5-f);
@@ -1575,7 +1628,7 @@ function toggleBookings(){
 }
 
 /* ─── Route map ───────────────────────────────────────────── */
-var _map=null, _mapInited=false, _mapOpen=true;
+var _map=null, _mapInited=false, _mapOpen=true, _mapMarkers={}, _activeStop=null;
 function initRouteMap(){
   if(typeof L==='undefined') return;
   var el=document.getElementById('routeMap');
@@ -1587,12 +1640,13 @@ function initRouteMap(){
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_map);
   var coords=ROUTE.map(function(c){return COORDS[c];});
   L.polyline(coords,{color:'#F26419',weight:2.5,opacity:.9,dashArray:'5 7'}).addTo(_map);
-  var seen={};
-  for(var ri=0;ri<ROUTE.length;ri++){
-    var c=ROUTE[ri];
-    if(seen[c]||!COORDS[c]) continue; seen[c]=true;
-    L.circleMarker(COORDS[c],{radius:6,fillColor:'#F26419',color:'#1a1a1a',weight:2,fillOpacity:1})
-      .addTo(_map).bindPopup('<strong style="font-size:13px">'+c+'</strong>');
+  for(var si=0;si<STOPS.length;si++){
+    var stop=STOPS[si], c=stop.city;
+    var icon=L.divIcon({className:'map-pin', html:'<div class="map-pin-num">'+stop.num+'</div>', iconSize:[24,24], iconAnchor:[12,12]});
+    var m=L.marker(COORDS[c],{icon:icon}).addTo(_map)
+      .bindPopup('<strong style="font-size:13px">'+stop.num+'. '+c+'</strong><div class="cap" style="color:var(--tx2);margin-top:2px">'+stopRange(stop)+'</div>');
+    m.on('click', (function(city){ return function(){ focusStopFromMap(city); }; })(c));
+    _mapMarkers[c]=m;
   }
   _map.fitBounds(L.latLngBounds(coords),{padding:[24,24]});
 }
@@ -1611,6 +1665,38 @@ function toggleMap(){
   }
 }
 
+// Highlight a stop's numbered pin + matching badges in the trip list (and clear the previous one)
+function highlightMarker(c){
+  if(_activeStop&&_mapMarkers[_activeStop]){
+    var prev=_mapMarkers[_activeStop].getElement();
+    if(prev){ var pd=prev.querySelector('.map-pin-num'); if(pd) pd.classList.remove('active'); }
+  }
+  var oldBadges=document.querySelectorAll('.stop-num.active');
+  for(var i=0;i<oldBadges.length;i++) oldBadges[i].classList.remove('active');
+  _activeStop=c;
+  var m=_mapMarkers[c];
+  if(m){
+    var el=m.getElement();
+    if(el){ var d=el.querySelector('.map-pin-num'); if(d) d.classList.add('active'); }
+  }
+  var badges=document.querySelectorAll('.stop-num[data-stop="'+c+'"]');
+  for(var i=0;i<badges.length;i++) badges[i].classList.add('active');
+}
+
+// Tap a numbered stop on the map → open & scroll to its section in the trip list below
+function focusStopFromMap(c){
+  highlightMarker(c);
+  if(_mapMarkers[c]) _mapMarkers[c].openPopup();
+  var stop=STOP_BY_CITY[c]; if(!stop||stop.first<0) return;
+  var card=g('dc'+stop.first), main=g('main');
+  if(!card||!main) return;
+  if(!card.classList.contains('open')) toggleDay(stop.first);
+  setTimeout(function(){
+    var r=card.getBoundingClientRect(), mr=main.getBoundingClientRect();
+    main.scrollBy({top:r.top-mr.top-12, behavior:'smooth'});
+  }, 60);
+}
+
 function zoomMapToCity(c){
   if(!COORDS[c]) return;
   var wasOpen=_mapOpen;
@@ -1622,6 +1708,8 @@ function zoomMapToCity(c){
     // Leaflet must recompute its dimensions before centering, or flyTo lands off-target
     _map.invalidateSize(true);
     _map.flyTo(COORDS[c],11,{duration:1.2});
+    highlightMarker(c);
+    if(_mapMarkers[c]) _mapMarkers[c].openPopup();
   };
   if(wasOpen&&_mapInited&&_map) fly();
   else setTimeout(fly,420); // wait out the .3s height transition + map init
@@ -2089,10 +2177,11 @@ function renderTimeline(){
   // Route map panel (collapsible, open by default)
   out+='<div class="map-panel">';
   out+='<div class="map-toggle" onclick="toggleMap()">';
-  out+='<div class="row gap2"><i class="ph-fill ph-map-pin" style="color:var(--ac);font-size:16px"></i><span class="label">Route map</span><span class="cap" style="margin-left:4px">15 cities · Europe</span></div>';
+  out+='<div class="row gap2"><i class="ph-fill ph-map-pin" style="color:var(--ac);font-size:16px"></i><span class="label">Route map</span><span class="cap" style="margin-left:4px">'+STOPS.length+' stops · Europe</span></div>';
   out+='<i class="ph ph-caret-down map-caret-icon open" id="mapCaret"></i>';
   out+='</div>';
   out+='<div id="mapWrap" style="height:260px;overflow:hidden;transition:height .3s ease"><div id="routeMap"></div></div>';
+  out+='<div class="cap map-hint" style="color:var(--tx3)">Tap a numbered pin to jump to that stop below, or tap a number in the list to find it on the map.</div>';
   out+='</div>';
 
   // Sticky phase jump tabs
@@ -2131,7 +2220,8 @@ function renderTimeline(){
     out+='<div class="day-tog" onclick="toggleDay('+i+')">';
     out+='<div class="day-thumb"><div class="day-thumb-bg" style="background:linear-gradient('+bg+')"></div><div class="day-thumb-em">'+d.e+'</div><img class="bg-photo" data-city="'+pc+'" alt="" onload="this.classList.add(\'vis\')"></div>';
     out+='<div class="day-tog-meta">';
-    out+='<div class="day-tog-city'+(isToday?' ac':'')+'">'+d.c+'</div>';
+    var pStop=STOP_BY_CITY[pc];
+    out+='<div class="day-tog-city'+(isToday?' ac':'')+'">'+(pStop?'<span class="stop-num" data-stop="'+pc+'" onclick="event.stopPropagation();zoomMapToCity(\''+pc+'\')">'+pStop.num+'</span>':'')+d.c+'</div>';
     out+='<div class="day-tog-date">'+fmt(d.d)+'&nbsp;·&nbsp;Day '+dn+'</div>';
     var badges=[];
     if(isToday) badges.push('<span class="badge b-ac">Today</span>');
