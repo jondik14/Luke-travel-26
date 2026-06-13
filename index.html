@@ -99,7 +99,7 @@ body {
 #app { display:flex; flex-direction:column; height:100vh; height:100dvh; }
 #main {
   flex:1; overflow-y:auto; overscroll-behavior:contain;
-  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 52px);
+  padding-bottom: calc(env(safe-area-inset-bottom,0px) + 48px);
 }
 
 /* ─── Panes ──────────────────────────────────────────────── */
@@ -133,7 +133,7 @@ body.light #nav { background: rgba(244,242,239,.9); }
 .nbtn {
   flex:1; display:flex; flex-direction:column; align-items:center;
   justify-content:center; gap:3px;
-  padding:8px 0 6px;
+  padding:6px 0 4px;
   color:var(--tx3); font-size:9px; font-weight:700;
   letter-spacing:.07em; text-transform:uppercase;
   transition: color .2s, transform .4s var(--spring);
@@ -229,7 +229,7 @@ body.light #nav { background: rgba(244,242,239,.9); }
 /* ─── TODAY — Hero ───────────────────────────────────────── */
 .today-util {
   display:flex; justify-content:flex-end; gap:var(--sp2);
-  padding: calc(env(safe-area-inset-top,0px) + 6px) var(--sp4) 0;
+  padding: env(safe-area-inset-top,0px) var(--sp4) 0;
 }
 .util-btn {
   width:36px; height:36px; border-radius:var(--r-full);
@@ -242,8 +242,8 @@ body.light #nav { background: rgba(244,242,239,.9); }
 .util-btn i { font-size:17px; }
 
 .today-hero {
-  padding: var(--sp4) var(--sp4) var(--sp4);
-  min-height:150px;
+  padding: var(--sp2) var(--sp4) var(--sp4);
+  min-height:128px;
   display:flex; flex-direction:column; justify-content:flex-end;
 }
 .hero-eyebrow {
@@ -448,8 +448,12 @@ body.light .hero-display {
 /* ─── CITIES ─────────────────────────────────────────────── */
 .city-scroll {
   display:flex; gap:var(--sp2);
-  padding:var(--sp4) var(--sp4) 0;
+  padding:var(--sp3) var(--sp4);
   overflow-x:auto;
+  position:sticky; top:0; z-index:5;
+  background:var(--bg);
+  border-bottom:1px solid var(--bd);
+  transition: background .3s, border-color .3s;
 }
 .city-chip {
   white-space:nowrap; padding:8px var(--sp4);
