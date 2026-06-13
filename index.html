@@ -1510,12 +1510,12 @@ function goBook(){
 function communityLinks(cityName){
   var q=encodeURIComponent(cityName);
   return [
-    {ico:'ph-barbell', lbl:'Calisthenics & outdoor gyms', sub:'Reddit search for '+cityName,
+    {ico:'ph-barbell', lbl:'Calisthenics & outdoor gyms', sub:'Reddit search · "calisthenics '+cityName+'"',
      url:'https://www.reddit.com/search/?q=calisthenics%20'+q},
-    {ico:'ph-vinyl-record', lbl:'Techno & nightlife', sub:'Resident Advisor listings',
+    {ico:'ph-vinyl-record', lbl:'Techno & nightlife', sub:'Resident Advisor · clubs & events in '+cityName,
      url:'https://ra.co/search/'+q},
-    {ico:'ph-aperture', lbl:'Photo spots locals love', sub:'Reddit r/'+cityName+' top posts',
-     url:'https://www.reddit.com/r/'+q+'/search/?q=best%20photo%20spot&restrict_sr=1&sort=top'},
+    {ico:'ph-aperture', lbl:'Photo spots locals love', sub:'Reddit search · "'+cityName+' photo spots"',
+     url:'https://www.reddit.com/search/?q='+encodeURIComponent(cityName+' photo spots')},
   ];
 }
 function selExpCat(cat){
@@ -2321,6 +2321,7 @@ function renderGuide(){
   var clinks=communityLinks(city);
   out+='<div class="guide-sec">';
   out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-users-three"></i></div><span class="guide-hdr-label">Find your people</span></div>';
+  out+='<div class="cap mb3" style="color:var(--tx3)">External search links — opens in a new tab. Results depend on how much is posted about '+city+'.</div>';
   out+='<div class="intel-grid">';
   for(var i=0;i<clinks.length;i++){
     var cl=clinks[i];
