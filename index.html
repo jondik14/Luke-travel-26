@@ -1156,6 +1156,7 @@ function tripSegments(){
 }
 
 var BK = {
+  'ams-opo':{from:'AMS',to:'OPO',fl:'HV6005',dep:'18:20',arr:'20:05',date:'Mon 29 Jun',seat:'18D',ref:'IE43SW',eur:182},
   'bcn-ibz':{from:'BCN',to:'IBZ',fl:'VY3518',dep:'17:15',arr:'18:20',date:'Mon 13 Jul',seat:'5C',ref:'JNVDTN',eur:65.99},
   'ibz-bcn':{from:'IBZ',to:'BCN',fl:'VY3511',dep:'14:25',arr:'15:25',date:'Wed 15 Jul',seat:'11B',ref:'DK846G',eur:102.99},
 };
@@ -1184,15 +1185,15 @@ var DAYS=[
   {d:'2026-06-18',c:'Taormina',e:'🍋',p:1,t:'city',pp:['B','K','R','L'],a:null,r:null,th:['Last family day 🥂']},
   {d:'2026-06-19',c:'Bristol',e:'🇬🇧',p:2,t:'city',pp:['L','R','M'],a:'Airbnb',r:null,th:['Bucks begins! 🎉','Clifton & Harbourside']},
   {d:'2026-06-20',c:'Bristol',e:'🇬🇧',p:2,t:'city',pp:['L','R','M'],a:'Airbnb',r:null,th:['Bucks day 2']},
-  {d:'2026-06-21',c:'Bristol → Munich',e:'✈️',p:2,t:'travel',pp:['L','R','M'],a:"Wombat's Hostel",r:'Trip.com confirmed',th:['Flight to Munich','Wombats check-in']},
-  {d:'2026-06-22',c:'Innsbruck',e:'🏔️',p:2,t:'city',pp:['L'],a:'MEININGER Hostel',r:'Hostelworld confirmed',th:['Nordkette Cable Car','Old Town','Mountain photography']},
+  {d:'2026-06-21',c:'Bristol → Munich',e:'✈️',p:2,t:'travel',pp:['L','R','M'],a:"Wombat's Hostel",r:'Agoda confirmed · AUD 51.15',th:['Flight to Munich','Wombats check-in']},
+  {d:'2026-06-22',c:'Innsbruck',e:'🏔️',p:2,t:'city',pp:['L'],a:'MEININGER Hostel',r:'Hostelworld confirmed',bus:{from:'Munich',to:'Innsbruck',dep:'10:00',arr:'12:20',ref:'FlixBus #3345637470'},th:['Nordkette Cable Car','Old Town','Mountain photography']},
   {d:'2026-06-23',c:'Innsbruck',e:'🏔️',p:2,t:'event',pp:['L'],a:'MEININGER Hostel',r:'Hostelworld confirmed',th:['🔒 HIKE WITH ISMAEL','Outdoor calisthenics']},
-  {d:'2026-06-24',c:'Munich',e:'🍺',p:2,t:'city',pp:['L'],a:"Wombat's City Hostel",r:'Ref 8249-577112179 · €64.10',th:['Allianz Arena','Bayern Megastore (jersey!)','BMW Welt','Bahnwärter Thiel']},
+  {d:'2026-06-24',c:'Munich',e:'🍺',p:2,t:'city',pp:['L'],a:"Wombat's City Hostel",r:'Ref 8249-577112179 · €64.10',bus:{from:'Innsbruck',to:'Munich',dep:'13:45',arr:'16:00',ref:'FlixBus #3345637470'},th:['Allianz Arena','Bayern Megastore (jersey!)','BMW Welt','Bahnwärter Thiel']},
   {d:'2026-06-25',c:'Amsterdam',e:'🚲',p:2,t:'city',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['Munich → Amsterdam','Canal cycling']},
   {d:'2026-06-26',c:'Amsterdam',e:'🎵',p:2,t:'event',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['🔒 DEFQON.1','Nightlife photography']},
   {d:'2026-06-27',c:'Amsterdam',e:'🎨',p:2,t:'city',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['Stedelijk Museum','Moco Museum','NXT Museum']},
   {d:'2026-06-28',c:'Amsterdam',e:'🎨',p:2,t:'city',pp:['L'],a:'Hans Brinker Hostel',r:'Hostelworld confirmed',th:['Van Gogh Museum','Dutch branding walk']},
-  {d:'2026-06-29',c:'Amsterdam → Porto',e:'✈️',p:3,t:'travel',pp:['L'],a:null,r:'Transavia IE43SW confirmed',th:['Transavia flight IE43SW','Porto arrival']},
+  {d:'2026-06-29',c:'Amsterdam → Porto',e:'✈️',p:3,t:'travel',pp:['L'],a:null,r:'Transavia IE43SW confirmed',bk:'ams-opo',th:['HV6005 · 18:20 · Seat 18D','Porto arrival']},
   {d:'2026-06-30',c:'Porto',e:'🍷',p:3,t:'city',pp:['L'],a:null,r:null,th:['Ribeira District','Dom Luís Bridge','Tile photography']},
   {d:'2026-07-01',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:'TAP Z7GFA9 confirmed',th:['TAP flight (Z7GFA9)','Ericeira check-in']},
   {d:'2026-07-02',c:'Ericeira',e:'🏄',p:3,t:'city',pp:['L'],a:'Family Airbnb',r:null,th:['Beach day','Atlantic swim 🏊']},
@@ -1875,7 +1876,7 @@ function renderToday(){
   }
 
   // Confirmed bookings — collapsed
-  var totalBk=2+8; // flights + stays
+  var totalBk=3+9; // flights + stays/buses
   out += '<div class="bk-wrap mb4">';
   out += '<div class="bk-toggle" onclick="toggleBookings()">';
   out += '<div class="row gap3"><div class="ico ico-ok" style="width:32px;height:32px"><i class="ph-fill ph-check-circle"></i></div>';
@@ -1883,7 +1884,7 @@ function renderToday(){
   out += '<i class="ph ph-caret-down" id="bkCaret" style="color:var(--tx3);font-size:16px;transition:transform .3s var(--spring)"></i>';
   out += '</div>';
   out += '<div class="bk-list" id="bkList">';
-  var bkeys=['bcn-ibz','ibz-bcn'];
+  var bkeys=['ams-opo','bcn-ibz','ibz-bcn'];
   for(var i=0;i<bkeys.length;i++){
     var b=BK[bkeys[i]];
     out += '<div class="bk-row">';
@@ -1893,13 +1894,14 @@ function renderToday(){
     out += '</div>';
   }
   var stays=[
-    {i:'ph-bed',t:"Wombat's Munich",s:'24 Jun · €64.10'},
+    {i:'ph-bed',t:"Wombat's Munich (21–22 Jun)",s:'Agoda · AUD 51.15'},
+    {i:'ph-bed',t:"Wombat's Munich (24 Jun)",s:'€64.10'},
+    {i:'ph-bus',t:'FlixBus Munich ↔ Innsbruck',s:'22 & 24 Jun · #3345637470'},
     {i:'ph-bed',t:'Hans Brinker Amsterdam',s:'25–28 Jun'},
     {i:'ph-bed',t:'MEININGER Innsbruck',s:'22–24 Jun'},
     {i:'ph-bed',t:'Generator Madrid',s:'8–10 Jul'},
     {i:'ph-bed',t:'Itaca Barcelona',s:'11–13 Jul'},
     {i:'ph-bed',t:'Giramundo Ibiza',s:'13–15 Jul'},
-    {i:'ph-airplane',t:'Transavia AMS → OPO',s:'IE43SW'},
     {i:'ph-airplane',t:'TAP Portugal OPO → LIS',s:'Z7GFA9'},
   ];
   for(var i=0;i<stays.length;i++){
@@ -2115,6 +2117,7 @@ function renderTimeline(){
       var tLbl=(tiB.dep&&tiB.arr)?tiB.dep+' → '+tiB.arr:'Travel day';
       badges.push('<span class="badge b-sky"><i class="ph-fill ph-airplane-in-flight"></i>'+tLbl+'</span>');
     }
+    if(d.bus) badges.push('<span class="badge b-sky"><i class="ph-fill ph-bus"></i>'+d.bus.dep+' → '+d.bus.arr+'</span>');
     if(d.a&&d.r)    badges.push('<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Booked</span>');
     else if(d.a&&!d.r) badges.push('<span class="badge b-warn">Unconfirmed</span>');
     else if(!d.a&&d.t!=='travel'&&d.t!=='home') badges.push('<span class="badge b-warn">Book accomm.</span>');
@@ -2143,8 +2146,12 @@ function renderTimeline(){
       if(ti.eur) metaBits.push('€'+ti.eur);
       out+='<div class="day-flt-meta">'+metaBits.join(' · ')+'</div></div>';
     }
+    if(d.bus){
+      out+='<div class="day-flt"><div class="day-flt-route"><span class="day-flt-code">'+d.bus.from+'</span><i class="ph-fill ph-bus day-flt-arrow"></i><span class="day-flt-code">'+d.bus.to+'</span></div>';
+      out+='<div class="day-flt-meta">'+d.bus.dep+'–'+d.bus.arr+' · '+d.bus.ref+'</div></div>';
+    }
     if(d.th&&d.th.length){
-      out+='<div class="label" style="margin:'+((d.a||d.t==='travel')?'12px':'0')+'px 0 6px">Plan</div>';
+      out+='<div class="label" style="margin:'+((d.a||d.t==='travel'||d.bus)?'12px':'0')+'px 0 6px">Plan</div>';
       for(var j=0;j<d.th.length;j++) out+='<div class="day-hl">'+d.th[j].replace('🔒 ','')+'</div>';
     }
     if(gc){
@@ -2418,9 +2425,10 @@ function tog(id){
 
 /* ─── BUDGET ─────────────────────────────────────────────── */
 var CONFIRMED_COSTS=[
+  {ico:'ph-airplane',t:'AMS → OPO · Transavia',sub:'Mon 29 Jun · HV6005',eur:182},
   {ico:'ph-airplane',t:'BCN → IBZ · Vueling',sub:'Mon 13 Jul · VY3518',eur:65.99},
   {ico:'ph-airplane',t:'IBZ → BCN · Vueling',sub:'Wed 15 Jul · VY3511',eur:102.99},
-  {ico:'ph-bed',t:'Wombat\'s Munich',sub:'24 Jun · €9.56 + €56.41 at property',eur:64.10},
+  {ico:'ph-bed',t:'Wombat\'s Munich (24 Jun)',sub:'€9.56 + €56.41 at property',eur:64.10},
 ];
 function renderBudget(){
   fetchXR();
