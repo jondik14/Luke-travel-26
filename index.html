@@ -39,6 +39,8 @@
   --warn-dim:rgba(251,191,36,.12);
   --warn-tx: #fbbf24;
   --err:     #f87171;
+  --sky:     #4FA8E0;
+  --sky-dim: rgba(79,168,224,.13);
 
   /* Phase colours */
   --p1:#E07B5A; --p2:#4A9E7A; --p3:#E8A23C; --p4:#5A7EC4;
@@ -196,6 +198,7 @@ body.light #nav { background: rgba(244,242,239,.9); }
 .b-warn { background:var(--warn-dim); color:var(--warn); border:1px solid rgba(251,191,36,.2); }
 .b-ac   { background:var(--ac-dim);   color:var(--ac);   border:1px solid rgba(242,100,25,.25); }
 .b-dim  { background:var(--s2);       color:var(--tx2);  border:1px solid var(--bd); }
+.b-sky  { background:var(--sky-dim);  color:var(--sky);  border:1px solid rgba(79,168,224,.25); }
 .b-err  { background:rgba(248,113,113,.12); color:var(--err); border:1px solid rgba(248,113,113,.2); }
 
 /* ─── Icon container ─────────────────────────────────────── */
@@ -284,10 +287,10 @@ body.light .hero-display {
 }
 .flt-route {
   display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:var(--sp3);
+  margin-bottom:var(--sp3); gap:var(--sp2);
 }
-.flt-code { font-size:26px; font-weight:800; letter-spacing:-.03em; }
-.flt-arrow { color:var(--ac); font-size:20px; }
+.flt-code { font-size:26px; font-weight:800; letter-spacing:-.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.flt-arrow { color:var(--ac); font-size:20px; flex-shrink:0; }
 .flt-meta { font-size:13px; color:var(--tx2); font-weight:500; }
 
 /* ─── Stay board (Airbnb-style reservation card) ─────────── */
@@ -377,11 +380,12 @@ body.light .hero-display {
   position:absolute; inset:0; display:flex;
   align-items:center; justify-content:center; font-size:24px;
 }
-.day-thumb img {
+/* Generic background photo — used for any element with data-city */
+.bg-photo {
   position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; opacity:0; transition:opacity .5s;
+  object-fit:cover; opacity:0; transition:opacity .6s;
 }
-.day-thumb img.vis { opacity:1; }
+.bg-photo.vis { opacity:1; }
 
 /* Text meta */
 .day-tog-meta { flex:1; min-width:0; }
@@ -391,7 +395,11 @@ body.light .hero-display {
 }
 .day-tog-city.ac { color:var(--ac); }
 .day-tog-date { font-size:12px; color:var(--tx2); margin-top:1px; }
-.day-tog-badge { margin-top:5px; }
+.day-tog-badge { margin-top:5px; display:flex; flex-wrap:wrap; gap:5px; }
+
+/* Travel day — accent the whole card so it pops while scrolling */
+.day-card.travel-day { border-color:rgba(79,168,224,.35); }
+.day-card.travel-day .day-thumb-bg { filter:saturate(1.15); }
 
 /* Expand caret */
 .day-caret { font-size:18px; color:var(--tx3); flex-shrink:0;
@@ -412,19 +420,19 @@ body.light .hero-display {
   background:var(--tx3); flex-shrink:0; margin-top:7px;
 }
 
-/* Flight inline */
+/* Travel block — flight/transit summary, inline in day card */
 .day-flt {
-  background:var(--ac-dim); border:1px solid rgba(242,100,25,.2);
+  background:var(--sky-dim); border:1px solid rgba(79,168,224,.22);
   border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
   margin-bottom:var(--sp3);
 }
 .day-flt-route {
   display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:var(--sp2);
+  margin-bottom:var(--sp2); gap:var(--sp2);
 }
-.day-flt-code { font-size:20px; font-weight:800; letter-spacing:-.02em; }
-.day-flt-arrow { color:var(--ac); }
-.day-flt-meta  { font-size:12px; color:var(--tx2); font-weight:500; }
+.day-flt-code { font-size:18px; font-weight:800; letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.day-flt-arrow { color:var(--sky); flex-shrink:0; }
+.day-flt-meta  { font-size:12px; color:var(--tx2); font-weight:500; display:flex; align-items:center; gap:5px; }
 
 /* Guide CTA inside card */
 .cta-sm {
@@ -895,10 +903,11 @@ body.light .hero-display {
   transition:background .3s, border-color .3s;
 }
 .upnext-img {
-  position:relative; height:80px;
+  position:relative; height:80px; overflow:hidden;
   display:flex; align-items:flex-start; justify-content:space-between;
   padding:var(--sp2) var(--sp3);
 }
+.upnext-img-grad { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.5)); }
 .upnext-emoji { font-size:27px; filter:drop-shadow(0 3px 10px rgba(0,0,0,.35)); position:relative; }
 .upnext-pill {
   position:relative; font-size:10px; font-weight:700; letter-spacing:.02em; white-space:nowrap;
@@ -1215,18 +1224,18 @@ var HERO_BG = {
 };
 
 var GUIDES = {
-  Athens:{e:'🏛️',mustdo:['Acropolis — arrive 8am before crowds (book online)','Acropolis Museum — 2hrs minimum','Lycabettus Hill — best sunset in Athens','Monastiraki flea market & street food'],design:['Ancient proportions — Parthenon golden ratio study','Greek wayfinding & signage systems','Street typography in Plaka neighbourhood'],reviews:[{p:'Acropolis',r:4.9,t:'Go at opening — crowds triple by 10am. The Erechtheum and Propylaea are underrated.'},{p:'Monastiraki',r:4.5,t:'Brilliant for street photography. Best souvlaki in the city. Flea market on Sunday mornings.'}]},
-  Milos:{e:'🏖️',mustdo:['Sarakiniko Beach — volcanic white rock formations','Kleftiko Sea Caves boat tour (book full day)','Plaka village sunset with island views'],photo:['Sarakiniko at dawn — otherworldly, zero people','Klima village colourful fishing huts','Plaka rooftops at golden hour'],reviews:[{p:'Sarakiniko',r:4.9,t:'Unlike anything else in Greece. White pumice + turquoise water. Go before 8am.'},{p:'Kleftiko Boat Tour',r:4.8,t:'Only accessible by boat. Crystal sea caves you can swim inside. All-day tour is worth it.'}]},
+  Athens:{e:'🏛️',mustdo:['Acropolis — arrive 8am before crowds (book online)','Acropolis Museum — 2hrs minimum','Lycabettus Hill — best sunset in Athens','Anafiotika — tiny whitewashed Cycladic-style alleys below the Acropolis','Monastiraki flea market & street food'],design:['Ancient proportions — Parthenon golden ratio study','Greek wayfinding & signage systems','Street typography in Plaka neighbourhood'],food:['Bouloukos Kebabs — local favourite, order the classics'],nightlife:['Half Note Jazz Club'],reviews:[{p:'Acropolis',r:4.9,t:'Go at opening — crowds triple by 10am. The Erechtheum and Propylaea are underrated.'},{p:'Monastiraki',r:4.5,t:'Brilliant for street photography. Best souvlaki in the city. Flea market on Sunday mornings.'}]},
+  Milos:{e:'🏖️',mustdo:['Sarakiniko Beach — volcanic white rock formations, go before 9am','Kleftiko Sea Caves boat tour (book full day)','Quad/ATV beach-hopping route: Sarakiniko → Papafragas → Firopotamos → Klima → Mandrakia','Plaka village sunset with island views'],photo:['Sarakiniko at dawn — otherworldly, zero people','Klima & Mandrakia — colourful fishing huts (syrmata) right on the water','Sunset at Panagia Korfiatissa Church, Plaka','Fyriplaka, Tsigrado, Gerakas, Paleochori, Pollonia — quad-only beaches with dramatic cliffs'],food:['O Hamos taverna, Plaka — order authentic Greek food, go 6:30–7pm before it fills up','Fresh seafood at the tiny harbour tavernas in Mandrakia'],reviews:[{p:'Sarakiniko',r:4.9,t:'Unlike anything else in Greece. White pumice + turquoise water. Go before 8am.'},{p:'Kleftiko Boat Tour',r:4.8,t:'Only accessible by boat. Crystal sea caves you can swim inside. All-day tour is worth it.'},{p:'Quad/ATV Hire',r:4.8,t:'Essential for beach hopping on narrow roads — roads wind more than they look so budget time. Helmet up and drive safe.'}]},
   Catania:{e:'🌋',mustdo:['Piazza del Duomo — baroque cathedral & elephant fountain','La Pescheria fish market 7–9am','Via Etna for street food & shopping'],food:['Arancini — try the pistachio version','Granita e brioche for breakfast (Sicilian ritual)','Fresh swordfish from the harbour catch'],reviews:[{p:'La Pescheria Market',r:4.7,t:'Chaotic and full of character. Best street photography of the trip. Go at 7am when it opens.'},{p:'Street Food',r:4.8,t:'Best arancini anywhere. The pistachio filling is extraordinary. Ask locals, not Google.'}]},
   Taormina:{e:'🍋',mustdo:['Greek Theatre — Mount Etna as backdrop','Isola Bella beach (cable car from town)','Corso Umberto stroll — boutiques & gelato'],food:['Granita di mandorla e brioche — THE Sicilian breakfast','Ricotta cannoli — ask for fresh-filled','Pasta alla norma at a local trattoria'],reviews:[{p:'Greek Theatre',r:4.9,t:'One of the most dramatic settings on earth. Etna erupting in the background is once-in-a-lifetime.'},{p:'Isola Bella',r:4.7,t:'Cable car down to a tiny protected cove. Crystal water. Beautiful for swimming and photography.'}]},
   Bristol:{e:'🇬🇧',mustdo:['Clifton Suspension Bridge — walk both ways','Harbourside walk & independent breweries','Banksy trail in Stokes Croft'],nightlife:['Wiper & True Brewery','The Lanes cocktail bars','Old Duke pub for jazz'],reviews:[{p:'Clifton Suspension Bridge',r:4.7,t:'Victorian engineering marvel. Views into the Avon Gorge are excellent for photography.'},{p:'Stokes Croft',r:4.6,t:'Best street art in the UK outside London. Good independent pubs and cafes.'}]},
   Munich:{e:'🍺',mustdo:['Allianz Arena tour — book ahead','Bayern Munich Megastore — buy the jersey 🧣','BMW Welt — free entry, extraordinary architecture','English Garden — larger than Central Park'],design:['Deutsches Museum — engineering & design history','German typographic tradition in street signage','U-Bahn wayfinding system — superb grid design'],nightlife:['Bahnwärter Thiel — open-air club in converted tram depot','Augustiner Bräuhaus — authentic Munich beer culture'],reviews:[{p:'BMW Welt',r:4.8,t:'Free entry. The building itself is worth the trip. Cars displayed like sculpture. Budget 2–3hrs.'},{p:'Allianz Arena',r:4.8,t:'The LED facade at night is surreal. Tour on non-match days. Book online. Pitch walk is a highlight.'}]},
   Innsbruck:{e:'🏔️',mustdo:['Nordkette Cable Car → 2,256m (20 min from city centre)','Old Town Altstadt & Golden Roof','Hike with Ismael — 23 June 🔒 LOCKED'],fitness:['Full mountain hike (4–6hrs, Ismael knows the route)','Outdoor calisthenics with Alps backdrop','Hiking gear at Intersport Kröll'],photo:['Nordkette summit — city + Alps in one frame','Inn River with mountain reflections','Old Town medieval lanes at dusk'],reviews:[{p:'Nordkette Cable Car',r:4.9,t:'Fastest way from a city to 2,256m in Europe. Views are breathtaking. Check weather.'},{p:'Old Town',r:4.6,t:'Golden Roof is the centrepiece. Medieval architecture in excellent condition. Great evening photography.'}]},
-  Amsterdam:{e:'🚲',mustdo:['Defqon.1 — 26 June 🔒 LOCKED','Canal cycling (rent from Macbike or Star Bikes)','Jordaan neighbourhood wander'],museums:['Stedelijk Museum — Dutch modernism & graphic design','Moco Museum — Banksy, Basquiat, contemporary','NXT Museum — immersive digital art','Van Gogh Museum — book weeks ahead'],design:['NDSM Wharf — Amsterdam creative district','Dutch graphic design bookshops in Jordaan','Droog design store on Staalstraat'],nightlife:['Shelter — techno bunker under the A\'dam Tower','Radion — one of Europe\'s best sound systems','Lofi — intimate basement house music'],reviews:[{p:'Stedelijk Museum',r:4.7,t:'The Rietveld room and Dutch modernism collection are world class. Design history lovers: budget 3+ hours.'},{p:'NXT Museum',r:4.6,t:'Most photogenic museum in NL. Immersive digital art. Every room different. Book ahead.'}]},
+  Amsterdam:{e:'🚲',mustdo:['Defqon.1 — 26 June 🔒 LOCKED','Canal cycling (rent from Macbike or Star Bikes)','Vondelpark → Amstel river bike ride','Golden-hour canal cruise (~7–8pm — quiet canals over Red Light)','Jordaan neighbourhood wander'],museums:['Anne Frank House — #1 priority booking, tickets drop ~6wks ahead & sell out fast','Van Gogh Museum — time-slot entry, try to book the 9am slot','Stedelijk Museum — Dutch modernism & graphic design','Moco Museum — Banksy, Basquiat, contemporary','NXT Museum — immersive digital art'],design:['NDSM Wharf — Amsterdam creative district','Dutch graphic design bookshops in Jordaan','Droog design store on Staalstraat'],food:['Foodhallen, Jordaan — indoor food market, great variety','Winkel 43 — best apple pie in the Jordaan','Moeders — home-style Dutch comfort food'],nightlife:['Shelter — techno bunker under the A\'dam Tower','Radion — one of Europe\'s best sound systems','Lofi — intimate basement house music','Paradiso — iconic club in a former church'],reviews:[{p:'Stedelijk Museum',r:4.7,t:'The Rietveld room and Dutch modernism collection are world class. Design history lovers: budget 3+ hours.'},{p:'NXT Museum',r:4.6,t:'Most photogenic museum in NL. Immersive digital art. Every room different. Book ahead.'}]},
   Porto:{e:'🍷',mustdo:['Ribeira District — UNESCO riverside neighbourhood','Dom Luís Bridge upper deck walk','Serra do Pilar for sunset panorama'],photo:['Azulejo tile facades — Almas Chapel has 20,000 tiles','Ribeira rooftops from the bridge at golden hour','Douro River reflections at dusk'],food:['Francesinha at Cervejaria Brasão (the Porto sandwich)','Port wine tasting in Vila Nova de Gaia','Bacalhau à Brás — salt cod done right'],reviews:[{p:'Dom Luís Bridge',r:4.8,t:'Upper deck walk gives the full panorama both ways. Go at sunset. One of the best free views in Europe.'},{p:'Ribeira',r:4.7,t:'Most photogenic riverside neighbourhood in Europe. Colour, texture, history. Explore every alley.'}]},
   Ericeira:{e:'🏄',mustdo:['World Surfing Reserve cliff walks north of town','Praia do Sul for swimming and sunsets','Village cobblestone streets & seafood restaurants'],fitness:['Atlantic ocean swim — cold, bracing, worth it 🏊','Morning cliff path run from the village','Beach calisthenics with ocean view'],food:['Percebes (barnacles) at the harbour — fresh and local','Grilled fish at a harbour-side restaurant','Açaí bowls at a surf café for breakfast'],reviews:[{p:'Ericeira Village',r:4.8,t:'One of only two World Surfing Reserves in Europe. Laid back, dramatic cliffs, exceptional seafood.'},{p:'Coastal Cliff Walk',r:4.7,t:'Walk north from the village. Dramatic Atlantic views on volcanic rock. Perfect at golden hour.'}]},
   Madrid:{e:'👑',mustdo:['Prado Museum — 3hrs minimum (Velázquez, Goya, El Greco)','Royal Palace & Sabatini Gardens','Retiro Park for street photography'],football:['Bernabéu Stadium Tour — new renovation is jaw-dropping','Football culture photography in La Latina bars'],food:['Tapas circuit in La Latina neighbourhood','Churros con chocolate at San Ginés (open 24hrs)','Vermut hour in Malasaña every Sunday 1–3pm'],reviews:[{p:'Prado Museum',r:4.9,t:'The Spanish masters at their absolute best. Las Meninas alone justifies the trip. Allow a full morning.'},{p:'Bernabéu Tour',r:4.8,t:'Post-renovation the stadium is genuinely stunning. Walking the pitch is surreal. Book online.'}]},
-  Barcelona:{e:'🏗️',mustdo:['Sagrada Família — book tower access weeks ahead','Park Güell (timed entry mosaic terrace)','Gothic Quarter — 2hrs wandering without a map'],design:['MACBA (contemporary art + Meier architecture)','Poblenou @22 district — design studios & galleries','Gaudí trail: Casa Batlló, Casa Milà, Palau Güell'],football:['Camp Nou Museum — new stadium renovation tour'],food:['Pa amb tomàquet (bread, tomato, oil — on everything)','Patatas bravas at a proper tapas bar','Sunday vermut in El Born neighbourhood'],reviews:[{p:'Sagrada Família',r:4.9,t:'Book the tower access. The interior light through coloured glass at noon is unlike anything.'},{p:'Poblenou',r:4.7,t:'Barcelona\'s design hub. Street art, tech startups, independent studios. Great half-day wander.'}]},
+  Barcelona:{e:'🏗️',mustdo:['Sagrada Família — book tower access weeks ahead, bring headphones for audio tour','Park Güell (timed entry mosaic terrace)','Gothic Quarter — 2hrs wandering without a map'],design:['MACBA (contemporary art + Meier architecture)','Poblenou @22 district — design studios & galleries','Gaudí trail: Casa Batlló, Casa Milà, Palau Güell'],photo:['Bunkers del Carmel — best sunset in Barcelona, full skyline view (better than Montjuïc)'],football:['Camp Nou Museum — new stadium renovation tour'],food:['Pa amb tomàquet (bread, tomato, oil — on everything)','Patatas bravas at a proper tapas bar','El Born district — great food & wine bars, better evening vibe than La Rambla','Sunday vermut in El Born neighbourhood'],nightlife:['Jamboree Jazz Club — live jazz/flamenco in the Gothic Quarter'],reviews:[{p:'Sagrada Família',r:4.9,t:'Book the tower access. The interior light through coloured glass at noon is unlike anything.'},{p:'Poblenou',r:4.7,t:'Barcelona\'s design hub. Street art, tech startups, independent studios. Great half-day wander.'},{p:'Bunkers del Carmel',r:4.8,t:'Skip Montjuïc — this is the sunset spot. Full skyline + sea view, bring a drink and a blanket.'}]},
   Ibiza:{e:'🌅',mustdo:['Sunset at Café del Mar — arrive 30min early','Dalt Vila UNESCO Old Town on the hill','Es Vedrà viewpoint at sunset'],photo:['Café del Mar golden hour — iconic shot','Dalt Vila ramparts over the harbour','White-washed village streets in Sant Josep'],nightlife:['Café del Mar — the original sunset ritual','DC-10 — legendary Monday club nights (check calendar)'],reviews:[{p:'Café del Mar',r:4.7,t:'The sunset is genuinely one of Europe\'s most famous. Arrive 30 minutes early for the wall.'},{p:'Dalt Vila',r:4.8,t:'UNESCO old town on the hill. Seriously underrated. Incredible views and ancient history.'}]},
 };
 
@@ -1288,8 +1297,10 @@ var city = 'Athens';
 
 // Things still to book/confirm — each links straight to where to sort it
 var TODO_ITEMS=[
-  {id:'quad-milos', t:'Book quad bike rental', city:'Milos', note:'Best way to reach Sarakiniko & Kleftiko viewpoints', link:'https://www.google.com/search?q=quad+bike+rental+milos+greece'},
-  {id:'vangogh-ams', t:'Book Van Gogh Museum tickets', city:'Amsterdam', note:'Sells out weeks ahead — book a timed slot', link:'https://www.vangoghmuseum.nl/en/tickets'}
+  {id:'quad-milos', t:'Book quad/ATV rental', city:'Milos', note:'Only 1 day left here — do it today for the Sarakiniko → Papafragas → Firopotamos → Klima → Mandrakia beach-hopping route', link:'https://atv-rental-milos.com/'},
+  {id:'vangogh-ams', t:'Book Van Gogh Museum tickets', city:'Amsterdam', note:'Time-slot entry, sells out weeks ahead — try the 9am slot', link:'https://www.vangoghmuseum.nl/en/tickets'},
+  {id:'annefrank-ams', t:'Book Anne Frank House tickets', city:'Amsterdam', note:'#1 priority — tickets drop ~6wks ahead and sell out fast, check now', link:'https://www.google.com/search?q=anne+frank+house+tickets'},
+  {id:'sagrada-bcn', t:'Book Sagrada Família timed entry', city:'Barcelona', note:'Tower access sells out weeks ahead — pick an exact slot, bring headphones for audio tour', link:'https://www.google.com/search?q=sagrada+familia+tickets'}
 ];
 
 // WMO weather interpretation codes → emoji + label
@@ -1693,6 +1704,7 @@ function renderToday(){
       out += '<div class="label mb3">Where you\'re staying</div>';
       out += '<div class="stay-board mb4">';
       out += '<div class="stay-board-hero" style="background:linear-gradient('+sbg+')">';
+      out += '<img class="bg-photo" data-city="'+stay.city+'" alt="" onload="this.classList.add(\'vis\')">';
       out += '<div class="stay-board-hero-grad"></div>';
       out += '<div class="stay-board-hero-em">'+(sgu?sgu.e:'🛏️')+'</div>';
       out += '<span class="badge '+(ok?'b-ok':'b-warn')+' stay-board-hero-badge"><i class="'+(ok?'ph-fill ph-check-circle':'ph ph-clock')+'"></i>'+(ok?'Confirmed':'TBC')+'</span>';
@@ -1711,22 +1723,25 @@ function renderToday(){
       out += '</div></div></div>';
     }
 
-    // Flight
-    if(entry.bk && BK[entry.bk]){
-      var b=BK[entry.bk];
-      out += '<div class="label mb3">Flight today</div>';
+    // Travel
+    if(entry.t==='travel'){
+      var ti=travelInfo(entry);
+      var hasTimes=!!(ti.dep&&ti.arr);
+      out += '<div class="label mb3">Travel today</div>';
       out += '<div class="flt-card mb4">';
       out += '<div class="flt-route">';
-      out += '<span class="flt-code">'+b.from+'</span>';
+      out += '<span class="flt-code">'+ti.from+'</span>';
       out += '<i class="ph-fill ph-airplane-in-flight flt-arrow"></i>';
-      out += '<span class="flt-code">'+b.to+'</span>';
+      out += '<span class="flt-code">'+ti.to+'</span>';
       out += '</div>';
       out += '<div class="row gap2 mb3">';
-      out += '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Confirmed</span>';
-      out += '<span class="badge b-dim">'+b.fl+'</span>';
-      out += '<span class="badge b-dim">Seat '+b.seat+'</span>';
+      out += hasTimes ? '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Confirmed</span>' : '<span class="badge b-warn"><i class="ph ph-clock"></i>Details TBC</span>';
+      if(ti.ref) out += '<span class="badge b-dim">'+ti.ref+'</span>';
+      if(ti.seat) out += '<span class="badge b-dim">Seat '+ti.seat+'</span>';
       out += '</div>';
-      out += '<div class="row between"><span class="cap">Dep '+b.dep+'</span><span class="cap">Arr '+b.arr+'</span><span class="cap accent">€'+b.eur+'</span></div>';
+      out += hasTimes
+        ? '<div class="row between"><span class="cap">Dep '+ti.dep+'</span><span class="cap">Arr '+ti.arr+'</span>'+(ti.eur?'<span class="cap accent">€'+ti.eur+'</span>':'')+'</div>'
+        : '<div class="cap" style="color:var(--tx2)">Times to be confirmed</div>';
       out += '</div>';
     }
 
@@ -1844,6 +1859,8 @@ function renderToday(){
       var mlbl = mdiff<=0 ? 'Today' : mdiff===1 ? 'Tomorrow' : 'In '+mdiff+'d';
       out += '<div class="upnext-card">';
       out += '<div class="upnext-img" style="background:linear-gradient('+mbg+')">';
+      out += '<img class="bg-photo" data-city="'+mo.city+'" alt="" onload="this.classList.add(\'vis\')">';
+      out += '<div class="upnext-img-grad"></div>';
       out += '<span class="upnext-emoji">'+mo.ico+'</span>';
       out += '<span class="upnext-pill">'+mlbl+'</span>';
       out += '</div>';
@@ -1898,6 +1915,7 @@ function renderToday(){
   out += '</div>'; // px
 
   g('pToday').innerHTML = out;
+  loadCityPhotos();
   // Update theme icon
   var tb=g('themeBtn');
   if(tb) tb.querySelector('i').className = dark ? 'ph ph-moon' : 'ph ph-sun';
@@ -1952,6 +1970,24 @@ function upcomingMoments(ts, limit){
   }
   return out;
 }
+// Pull together everything known about a travel day — route, times, ref —
+// so it can be rendered as one consistent "travel block".
+function travelInfo(d){
+  var parts=d.c.split(' → ');
+  var from=parts[0], to=parts[1]||parts[0];
+  var b=(d.bk&&BK[d.bk])?BK[d.bk]:null;
+  var ref=null;
+  if(d.th) for(var i=0;i<d.th.length;i++){
+    var m=d.th[i].match(/\(?\b([A-Z]{1,3}\d{2,4}[A-Z]{0,3})\b\)?/);
+    if(m){ ref=m[1]; break; }
+  }
+  return {
+    from:from, to:to,
+    dep:b?b.dep:null, arr:b?b.arr:null,
+    ref: b?b.fl:ref,
+    seat: b?b.seat:null, eur: b?b.eur:null
+  };
+}
 function photoCity(c){ var p=c.split(' → '); return p[p.length-1]; }
 function guideCity(c){
   var p=c.split(' → ');
@@ -1985,12 +2021,16 @@ function toggleDay(i){
     body.addEventListener('transitionend',function h(){ body.style.height='auto'; body.removeEventListener('transitionend',h); });
   }
 }
-function loadTimelinePhotos(){
-  var imgs=document.querySelectorAll('#pTimeline .day-thumb img[data-city]');
+// Loads real photos for every place name shown across all tabs —
+// day thumbnails, city hero banners, the stay board and the "Up next" cards.
+function loadCityPhotos(){
+  var imgs=document.querySelectorAll('img[data-city]');
   var needed={};
   for(var i=0;i<imgs.length;i++){
-    var c=imgs[i].getAttribute('data-city');
-    if(c&&WIKI_MAP[c]&&!WIKIIMG[c]) needed[c]=true;
+    var im=imgs[i], c=im.getAttribute('data-city');
+    if(!c||!WIKI_MAP[c]) continue;
+    if(WIKIIMG[c]){ if(im.getAttribute('src')!==WIKIIMG[c]) im.src=WIKIIMG[c]; }
+    else needed[c]=true;
   }
   Object.keys(needed).forEach(function(city){
     if(WIKIFETCH[city]) return;
@@ -2004,7 +2044,7 @@ function loadTimelinePhotos(){
         if(/(coat_of_arms|locator_map|location_map|flag_of|Flag_of|administrative_map)/i.test(url)) return;
         if(url.indexOf('/thumb/')>-1) url=url.replace(/\/\d+px-[^/]*$/,'/640px-'+url.split('/').pop());
         WIKIIMG[city]=url;
-        var els=document.querySelectorAll('#pTimeline .day-thumb img[data-city="'+city+'"]');
+        var els=document.querySelectorAll('img[data-city="'+city+'"]');
         for(var j=0;j<els.length;j++) els[j].src=url;
       }).catch(function(){});
   });
@@ -2059,19 +2099,26 @@ function renderTimeline(){
       out+='</div>';
     }
 
-    out+='<div class="day-wrap"><div class="day-card'+(isToday?' today':'')+(isPast?' past':'')+(isOpen?' open':'')+'" id="dc'+i+'">';
+    out+='<div class="day-wrap"><div class="day-card'+(isToday?' today':'')+(isPast?' past':'')+(isOpen?' open':'')+(d.t==='travel'?' travel-day':'')+'" id="dc'+i+'">';
 
     // ── Tap header ──
     out+='<div class="day-tog" onclick="toggleDay('+i+')">';
-    out+='<div class="day-thumb"><div class="day-thumb-bg" style="background:linear-gradient('+bg+')"></div><div class="day-thumb-em">'+d.e+'</div><img data-city="'+pc+'" alt="" onload="this.classList.add(\'vis\')"></div>';
+    out+='<div class="day-thumb"><div class="day-thumb-bg" style="background:linear-gradient('+bg+')"></div><div class="day-thumb-em">'+d.e+'</div><img class="bg-photo" data-city="'+pc+'" alt="" onload="this.classList.add(\'vis\')"></div>';
     out+='<div class="day-tog-meta">';
     out+='<div class="day-tog-city'+(isToday?' ac':'')+'">'+d.c+'</div>';
     out+='<div class="day-tog-date">'+fmt(d.d)+'&nbsp;·&nbsp;Day '+dn+'</div>';
-    if(isToday)          out+='<div class="day-tog-badge"><span class="badge b-ac">Today</span></div>';
-    else if(d.t==='event') out+='<div class="day-tog-badge"><span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked</span></div>';
-    else if(d.a&&d.r)    out+='<div class="day-tog-badge"><span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Booked</span></div>';
-    else if(d.a&&!d.r)   out+='<div class="day-tog-badge"><span class="badge b-warn">Unconfirmed</span></div>';
-    else if(!d.a&&d.t!=='travel'&&d.t!=='home') out+='<div class="day-tog-badge"><span class="badge b-warn">Book accomm.</span></div>';
+    var badges=[];
+    if(isToday) badges.push('<span class="badge b-ac">Today</span>');
+    if(d.t==='event') badges.push('<span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked</span>');
+    if(d.t==='travel'){
+      var tiB=travelInfo(d);
+      var tLbl=(tiB.dep&&tiB.arr)?tiB.dep+' → '+tiB.arr:'Travel day';
+      badges.push('<span class="badge b-sky"><i class="ph-fill ph-airplane-in-flight"></i>'+tLbl+'</span>');
+    }
+    if(d.a&&d.r)    badges.push('<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Booked</span>');
+    else if(d.a&&!d.r) badges.push('<span class="badge b-warn">Unconfirmed</span>');
+    else if(!d.a&&d.t!=='travel'&&d.t!=='home') badges.push('<span class="badge b-warn">Book accomm.</span>');
+    if(badges.length) out+='<div class="day-tog-badge">'+badges.join('')+'</div>';
     out+='</div>';
     out+='<i class="ph ph-caret-down day-caret"></i>';
     out+='</div>';
@@ -2087,13 +2134,17 @@ function renderTimeline(){
       out+=(ok?'<div class="cap mt1 ok-tx">'+d.r+'</div>':'<div class="cap mt1 warn-tx">Confirm booking</div>');
       out+='</div></div>';
     }
-    if(d.bk&&BK[d.bk]){
-      var b=BK[d.bk];
-      out+='<div class="day-flt"><div class="day-flt-route"><span class="day-flt-code">'+b.from+'</span><i class="ph-fill ph-airplane-in-flight day-flt-arrow"></i><span class="day-flt-code">'+b.to+'</span></div>';
-      out+='<div class="day-flt-meta">'+b.fl+' · '+b.dep+'–'+b.arr+' · Seat '+b.seat+' · €'+b.eur+'</div></div>';
+    if(d.t==='travel'){
+      var ti=travelInfo(d);
+      out+='<div class="day-flt"><div class="day-flt-route"><span class="day-flt-code">'+ti.from+'</span><i class="ph-fill ph-airplane-in-flight day-flt-arrow"></i><span class="day-flt-code">'+ti.to+'</span></div>';
+      var metaBits=[(ti.dep&&ti.arr)?ti.dep+'–'+ti.arr:'Time TBC'];
+      if(ti.ref) metaBits.push(ti.ref);
+      if(ti.seat) metaBits.push('Seat '+ti.seat);
+      if(ti.eur) metaBits.push('€'+ti.eur);
+      out+='<div class="day-flt-meta">'+metaBits.join(' · ')+'</div></div>';
     }
     if(d.th&&d.th.length){
-      out+='<div class="label" style="margin:'+(d.a||d.bk?'12px':'0')+'px 0 6px">Plan</div>';
+      out+='<div class="label" style="margin:'+((d.a||d.t==='travel')?'12px':'0')+'px 0 6px">Plan</div>';
       for(var j=0;j<d.th.length;j++) out+='<div class="day-hl">'+d.th[j].replace('🔒 ','')+'</div>';
     }
     if(gc){
@@ -2107,7 +2158,7 @@ function renderTimeline(){
   }
 
   g('pTimeline').innerHTML=out;
-  loadTimelinePhotos();
+  loadCityPhotos();
 }
 
 /* ─── CITIES ─────────────────────────────────────────────── */
@@ -2156,6 +2207,7 @@ function renderGuide(){
 
   var out='<div class="city-hero">';
   out+='<div class="city-hero-bg" style="background:linear-gradient('+bg+')"></div>';
+  out+='<img class="bg-photo" data-city="'+city+'" alt="" onload="this.classList.add(\'vis\')">';
   out+='<div class="city-hero-em">'+gu.e+'</div>';
   out+='<div class="city-hero-grad"></div>';
   out+='<div class="city-hero-txt"><div class="city-hero-name">'+city+'</div><div class="city-hero-sub">'+sub+'</div></div>';
@@ -2251,6 +2303,7 @@ function renderGuide(){
 
   out+='</div>';
   g('gInner').innerHTML=out;
+  loadCityPhotos();
 }
 
 /* ─── GOALS ──────────────────────────────────────────────── */
