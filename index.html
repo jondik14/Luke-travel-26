@@ -1113,10 +1113,11 @@ body {
   position:fixed; bottom:calc(env(safe-area-inset-bottom,0px) + 80px); left:var(--sp4);
   width:52px; height:52px; border-radius:50%;
   background:var(--s1); color:var(--tx2); border:1px solid var(--bd2);
-  display:flex; align-items:center; justify-content:center;
+  display:none; align-items:center; justify-content:center;
   font-size:22px; box-shadow:0 4px 20px rgba(0,0,0,.2); z-index:150;
   transition:transform .3s var(--spring), background .2s, color .2s, border-color .2s;
 }
+body.build-on .insp-fab { display:flex; }
 .insp-fab.on { background:var(--ac); color:#fff; border-color:var(--ac); }
 .insp-fab:active { transform:scale(.9); }
 .insp-badge {
@@ -1130,13 +1131,14 @@ body {
 .insp-banner {
   position:fixed; top:0; left:50%;
   width:100%; max-width:430px; z-index:160;
-  display:flex; align-items:center; justify-content:space-between; gap:var(--sp2);
+  display:none; align-items:center; justify-content:space-between; gap:var(--sp2);
   padding: calc(env(safe-area-inset-top,0px) + var(--sp2)) var(--sp4) var(--sp2);
   background:var(--ac); color:#fff;
   font-size:12px; font-weight:700;
   transform:translateX(-50%) translateY(-100%);
   transition:transform .3s var(--spring);
 }
+body.build-on .insp-banner { display:flex; }
 .insp-banner.on { transform:translateX(-50%) translateY(0); }
 .insp-banner span { display:flex; align-items:center; gap:6px; }
 .insp-banner button {
@@ -1705,6 +1707,7 @@ function boot(){
   renderBook();
   renderBudget();
   hideSplash();
+  applyBuildMode();
   updateInspBadge();
 }
 
@@ -3213,6 +3216,40 @@ function toggleTheme(){
 
 function openSheet(){ g('installOvl').classList.add('on'); document.body.style.overflow='hidden'; }
 function closeSheet(){ g('installOvl').classList.remove('on'); document.body.style.overflow=''; }
+
+/* ─── Build Mode (long-press theme button to enable Inspector) ── */
+var buildMode = localStorage.getItem('lk_build')==='1';
+var _bmTimer=null, _bmFired=false;
+
+function applyBuildMode(){
+  document.body.classList.toggle('build-on', buildMode);
+}
+
+document.addEventListener('touchstart', function(e){
+  var btn = e.target.closest && e.target.closest('#themeBtn');
+  if(!btn) return;
+  _bmFired = false;
+  _bmTimer = setTimeout(function(){
+    _bmFired = true;
+    buildMode = !buildMode;
+    localStorage.setItem('lk_build', buildMode?'1':'0');
+    applyBuildMode();
+    showInspToast(buildMode ? 'Build mode ON — inspector enabled' : 'Build mode OFF');
+    if(!buildMode && INSP_ON) toggleInspect();
+  }, 700);
+}, {passive:true});
+
+document.addEventListener('touchend', function(e){
+  if(_bmTimer){ clearTimeout(_bmTimer); _bmTimer=null; }
+  if(_bmFired){
+    e.preventDefault();
+    _bmFired = false;
+  }
+}, {passive:false});
+
+document.addEventListener('touchmove', function(){
+  if(_bmTimer){ clearTimeout(_bmTimer); _bmTimer=null; }
+}, {passive:true});
 
 /* ─── Inspector Mode ─────────────────────────────────────── */
 var INSP_ON = false;
