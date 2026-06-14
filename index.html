@@ -446,28 +446,20 @@ body {
 .cta-sm:active { opacity:.8; transform:scale(.96); }
 
 /* ─── CITIES ─────────────────────────────────────────────── */
-.city-scroll {
-  display:flex; gap:var(--sp2);
-  padding:var(--sp3) var(--sp4);
-  overflow-x:auto;
-  position:sticky; top:0; z-index:5;
-  background:var(--bg);
-  border-bottom:1px solid var(--bd);
-  transition: background .3s, border-color .3s;
+.city-pick-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
+  cursor:pointer; -webkit-user-select:none; user-select:none;
+  transition: background .15s;
 }
-.city-chip {
-  white-space:nowrap; padding:8px var(--sp4);
-  border-radius:var(--r-full);
-  border:1px solid var(--bd2);
-  background:var(--s2); font-size:14px; font-weight:700;
-  color:var(--tx); min-height:40px;
-  display:flex; align-items:center; gap:6px;
-  transition: background .2s, color .2s, border-color .2s, transform .3s var(--spring);
-}
-.city-chip:active { transform:scale(.94); }
-.city-chip.on { background:var(--ac); border-color:var(--ac); color:#fff; }
-.city-chip.on .city-chip-dot { background:rgba(255,255,255,.55)!important; }
-.city-chip-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.city-pick-row:last-child { border-bottom:none; }
+.city-pick-row:active { background:var(--s2); }
+.city-pick-flag { font-size:26px; width:36px; text-align:center; flex-shrink:0; }
+.city-pick-body { flex:1; min-width:0; }
+.city-pick-name { font-size:16px; font-weight:700; color:var(--tx); }
+.city-pick-row.on .city-pick-name { color:var(--ac); }
+.city-pick-sub { font-size:12px; color:var(--tx2); margin-top:2px; }
+.city-pick-chk { font-size:21px; color:var(--ac); flex-shrink:0; }
 
 .city-hero {
   position:relative; height:200px; overflow:hidden;
@@ -911,6 +903,7 @@ body {
 }
 .fab:active { transform:scale(.9); }
 .fab.hidden { opacity:0; pointer-events:none; transform:scale(.8); }
+.fab i { font-size:24px; }
 
 /* ─── Expense log ────────────────────────────────────────── */
 .exp-amt-row { position:relative; margin-bottom:var(--sp4); }
@@ -1201,8 +1194,18 @@ body {
   </div>
 </div>
 
+<!-- Switch city sheet -->
+<div class="ovl" id="citySheetOvl" onclick="closeCitySheet()">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Switch city</div>
+    <div id="citySheetList"></div>
+  </div>
+</div>
+
 <!-- Floating action button -->
 <button class="fab hidden" id="fab" onclick="openExpSheet()" aria-label="Log expense">+</button>
+<button class="fab hidden" id="cityFab" onclick="openCitySheet()" aria-label="Switch city"><i class="ph-fill ph-map-pin"></i></button>
 
 <script>
 var TODAY = new Date();
@@ -2504,8 +2507,12 @@ function renderTimeline(){
 
 /* ─── CITIES ─────────────────────────────────────────────── */
 function renderCities(){
-  var keys=Object.keys(GUIDES);
-  // Build city → country map
+  g('pCities').innerHTML='<div id="gInner"></div>';
+  renderGuide();
+}
+
+// City → country map (for flags), based on where each guide city appears in the itinerary
+function cityCountryMap(){
   var cityCountry={};
   for(var i=0;i<DAYS.length;i++){
     var parts=DAYS[i].c.split(' → ');
@@ -2514,26 +2521,39 @@ function renderCities(){
       if(ct&&GUIDES[ct]&&!cityCountry[ct]) cityCountry[ct]=CITY_COUNTRY[ct];
     }
   }
-  var chips='<div class="city-scroll">';
-  for(var i=0;i<keys.length;i++){
-    var k=keys[i];
-    var cn=CN[cityCountry[k]]||CN.Greece;
-    chips+='<button class="city-chip'+(k===city?' on':'')+'" onclick="selCity(\''+k+'\')">';
-    chips+='<span class="city-chip-dot" style="background:'+(k===city?'rgba(255,255,255,.55)':cn.c)+'"></span>';
-    chips+=k+'</button>';
-  }
-  chips+='</div>';
-  g('pCities').innerHTML=chips+'<div id="gInner"></div>';
-  renderGuide();
+  return cityCountry;
 }
 
 function selCity(c){
   city=c;
-  var chips=document.querySelectorAll('.city-chip');
-  for(var i=0;i<chips.length;i++) chips[i].classList.toggle('on',chips[i].textContent===c);
   renderGuide();
-  var inner=g('gInner');
-  if(inner) inner.scrollIntoView({behavior:'smooth'});
+  try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
+}
+
+// "Switch city" bottom sheet — reachable picker replacing the old top pill bar
+function renderCitySheetList(){
+  var keys=Object.keys(GUIDES);
+  var cityCountry=cityCountryMap();
+  var out='';
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i];
+    var cn=CN[cityCountry[k]]||CN.Greece;
+    var days=DAYS.filter(function(d){return d.c.indexOf(k)!==-1;});
+    var sub=days.length?fmt(days[0].d)+(days.length>1?' · '+days.length+' nights':''):'';
+    out+='<div class="city-pick-row'+(k===city?' on':'')+'" onclick="selCity(\''+k+'\');closeCitySheet()">';
+    out+='<span class="city-pick-flag">'+cn.f+'</span>';
+    out+='<div class="city-pick-body"><div class="city-pick-name">'+k+'</div><div class="city-pick-sub">'+sub+'</div></div>';
+    if(k===city) out+='<i class="ph-fill ph-check-circle city-pick-chk"></i>';
+    out+='</div>';
+  }
+  g('citySheetList').innerHTML=out;
+}
+function openCitySheet(){
+  renderCitySheetList();
+  g('citySheetOvl').classList.add('on'); document.body.style.overflow='hidden';
+}
+function closeCitySheet(){
+  g('citySheetOvl').classList.remove('on'); document.body.style.overflow='';
 }
 
 function renderGuide(){
@@ -3021,6 +3041,9 @@ function go(name,btn){
   // FAB visible on Today + Budget only
   var fab=g('fab');
   if(fab) fab.classList.toggle('hidden', name!=='Today'&&name!=='Budget');
+  // City-switch FAB visible on Cities only
+  var cityFab=g('cityFab');
+  if(cityFab) cityFab.classList.toggle('hidden', name!=='Cities');
 }
 
 /* ─── Theme ──────────────────────────────────────────────── */
