@@ -683,6 +683,35 @@ body {
 .binp:focus { border-color:var(--ac); }
 .binp.actual { border-color:rgba(74,222,128,.25); }
 
+/* ─── Bank account (Basiq) ───────────────────────────────── */
+.bank-sync-btn {
+  display:flex; align-items:center; gap:4px;
+  font-size:12px; font-weight:700; color:var(--ac);
+  padding:5px 12px; border-radius:var(--r-full);
+  background:var(--ac-dim);
+}
+.bank-sync-btn:active { transform:scale(.94); }
+.bank-sync-btn.spin i { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.bank-headroom {
+  display:flex; align-items:center; gap:var(--sp3);
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp4);
+  margin:var(--sp3) 0;
+}
+.bank-txn-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp2) 0; border-bottom:1px solid var(--bd);
+}
+.bank-txn-row:last-child { border-bottom:none; }
+.bank-txn-desc { flex:1; min-width:0; }
+.bank-txn-title {
+  font-size:13px; font-weight:600; color:var(--tx);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.bank-txn-meta { font-size:11px; color:var(--tx3); margin-top:1px; }
+.bank-txn-amt { font-size:13px; font-weight:700; flex-shrink:0; }
+
 /* ─── INSTALL SHEET ──────────────────────────────────────── */
 .ovl {
   position:fixed; inset:0; background:rgba(0,0,0,.6);
@@ -2909,6 +2938,134 @@ var CONFIRMED_COSTS=[
   {ico:'ph-airplane',t:'IBZ → BCN · Vueling',sub:'Wed 15 Jul · VY3511',eur:102.99},
   {ico:'ph-bed',t:'Wombat\'s Munich (24 Jun)',sub:'€9.56 + €56.41 at property',eur:64.10},
 ];
+/* ─── Bank account (Basiq) ───────────────────────────────── */
+function matchTxnDay(date){
+  for(var i=0;i<DAYS.length;i++) if(DAYS[i].d===date) return DAYS[i];
+  return null;
+}
+function renderBankCard(tB){
+  var connected = localStorage.getItem('lk_bank_connected')==='1';
+  var txns = JSON.parse(localStorage.getItem('lk_bank_txns')||'[]');
+  var syncedAt = localStorage.getItem('lk_bank_synced_at');
+
+  var out='<div class="card mb4" id="bankCard">';
+  out+='<div class="row between mb1"><span class="title">Bank activity</span>';
+  if(connected) out+='<button class="bank-sync-btn" id="bankSyncBtn" onclick="syncBank()"><i class="ph ph-arrows-clockwise"></i>Sync</button>';
+  out+='</div>';
+
+  if(!connected){
+    out+='<div class="cap" style="color:var(--tx2);line-height:1.5;margin:var(--sp2) 0 var(--sp3)">Connect your bank via Basiq (Open Banking) so real transactions line up with your itinerary — your bank login goes straight to your bank, never to this app.</div>';
+    out+='<button class="cta-btn" style="margin-top:0" onclick="connectBank()" id="bankConnectBtn">Connect bank account</button>';
+    out+='<div class="cap mt2" id="bankMsg" style="color:var(--tx3);min-height:14px"></div>';
+    out+='</div>';
+    return out;
+  }
+
+  // Trip-window spend from live bank data — already in AUD, same currency as the budget
+  var tripTxns=[];
+  for(var i=0;i<txns.length;i++){
+    var t=txns[i];
+    if(t.amount<0 && t.date>=DAYS[0].d && t.date<=DAYS[DAYS.length-1].d) tripTxns.push(t);
+  }
+  var spentLive=0; for(var i=0;i<tripTxns.length;i++) spentLive+=Math.abs(tripTxns[i].amount);
+  var remaining = tB-spentLive;
+
+  var ts=TODAY.toISOString().split('T')[0];
+  var tripOn = TODAY>=TS && TODAY<=TE;
+  var daysLeft = tripOn ? Math.max(39-dayNum(ts)+1,0) : 39;
+
+  if(tB>0){
+    var perDay = daysLeft>0 ? remaining/daysLeft : remaining;
+    var ok = remaining>=0;
+    out+='<div class="bank-headroom">';
+    out+='<div class="budget-pace-ico" style="background:'+(ok?'rgba(74,222,128,.13)':'rgba(248,81,73,.13)')+';color:'+(ok?'var(--ok)':'var(--err)')+'"><i class="ph-fill ph-'+(ok?'wallet':'warning-circle')+'"></i></div>';
+    out+='<div class="budget-pace-txt">';
+    out+='<div class="budget-pace-num">A$'+Math.round(spentLive).toLocaleString()+' spent so far (live)</div>';
+    out+='<div class="budget-pace-sub">'+(ok
+      ? 'A$'+Math.round(remaining).toLocaleString()+' left'+(tripOn?' · ≈A$'+Math.round(perDay).toLocaleString()+'/day for '+daysLeft+' day'+(daysLeft===1?'':'s')+' to go — room for extras':'')
+      : 'A$'+Math.round(Math.abs(remaining)).toLocaleString()+' over your trip budget so far')+'</div>';
+    out+='</div></div>';
+  }
+
+  // Per-city breakdown for days that have passed
+  var byCity={}, cityOrder=[];
+  for(var i=0;i<tripTxns.length;i++){
+    var day=matchTxnDay(tripTxns[i].date);
+    var c=day?day.c:'Other';
+    if(!byCity[c]){ byCity[c]=0; cityOrder.push(c); }
+    byCity[c]+=Math.abs(tripTxns[i].amount);
+  }
+  if(cityOrder.length){
+    out+='<div class="label mb2 mt3">By city</div>';
+    for(var i=0;i<cityOrder.length;i++){
+      out+='<div class="row between" style="padding:4px 0"><span class="cap">'+cityOrder[i]+'</span><span class="cap" style="font-weight:700">A$'+Math.round(byCity[cityOrder[i]]).toLocaleString()+'</span></div>';
+    }
+  }
+
+  // Recent transactions
+  if(txns.length){
+    out+='<div class="label mb2 mt3">Recent transactions</div>';
+    var recent=txns.slice(0,12);
+    for(var i=0;i<recent.length;i++){
+      var t=recent[i];
+      var day=matchTxnDay(t.date);
+      var tagTxt = day ? day.c+' · '+fmtShort(t.date) : fmtShort(t.date);
+      var credit=t.amount>=0;
+      out+='<div class="bank-txn-row">';
+      out+='<div class="bank-txn-desc"><div class="bank-txn-title">'+t.description+'</div><div class="bank-txn-meta">'+tagTxt+'</div></div>';
+      out+='<div class="bank-txn-amt" style="color:'+(credit?'var(--ok)':'var(--tx)')+'">'+(credit?'+':'−')+'A$'+Math.abs(t.amount).toFixed(2)+'</div>';
+      out+='</div>';
+    }
+  } else {
+    out+='<div class="cap mt3" style="color:var(--tx3)">No transactions synced yet — tap Sync.</div>';
+  }
+
+  if(syncedAt){
+    out+='<div class="cap mt3" style="color:var(--tx3)">Last synced '+new Date(syncedAt).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+'</div>';
+  }
+
+  out+='</div>';
+  return out;
+}
+function connectBank(){
+  var btn=g('bankConnectBtn'), msg=g('bankMsg');
+  if(btn){ btn.disabled=true; btn.textContent='Connecting…'; }
+  fetch('/api/basiq-connect-link').then(function(r){return r.json();}).then(function(data){
+    if(data.error){
+      if(msg) msg.textContent='Could not start bank connection — check the server is configured.';
+      if(btn){ btn.disabled=false; btn.textContent='Connect bank account'; }
+      return;
+    }
+    window.open(data.url,'_blank');
+    if(msg) msg.textContent='Complete the steps in the new tab, then come back and tap the button below.';
+    if(btn){
+      btn.disabled=false; btn.textContent="I've connected my bank";
+      btn.onclick=finishBankConnect;
+    }
+  }).catch(function(){
+    if(msg) msg.textContent='Network error — try again.';
+    if(btn){ btn.disabled=false; btn.textContent='Connect bank account'; }
+  });
+}
+function finishBankConnect(){
+  localStorage.setItem('lk_bank_connected','1');
+  renderBudget();
+  syncBank();
+}
+function syncBank(){
+  var btn=g('bankSyncBtn');
+  if(btn) btn.classList.add('spin');
+  fetch('/api/basiq-transactions').then(function(r){return r.json();}).then(function(data){
+    if(btn) btn.classList.remove('spin');
+    if(data.error) return;
+    localStorage.setItem('lk_bank_txns', JSON.stringify(data.transactions||[]));
+    localStorage.setItem('lk_bank_synced_at', new Date().toISOString());
+    renderBudget();
+  }).catch(function(){
+    if(btn) btn.classList.remove('spin');
+  });
+}
+
 function renderBudget(){
   fetchXR();
   // Compute logged totals per category (in EUR, as logged on the trip)
@@ -2954,6 +3111,9 @@ function renderBudget(){
         : 'Set a trip budget below to see if you\'re on pace'))+'</div>';
     out+='</div></div>';
   }
+
+  // Live bank activity (Basiq)
+  out+=renderBankCard(tB);
 
   // Confirmed costs
   out+='<div class="label mb3">Confirmed from bookings</div>';
