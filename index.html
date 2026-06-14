@@ -802,15 +802,43 @@ body {
 .map-pin-num.done { background:var(--ok); opacity:.6; }
 .map-hint { padding:0 var(--sp4) var(--sp3); }
 
-/* ─── Today: confirmed/suggestion legend + expandable suggestions ── */
+/* ─── Today: checklist legend ────────────────────────────── */
 .legend-row { display:flex; gap:var(--sp4); flex-wrap:wrap; }
 .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--tx2); font-weight:500; }
 .legend-item .badge { padding:2px 7px; font-size:10px; }
-.sugg-row { cursor:pointer; -webkit-user-select:none; user-select:none; }
-.sugg-row:active { background:var(--s2); }
-.sugg-row.sugg-row-open { border-bottom:none; }
-.sugg-detail { padding:0 0 var(--sp3) 52px; border-bottom:1px solid var(--bd); }
-.sugg-detail:last-child { border-bottom:none; }
+.legend-item i { font-size:12px; color:var(--tx3); }
+
+/* ─── Today: big, satisfying checklist rows ──────────────── */
+.todo-row {
+  display:flex; align-items:flex-start; gap:var(--sp3);
+  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
+  cursor:pointer; -webkit-user-select:none; user-select:none;
+}
+.todo-row:last-child { border-bottom:none; }
+.todo-row.sugg-open { border-bottom:none; }
+.todo-row:active .todo-chk { transform:scale(.92); }
+.todo-chk {
+  width:27px; height:27px; border-radius:50%; flex-shrink:0; margin-top:1px;
+  border:2px solid var(--bd2); display:flex; align-items:center; justify-content:center;
+  transition: background .2s, border-color .2s, transform .35s var(--spring);
+}
+.todo-chk i { font-size:14px; color:#fff; opacity:0; transform:scale(.4); transition: opacity .15s, transform .35s var(--spring); }
+.todo-chk.on { background:var(--ok); border-color:var(--ok); transform:scale(1.08); }
+.todo-chk.on i { opacity:1; transform:scale(1); }
+.todo-body { flex:1; min-width:0; }
+.todo-title { font-size:15px; font-weight:600; line-height:1.4; color:var(--tx); transition:color .2s; }
+.todo-row.done .todo-title { color:var(--tx3); text-decoration:line-through; }
+.todo-meta { margin-top:5px; display:flex; align-items:center; gap:6px; }
+.todo-info-btn {
+  width:27px; height:27px; border-radius:50%; flex-shrink:0; margin-top:1px;
+  background:var(--s2); border:1px solid var(--bd); color:var(--tx3);
+  display:flex; align-items:center; justify-content:center; font-size:14px;
+  transition: transform .2s var(--spring), background .2s, color .2s;
+}
+.todo-info-btn:active { transform:scale(.88); }
+.todo-row.sugg-open .todo-info-btn { background:var(--ac-dim); color:var(--ac); border-color:rgba(242,100,25,.25); }
+.todo-detail { padding:0 0 var(--sp3) 39px; border-bottom:1px solid var(--bd); }
+.todo-detail:last-child { border-bottom:none; }
 
 /* ─── Cities: per-place map & tick-off list ──────────────── */
 #placeMap { height:100%; background:var(--s2); }
@@ -1642,6 +1670,12 @@ function togPoi(key){
   localStorage.setItem('lk_poi',JSON.stringify(POIS));
   renderGuide();
 }
+// Tick off an item on Today's checklist (plan item or suggestion)
+function togToday(key){
+  POIS[key]=!POIS[key];
+  localStorage.setItem('lk_poi',JSON.stringify(POIS));
+  renderToday();
+}
 // Expand/collapse a "more info" suggestion row on Today
 function toggleSugg(key){
   openSugg[key]=!openSugg[key];
@@ -1977,40 +2011,53 @@ function renderToday(){
       out += '</div>';
     }
 
-    // Today plan — confirmed items, plus extra ideas pulled from the guide
+    // Today's checklist — confirmed plan items + extra suggestions, all tickable
     var todaySugg = todaySuggestions(entry);
     if((entry.th && entry.th.length) || todaySugg.length){
-      out += '<div class="label mb3">Today</div>';
+      var planKeys=[];
+      for(var i=0;i<(entry.th?entry.th.length:0);i++) planKeys.push('plan|'+ts+'|'+entry.th[i].replace('🔒 ',''));
+      var allTotal=planKeys.length+todaySugg.length;
+      var allDone=0;
+      for(var i=0;i<planKeys.length;i++) if(POIS[planKeys[i]]) allDone++;
+      for(var i=0;i<todaySugg.length;i++) if(POIS[poiKey(todaySugg[i].city,todaySugg[i].title)]) allDone++;
+
+      out += '<div class="row between mb2"><div class="label">Today\'s checklist</div><span class="cap accent" style="font-weight:700">'+allDone+' / '+allTotal+'</span></div>';
+      out += '<div class="prog-rail mb3" style="height:5px"><div class="prog-bar" style="width:'+Math.round(allTotal?allDone/allTotal*100:0)+'%;height:100%"></div></div>';
+
       if(entry.th && entry.th.length){
         out += '<div class="card mb3">';
         for(var i=0;i<entry.th.length;i++){
           var t=entry.th[i];
           var locked=t.indexOf('🔒')===0;
-          out += '<div class="list-row">';
-          out += '<div class="ico '+(locked?'ico-ac':'')+'"><i class="ph'+(locked?'-fill':'')+' '+(locked?'ph-lock-simple':'ph-caret-right')+'"></i></div>';
-          out += '<div class="grow1 body">'+t.replace('🔒 ','')+'</div>';
-          if(todaySugg.length) out += '<span class="badge b-ok">Confirmed</span>';
-          out += '</div>';
+          var title=t.replace('🔒 ','');
+          var pkey=planKeys[i], pdone=!!POIS[pkey];
+          out += '<div class="todo-row'+(pdone?' done':'')+'" onclick="togToday(\''+pkey.replace(/'/g,"\\'")+'\')">';
+          out += '<div class="todo-chk'+(pdone?' on':'')+'"><i class="ph-fill ph-check"></i></div>';
+          out += '<div class="todo-body"><div class="todo-title">'+title+'</div>';
+          out += '<div class="todo-meta">'+(locked?'<span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked in</span>':'<span class="badge b-ok">Confirmed</span>')+'</div>';
+          out += '</div></div>';
         }
         out += '</div>';
       }
+
       if(todaySugg.length){
         out += '<div class="legend-row mb3">';
         out += '<span class="legend-item"><span class="badge b-ok">Confirmed</span> on the plan</span>';
-        out += '<span class="legend-item"><span class="badge b-dim">Suggestion</span> tap for more info</span>';
+        out += '<span class="legend-item"><span class="badge b-dim">Suggestion</span> idea — tap '+'<i class="ph ph-info"></i>'+' for more</span>';
         out += '</div>';
         out += '<div class="card mb4">';
         for(var i=0;i<todaySugg.length;i++){
-          var sg=todaySugg[i], skey=poiKey(sg.city,sg.title), sopen=!!openSugg[skey];
+          var sg=todaySugg[i], skey=poiKey(sg.city,sg.title), sopen=!!openSugg[skey], sdone=!!POIS[skey];
           var rv=findReview(sg.city,sg.title);
-          out += '<div class="list-row sugg-row'+(sopen?' sugg-row-open':'')+'" onclick="toggleSugg(\''+skey.replace(/'/g,"\\'")+'\')">';
-          out += '<div class="ico"><i class="ph ph-sparkle"></i></div>';
-          out += '<div class="grow1 body">'+sg.title+'</div>';
-          out += '<span class="badge b-dim">Suggestion</span>';
-          out += '<i class="ph ph-caret-'+(sopen?'up':'down')+'" style="color:var(--tx3)"></i>';
+          out += '<div class="todo-row'+(sdone?' done':'')+(sopen?' sugg-open':'')+'" onclick="togToday(\''+skey.replace(/'/g,"\\'")+'\')">';
+          out += '<div class="todo-chk'+(sdone?' on':'')+'"><i class="ph-fill ph-check"></i></div>';
+          out += '<div class="todo-body"><div class="todo-title">'+sg.title+'</div>';
+          out += '<div class="todo-meta"><span class="badge b-dim">Suggestion</span></div>';
+          out += '</div>';
+          out += '<div class="todo-info-btn" onclick="event.stopPropagation();toggleSugg(\''+skey.replace(/'/g,"\\'")+'\')"><i class="ph'+(sopen?'-fill':'')+' ph-info"></i></div>';
           out += '</div>';
           if(sopen){
-            out += '<div class="sugg-detail">';
+            out += '<div class="todo-detail">';
             if(sg.desc) out += '<div class="cap mb2" style="color:var(--tx2)">'+sg.desc+'</div>';
             if(rv) out += '<div class="review-card" style="margin-bottom:0"><div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div><div class="review-txt">'+rv.t+'</div></div>';
             out += '<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+sg.city+'\')"><i class="ph ph-book-open"></i>View '+sg.city+' guide</button>';
