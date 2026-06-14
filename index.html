@@ -793,26 +793,21 @@ body {
 .map-toggle:active { background:var(--s2); }
 .map-caret-icon { font-size:16px; color:var(--tx3); transition:transform .3s var(--spring); }
 .map-caret-icon.open { transform:rotate(180deg); }
-#routeMap { height:260px; background:var(--s2); }
-.leaflet-container { background:var(--bg) !important; }
+#routeMap { height:260px; background:#e9e6e0; }
+.leaflet-container { background:#e9e6e0 !important; font-family:var(--font); }
 .map-pin { background:none; border:none; }
 .map-pin-num {
-  width:22px; height:22px; border-radius:50%;
+  width:24px; height:24px; border-radius:50%;
   background:var(--ac); color:#fff;
-  border:2px solid #1a1a1a; box-shadow:0 1px 4px rgba(0,0,0,.4);
+  border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.3);
   display:flex; align-items:center; justify-content:center;
   font-size:11px; font-weight:800; font-family:var(--font);
   transition: transform .25s var(--spring), background .2s, color .2s;
 }
-.map-pin-num.active { background:#fff; color:var(--ac); transform:scale(1.35); z-index:2; }
-.map-pin-num.done { background:var(--ok); opacity:.6; }
+.map-pin-num.active { background:#fff; color:var(--ac); border-color:var(--ac); transform:scale(1.35); z-index:2; }
+.map-pin-num.done { background:var(--ok); opacity:.85; }
+.map-pin-num.map-pin-home { background:#1a1a1a; border-color:#fff; }
 .map-hint { padding:0 var(--sp4) var(--sp3); }
-
-/* ─── Today: checklist legend ────────────────────────────── */
-.legend-row { display:flex; gap:var(--sp4); flex-wrap:wrap; }
-.legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--tx2); font-weight:500; }
-.legend-item .badge { padding:2px 7px; font-size:10px; }
-.legend-item i { font-size:12px; color:var(--tx3); }
 
 /* ─── Today: big, satisfying checklist rows ──────────────── */
 .todo-row {
@@ -1293,6 +1288,22 @@ var COORDS={
   Madrid:[40.4168,-3.7038],Barcelona:[41.3851,2.1734],
   Ibiza:[38.9067,1.4323]
 };
+// Where you're actually staying (more precise than the city-centre COORDS above)
+var STAY_COORDS={
+  Milos:[36.7605,24.4185] // Pollonia
+};
+// Known coordinates for specific guide suggestions, so pins land on the
+// real spot instead of relying on geocoding a long descriptive title
+var POI_COORDS={
+  'Milos|Sarakiniko Beach':[36.7605,24.4430],
+  'Milos|Kleftiko Sea Caves boat tour (book full day)':[36.6730,24.3850],
+  'Milos|Quad/ATV beach-hopping route: Sarakiniko → Papafragas → Firopotamos → Klima → Mandrakia':[36.7470,24.4350],
+  'Milos|Plaka village sunset with island views':[36.7280,24.4220],
+  'Milos|Sarakiniko at dawn':[36.7615,24.4445],
+  'Milos|Klima & Mandrakia':[36.7520,24.4150],
+  'Milos|Sunset at Panagia Korfiatissa Church, Plaka':[36.7283,24.4215],
+  'Milos|Fyriplaka, Tsigrado, Gerakas, Paleochori, Pollonia':[36.6850,24.4950]
+};
 var ROUTE=['Athens','Milos','Catania','Taormina','Bristol','Munich','Innsbruck','Munich','Amsterdam','Porto','Ericeira','Madrid','Barcelona','Ibiza','Barcelona'];
 
 var DAYS=[
@@ -1569,8 +1580,6 @@ function boot(){
     document.head.appendChild(ml);
   }
   renderToday();
-  // Show FAB on Today tab (default)
-  var fab=g('fab'); if(fab) fab.classList.remove('hidden');
   renderTimeline();
   renderCities();
   renderBook();
@@ -1794,7 +1803,7 @@ function initRouteMap(){
   if(_mapInited&&_map){ _map.invalidateSize(true); return; }
   _mapInited=true;
   _map=L.map('routeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:true});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_map);
   var coords=ROUTE.map(function(c){return COORDS[c];});
   L.polyline(coords,{color:'#F26419',weight:2.5,opacity:.9,dashArray:'5 7'}).addTo(_map);
   for(var si=0;si<STOPS.length;si++){
@@ -1887,28 +1896,45 @@ function geocodePOI(c,title,cb){
       if(GEO[key]) cb(GEO[key]);
     }).catch(function(){});
 }
+// Nudge a new pin away from any already-placed pin that's too close,
+// so suggestions for the same beach/village don't render on top of each other
+function avoidOverlap(pos, placed){
+  var lat=pos[0], lng=pos[1];
+  for(var i=0;i<placed.length;i++){
+    if(Math.abs(placed[i][0]-lat)<0.0012 && Math.abs(placed[i][1]-lng)<0.0012){
+      var ang=i*1.1;
+      lat+=Math.cos(ang)*0.0015;
+      lng+=Math.sin(ang)*0.0015;
+    }
+  }
+  return [lat,lng];
+}
 function initPlaceMap(c, items){
   if(typeof L==='undefined'){ setTimeout(function(){ initPlaceMap(c,items); },200); return; }
   var el=document.getElementById('placeMap'); if(!el) return;
   if(_placeMap){ _placeMap.remove(); _placeMap=null; }
   _placeMarkers={};
-  var center=COORDS[c]; if(!center) return;
-  _placeMap=L.map('placeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:true}).setView(center,13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_placeMap);
-  L.marker(center,{icon:L.divIcon({className:'map-pin',html:'<div class="map-pin-num" style="background:var(--tx2)"><i class="ph-fill ph-house-line" style="font-size:11px"></i></div>',iconSize:[24,24],iconAnchor:[12,12]})})
+  var stay=STAY_COORDS[c]||COORDS[c]; if(!stay) return;
+  _placeMap=L.map('placeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:true}).setView(stay,13);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_placeMap);
+  L.marker(stay,{icon:L.divIcon({className:'map-pin',html:'<div class="map-pin-num map-pin-home"><i class="ph-fill ph-house-line" style="font-size:11px"></i></div>',iconSize:[24,24],iconAnchor:[12,12]})})
     .addTo(_placeMap).bindPopup('<strong style="font-size:13px">Where you\'re staying</strong>');
+  var placed=[stay];
   for(var i=0;i<items.length;i++){
     (function(it,idx){
-      geocodePOI(c,it.title,function(coords){
+      function place(coords){
         if(!_placeMap) return;
+        var pos=avoidOverlap([coords.lat,coords.lng],placed); placed.push(pos);
         var done=!!POIS[poiKey(c,it.title)];
         var icon=L.divIcon({className:'map-pin',html:'<div class="map-pin-num'+(done?' done':'')+'">'+(idx+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
-        var m=L.marker([coords.lat,coords.lng],{icon:icon}).addTo(_placeMap)
+        var m=L.marker(pos,{icon:icon}).addTo(_placeMap)
           .bindPopup('<strong style="font-size:13px">'+(idx+1)+'. '+it.title+'</strong>');
         _placeMarkers[it.title]=m;
-        var bounds=[center]; for(var k in _placeMarkers) bounds.push(_placeMarkers[k].getLatLng());
-        _placeMap.fitBounds(L.latLngBounds(bounds),{padding:[28,28]});
-      });
+        _placeMap.fitBounds(L.latLngBounds(placed),{padding:[28,28]});
+      }
+      var known=POI_COORDS[poiKey(c,it.title)];
+      if(known) place({lat:known[0],lng:known[1]});
+      else geocodePOI(c,it.title,place);
     })(items[i],i);
   }
 }
@@ -2084,19 +2110,13 @@ function renderToday(){
       }
 
       if(todaySugg.length){
-        out += '<div class="legend-row mb3">';
-        out += '<span class="legend-item"><span class="badge b-ok">Confirmed</span> on the plan</span>';
-        out += '<span class="legend-item"><span class="badge b-dim">Suggestion</span> idea — tap '+'<i class="ph ph-info"></i>'+' for more</span>';
-        out += '</div>';
         out += '<div class="card mb4">';
         for(var i=0;i<todaySugg.length;i++){
           var sg=todaySugg[i], skey=poiKey(sg.city,sg.title), sopen=!!openSugg[skey], sdone=!!POIS[skey];
           var rv=findReview(sg.city,sg.title);
           out += '<div class="todo-row'+(sdone?' done':'')+(sopen?' sugg-open':'')+'" onclick="togToday(\''+skey.replace(/'/g,"\\'")+'\')">';
           out += '<div class="todo-chk'+(sdone?' on':'')+'"><i class="ph-fill ph-check"></i></div>';
-          out += '<div class="todo-body"><div class="todo-title">'+sg.title+'</div>';
-          out += '<div class="todo-meta"><span class="badge b-dim">Suggestion</span></div>';
-          out += '</div>';
+          out += '<div class="todo-body"><div class="todo-title">'+sg.title+'</div></div>';
           out += '<div class="todo-info-btn" onclick="event.stopPropagation();toggleSugg(\''+skey.replace(/'/g,"\\'")+'\')"><i class="ph'+(sopen?'-fill':'')+' ph-info"></i></div>';
           out += '</div>';
           if(sopen){
@@ -3049,9 +3069,9 @@ function go(name,btn){
   if(activeIcon) activeIcon.className='ph-fill '+btn.getAttribute('data-icon');
   try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
   if(name==='Timeline') setTimeout(initRouteMap,120);
-  // FAB visible on Today + Budget only
+  // FAB visible on Budget only
   var fab=g('fab');
-  if(fab) fab.classList.toggle('hidden', name!=='Today'&&name!=='Budget');
+  if(fab) fab.classList.toggle('hidden', name!=='Budget');
   // City-switch FAB visible on Cities only
   var cityFab=g('cityFab');
   if(cityFab) cityFab.classList.toggle('hidden', name!=='Cities');
