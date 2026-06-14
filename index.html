@@ -1977,11 +1977,15 @@ function renderToday(){
   } else if(entry){
     // On trip
     var dn = dayNum(entry.d);
+    // A lone th[] entry is a day "theme" tag (e.g. "Last island day"), not a checklist item
+    var dayTag = (entry.th && entry.th.length===1) ? entry.th[0].replace('🔒 ','') : null;
     out += '<div class="today-hero">';
     out += '<div class="hero-eyebrow">Day '+dn+' of 39 &nbsp;·&nbsp; '+fmtLong(entry.d)+'</div>';
     out += '<div class="hero-display">'+entry.c.split(' → ')[0]+'</div>';
     if(entry.c.indexOf(' → ')!==-1){
-      out += '<div class="hero-sub">→ '+entry.c.split(' → ')[1]+'</div>';
+      out += '<div class="hero-sub">→ '+entry.c.split(' → ')[1]+(dayTag?' · '+dayTag:'')+'</div>';
+    } else if(dayTag){
+      out += '<div class="hero-sub">'+dayTag+'</div>';
     }
     out += '</div>';
     // Phase strip + kanban
@@ -2012,10 +2016,11 @@ function renderToday(){
     }
 
     // Today's checklist — confirmed plan items + extra suggestions, all tickable
+    var planTh = (entry.th && entry.th.length>1) ? entry.th : [];
     var todaySugg = todaySuggestions(entry);
-    if((entry.th && entry.th.length) || todaySugg.length){
+    if(planTh.length || todaySugg.length){
       var planKeys=[];
-      for(var i=0;i<(entry.th?entry.th.length:0);i++) planKeys.push('plan|'+ts+'|'+entry.th[i].replace('🔒 ',''));
+      for(var i=0;i<planTh.length;i++) planKeys.push('plan|'+ts+'|'+planTh[i].replace('🔒 ',''));
       var allTotal=planKeys.length+todaySugg.length;
       var allDone=0;
       for(var i=0;i<planKeys.length;i++) if(POIS[planKeys[i]]) allDone++;
@@ -2024,10 +2029,10 @@ function renderToday(){
       out += '<div class="row between mb2"><div class="label">Today\'s checklist</div><span class="cap accent" style="font-weight:700">'+allDone+' / '+allTotal+'</span></div>';
       out += '<div class="prog-rail mb3" style="height:5px"><div class="prog-bar" style="width:'+Math.round(allTotal?allDone/allTotal*100:0)+'%;height:100%"></div></div>';
 
-      if(entry.th && entry.th.length){
+      if(planTh.length){
         out += '<div class="card mb3">';
-        for(var i=0;i<entry.th.length;i++){
-          var t=entry.th[i];
+        for(var i=0;i<planTh.length;i++){
+          var t=planTh[i];
           var locked=t.indexOf('🔒')===0;
           var title=t.replace('🔒 ','');
           var pkey=planKeys[i], pdone=!!POIS[pkey];
