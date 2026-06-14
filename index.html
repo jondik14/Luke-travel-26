@@ -9,10 +9,10 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0d0d0d" id="themeColor">
 <title>Luke's Europe 2026</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <style>
 /* ─── Design tokens ─────────────────────────────────────── */
 :root {
@@ -97,6 +97,20 @@ body {
 }
 
 #app { display:flex; flex-direction:column; height:100vh; height:100dvh; }
+
+/* ─── Splash / loading screen ───────────────────────────── */
+#splash {
+  position:fixed; inset:0; z-index:9999;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:var(--sp3);
+  background:var(--bg);
+  transition: opacity .4s ease, visibility .4s ease;
+}
+#splash.hide { opacity:0; visibility:hidden; pointer-events:none; }
+.splash-title {
+  font-size:13px; font-weight:800; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ac);
+}
 #main {
   flex:1; overflow-y:auto; overscroll-behavior:contain;
   padding-bottom: calc(env(safe-area-inset-bottom,0px) + 48px);
@@ -1107,6 +1121,16 @@ body {
 </head>
 <body>
 
+<script>try{if(localStorage.getItem('lk_t')==='light')document.documentElement.classList.add('light');}catch(e){}</script>
+<script type="module">
+import { superballs } from 'https://cdn.jsdelivr.net/npm/ldrs@1/dist/auto/superballs.js';
+superballs.register();
+</script>
+<div id="splash">
+  <l-superballs size="40" speed="1.4" color="#F26419"></l-superballs>
+  <div class="splash-title">Luke's Europe 2026</div>
+</div>
+
 <div id="app">
   <div id="offlineBanner"><i class="ph ph-wifi-slash"></i>&nbsp;Offline — showing saved data</div>
   <main id="main">
@@ -1523,6 +1547,10 @@ function updateOnlineStatus(){
   b.classList.toggle('show', !navigator.onLine);
 }
 
+function hideSplash(){
+  var sp=g('splash'); if(sp) sp.classList.add('hide');
+}
+
 function boot(){
   applyTheme();
   if('serviceWorker' in navigator){
@@ -1547,6 +1575,7 @@ function boot(){
   renderCities();
   renderBook();
   renderBudget();
+  hideSplash();
 }
 
 /* ─── Weather ────────────────────────────────────────────── */
@@ -1758,7 +1787,7 @@ function toggleBookings(){
 /* ─── Route map ───────────────────────────────────────────── */
 var _map=null, _mapInited=false, _mapOpen=true, _mapMarkers={}, _activeStop=null;
 function initRouteMap(){
-  if(typeof L==='undefined') return;
+  if(typeof L==='undefined'){ setTimeout(initRouteMap,200); return; }
   var el=document.getElementById('routeMap');
   if(!el) return;
   // If already created, just fix dimensions (re-entering hidden pane)
@@ -1859,7 +1888,7 @@ function geocodePOI(c,title,cb){
     }).catch(function(){});
 }
 function initPlaceMap(c, items){
-  if(typeof L==='undefined') return;
+  if(typeof L==='undefined'){ setTimeout(function(){ initPlaceMap(c,items); },200); return; }
   var el=document.getElementById('placeMap'); if(!el) return;
   if(_placeMap){ _placeMap.remove(); _placeMap=null; }
   _placeMarkers={};
@@ -2018,6 +2047,12 @@ function renderToday(){
       out += '</div>';
     }
 
+    // Weather widget (populated async) — near the top, close to today's plan
+    out += '<div id="wxZone"><div class="weather-row" style="opacity:.5">';
+    out += '<div class="weather-ico">🌡️</div>';
+    out += '<div class="grow1"><div class="weather-temp" style="color:var(--tx2)">Loading weather...</div></div>';
+    out += '</div></div>';
+
     // Today's checklist — confirmed plan items + extra suggestions, all tickable
     var planTh = (entry.th && entry.th.length>1) ? entry.th : [];
     var todaySugg = todaySuggestions(entry);
@@ -2104,12 +2139,6 @@ function renderToday(){
       out += '</div></div></div>';
     }
 
-    // Weather widget (populated async)
-    out += '<div id="wxZone"><div class="weather-row" style="opacity:.5">';
-    out += '<div class="weather-ico">🌡️</div>';
-    out += '<div class="grow1"><div class="weather-temp" style="color:var(--tx2)">Loading weather...</div></div>';
-    out += '</div></div>';
-
     // Today's logged spend
     if(todayExps.length>0){
       out += '<div class="label mb3">Spent today</div>';
@@ -2151,24 +2180,6 @@ function renderToday(){
     out += '<i class="ph ph-caret-right" style="color:var(--tx3)"></i>';
     out += '</div>';
   }
-
-  // Locked events — always show
-  out += '<div class="label mb3">Locked in</div>';
-  var locked=[{d:'2026-06-23',l:'Hike with Ismael',city:'Innsbruck'},{d:'2026-06-26',l:'Defqon.1',city:'Amsterdam'}];
-  out += '<div class="card mb4">';
-  for(var i=0;i<locked.length;i++){
-    var ev=locked[i];
-    var diff=Math.ceil((new Date(ev.d+'T00:00:00')-TODAY)/86400000);
-    out += '<div class="list-row">';
-    out += '<div class="ico ico-ac"><i class="ph-fill ph-lock-simple"></i></div>';
-    out += '<div class="grow1">';
-    out += '<div class="cap mb1">'+fmt(ev.d)+' · '+ev.city+'</div>';
-    out += '<div class="title">'+ev.l+'</div>';
-    out += '</div>';
-    out += '<div class="badge '+(diff<=0?'b-ok':diff<7?'b-warn':'b-dim')+'">'+(diff<=0?'Today':diff+'d')+'</div>';
-    out += '</div>';
-  }
-  out += '</div>';
 
   // Stats tiles
   var loggedTotal2=0; for(var i=0;i<exps.length;i++) loggedTotal2+=exps[i].amt;
@@ -3065,6 +3076,7 @@ function closeSheet(){ g('installOvl').classList.remove('on'); document.body.sty
 try {
   boot();
 } catch(e) {
+  hideSplash();
   var ep = g('pToday');
   if(ep) ep.innerHTML = '<div style="padding:24px 16px;color:#f87171">'
     +'<div style="font-size:17px;font-weight:700;margin-bottom:8px">App error</div>'
