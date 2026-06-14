@@ -1190,6 +1190,53 @@ body.build-on .insp-banner { display:flex; }
 }
 .insp-toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
 
+.insp-crit-wrap { display:flex; flex-direction:column; gap:6px; margin-bottom:var(--sp4); }
+.insp-crit {
+  display:flex; align-items:flex-start; gap:8px;
+  font-size:12px; line-height:1.5; padding:8px 10px;
+  border-radius:var(--r-sm);
+}
+.insp-crit i { font-size:14px; flex-shrink:0; margin-top:1px; }
+.insp-crit-warn { background:var(--warn-dim); color:var(--warn-tx); }
+.insp-crit-info { background:var(--s2); color:var(--tx2); }
+.insp-crit-ok   { background:var(--ok-dim); color:var(--ok-tx); }
+
+.insp-edit-grid { margin-bottom:var(--sp2); }
+.insp-edit-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:var(--sp2) 0; border-bottom:1px solid var(--bd);
+}
+.insp-edit-row:last-child { border-bottom:none; }
+.insp-edit-label { font-size:13px; font-weight:600; color:var(--tx2); }
+.insp-edit-ctrl { display:flex; align-items:center; gap:var(--sp2); }
+.insp-step {
+  width:32px; height:32px; border-radius:50%; flex-shrink:0;
+  background:var(--s2); border:1px solid var(--bd2);
+  font-size:18px; font-weight:700; color:var(--tx); line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+}
+.insp-step:active { transform:scale(.9); background:var(--s3); }
+.insp-edit-val { font-size:13px; font-weight:700; color:var(--tx); min-width:42px; text-align:center; }
+.insp-color-sw {
+  width:28px; height:28px; border-radius:50%; flex-shrink:0;
+  border:2px solid var(--bd2);
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+}
+.insp-color-sw:active { transform:scale(.9); }
+.insp-color-reset {
+  background:var(--s2)!important; display:flex; align-items:center;
+  justify-content:center; font-size:13px; color:var(--tx2);
+}
+
+.insp-reset-btn {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  width:100%; padding:var(--sp2) 0; margin-bottom:var(--sp3);
+  font-size:12px; font-weight:700; color:var(--tx2);
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+}
+.insp-item-meta { font-size:11px; font-weight:600; color:var(--ac); margin-top:4px; }
+
 /* ─── Reduced motion ─────────────────────────────────────── */
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
@@ -1328,6 +1375,50 @@ superballs.register();
     <div class="sheet-handle"></div>
     <div class="sheet-title" style="text-align:left;margin-bottom:var(--sp3)">What needs to change?</div>
     <div class="insp-note-target" id="inspNoteTarget"></div>
+
+    <div class="insp-crit-wrap" id="inspCritique"></div>
+
+    <div class="insp-edit-grid">
+      <div class="insp-edit-row">
+        <span class="insp-edit-label">Text size</span>
+        <div class="insp-edit-ctrl">
+          <button class="insp-step" onclick="stepEdit('fontSize',-1)" aria-label="Decrease text size">−</button>
+          <span class="insp-edit-val" id="insp-val-fontSize">–</span>
+          <button class="insp-step" onclick="stepEdit('fontSize',1)" aria-label="Increase text size">+</button>
+        </div>
+      </div>
+      <div class="insp-edit-row">
+        <span class="insp-edit-label">Spacing</span>
+        <div class="insp-edit-ctrl">
+          <button class="insp-step" onclick="stepEdit('padding',-1)" aria-label="Decrease spacing">−</button>
+          <span class="insp-edit-val" id="insp-val-padding">–</span>
+          <button class="insp-step" onclick="stepEdit('padding',1)" aria-label="Increase spacing">+</button>
+        </div>
+      </div>
+      <div class="insp-edit-row">
+        <span class="insp-edit-label">Corners</span>
+        <div class="insp-edit-ctrl">
+          <button class="insp-step" onclick="stepEdit('borderRadius',-1)" aria-label="Decrease corner radius">−</button>
+          <span class="insp-edit-val" id="insp-val-borderRadius">–</span>
+          <button class="insp-step" onclick="stepEdit('borderRadius',1)" aria-label="Increase corner radius">+</button>
+        </div>
+      </div>
+      <div class="insp-edit-row">
+        <span class="insp-edit-label">Color</span>
+        <div class="insp-edit-ctrl">
+          <button class="insp-color-sw" style="background:var(--tx)" onclick="setEditColor('var(--tx)','text')" aria-label="Text color"></button>
+          <button class="insp-color-sw" style="background:var(--tx2)" onclick="setEditColor('var(--tx2)','muted')" aria-label="Muted color"></button>
+          <button class="insp-color-sw" style="background:var(--ac)" onclick="setEditColor('var(--ac)','accent')" aria-label="Accent color"></button>
+          <button class="insp-color-sw" style="background:var(--ok)" onclick="setEditColor('var(--ok)','success green')" aria-label="Success color"></button>
+          <button class="insp-color-sw" style="background:var(--err)" onclick="setEditColor('var(--err)','error red')" aria-label="Error color"></button>
+          <button class="insp-color-sw insp-color-reset" onclick="resetEditColor()" aria-label="Reset color"><i class="ph ph-arrow-counter-clockwise"></i></button>
+        </div>
+      </div>
+    </div>
+    <button class="insp-reset-btn" id="inspResetBtn" onclick="resetEdits()" style="display:none">
+      <i class="ph ph-arrow-counter-clockwise"></i> Reset preview
+    </button>
+
     <input class="insp-note-inp" id="inspNoteInp" type="text" placeholder="e.g. make this bigger, broken on tap...">
     <button class="cta-btn" onclick="addInspectNote()">Add to list</button>
   </div>
@@ -3258,6 +3349,18 @@ var inspectItems = JSON.parse(localStorage.getItem('lk_insp')||'[]');
 var inspCurrentTarget = null;
 var PANE_NAMES = {pToday:'Today', pTimeline:'Trip', pCities:'Cities', pGoals:'Goals', pBudget:'Budget'};
 
+var inspCurrentEl = null;
+var inspOriginal = {};
+var inspEditCurrent = {};
+var inspEdits = {};
+var inspCritiqueCache = [];
+var EDIT_PROPS = [
+  {key:'fontSize', label:'Text size', step:1, min:8, max:48},
+  {key:'padding', label:'Spacing', step:4, min:0, max:48},
+  {key:'borderRadius', label:'Corners', step:2, min:0, max:32}
+];
+var EDIT_LABELS = {fontSize:'Text size', padding:'Spacing', borderRadius:'Corners', color:'Color'};
+
 function saveInsp(){ localStorage.setItem('lk_insp', JSON.stringify(inspectItems)); }
 
 function updateInspBadge(){
@@ -3288,19 +3391,166 @@ function describeElement(el){
   var tag = el.tagName.toLowerCase();
   var cls = getClasses(el);
   var id = el.id;
+  var target = el;
   if(!id && !cls.length){
     var p = el.parentElement;
     while(p && p!==document.body){
       var pcls = getClasses(p);
-      if(p.id || pcls.length){ id=p.id; cls=pcls; tag=p.tagName.toLowerCase(); break; }
+      if(p.id || pcls.length){ id=p.id; cls=pcls; tag=p.tagName.toLowerCase(); target=p; break; }
       p = p.parentElement;
     }
   }
-  var pane = el.closest('.pane');
+  var pane = target.closest('.pane');
   var screen = pane ? (PANE_NAMES[pane.id]||pane.id) : '';
   var selector = id ? '#'+id : (cls.length ? '.'+cls.slice(0,2).join('.') : tag);
-  var text = (el.textContent||'').trim().replace(/\s+/g,' ').slice(0,50);
-  return { selector:selector, screen:screen, text:text };
+  var text = (target.textContent||'').trim().replace(/\s+/g,' ').slice(0,50);
+  return { selector:selector, screen:screen, text:text, el:target };
+}
+
+/* ─── Design lint + live edit helpers ──────────────────────── */
+function parseColor(str){
+  var m = str && str.match(/rgba?\(([^)]+)\)/);
+  if(!m) return {r:0,g:0,b:0,a:1};
+  var p = m[1].split(',').map(function(x){ return parseFloat(x); });
+  return {r:p[0]||0, g:p[1]||0, b:p[2]||0, a:p.length>3?p[3]:1};
+}
+function rgbToHex(c){
+  function h(x){ x=Math.max(0,Math.min(255,Math.round(x))); var s=x.toString(16); return s.length===1?'0'+s:s; }
+  return '#'+h(c.r)+h(c.g)+h(c.b);
+}
+function relLum(c){
+  function f(x){ x/=255; return x<=0.03928 ? x/12.92 : Math.pow((x+0.055)/1.055,2.4); }
+  return 0.2126*f(c.r)+0.7152*f(c.g)+0.0722*f(c.b);
+}
+function contrastRatio(c1,c2){
+  var l1=relLum(c1)+0.05, l2=relLum(c2)+0.05;
+  return l1>l2 ? l1/l2 : l2/l1;
+}
+function getBgColor(el){
+  var node=el;
+  while(node){
+    var p=parseColor(getComputedStyle(node).backgroundColor);
+    if(p.a>0.01) return p;
+    node=node.parentElement;
+  }
+  return {r:13,g:13,b:13,a:1};
+}
+
+function critiqueElement(el){
+  var cs=getComputedStyle(el);
+  var r=el.getBoundingClientRect();
+  var out=[];
+
+  var clickable = el.tagName==='BUTTON' || el.tagName==='A' || !!el.getAttribute('onclick') || cs.cursor==='pointer';
+  if(clickable && r.width>0 && r.height>0 && (r.width<44 || r.height<44)){
+    out.push({type:'warn', text:'Tap target '+Math.round(r.width)+'×'+Math.round(r.height)+'px — HIG minimum is 44×44px'});
+  }
+
+  var grid=[0,4,8,12,16,20,24,32];
+  var pads={};
+  ['paddingTop','paddingRight','paddingBottom','paddingLeft'].forEach(function(p){
+    var v=Math.round(parseFloat(cs[p])||0);
+    if(v) pads[v]=true;
+  });
+  Object.keys(pads).forEach(function(v){
+    if(grid.indexOf(parseInt(v,10))===-1) out.push({type:'info', text:'Padding '+v+'px is off the 8pt grid (4/8/12/16/20/24/32)'});
+  });
+
+  var fg=parseColor(cs.color), bg=getBgColor(el);
+  var ratio=contrastRatio(fg,bg);
+  var fs=parseFloat(cs.fontSize), bold=parseInt(cs.fontWeight,10)>=700;
+  var isLarge = fs>=18 || (fs>=14 && bold);
+  var minRatio = isLarge?3:4.5;
+  if(ratio < minRatio){
+    out.push({type:'warn', text:'Contrast '+ratio.toFixed(1)+':1 — below WCAG AA ('+minRatio+':1)'});
+  }
+
+  var br=Math.round(parseFloat(cs.borderTopLeftRadius)||0);
+  var radii=[0,10,16,22,28];
+  if(br>0 && br<100 && radii.indexOf(br)===-1){
+    out.push({type:'info', text:'Corner radius '+br+'px isn\'t one of the design tokens (10/16/22/28)'});
+  }
+
+  if(!out.length) out.push({type:'ok', text:'Looks consistent with the design system'});
+  return out;
+}
+
+function captureOriginal(el){
+  var cs=getComputedStyle(el);
+  return {
+    fontSize: Math.round(parseFloat(cs.fontSize)||0),
+    padding: Math.round(parseFloat(cs.paddingTop)||0),
+    borderRadius: Math.round(parseFloat(cs.borderTopLeftRadius)||0),
+    color: rgbToHex(parseColor(cs.color))
+  };
+}
+
+function renderCritique(){
+  var wrap=g('inspCritique');
+  if(!wrap||!inspCurrentEl) return;
+  inspCritiqueCache = critiqueElement(inspCurrentEl);
+  wrap.innerHTML = inspCritiqueCache.map(function(c){
+    var icon = c.type==='ok' ? 'ph-fill ph-check-circle' : (c.type==='warn' ? 'ph-fill ph-warning' : 'ph ph-info');
+    return '<div class="insp-crit insp-crit-'+c.type+'"><i class="'+icon+'"></i>'+c.text+'</div>';
+  }).join('');
+}
+
+function refreshEditUI(){
+  EDIT_PROPS.forEach(function(p){
+    var elv=g('insp-val-'+p.key);
+    if(elv) elv.textContent = inspEditCurrent[p.key]+'px';
+  });
+  var rb=g('inspResetBtn');
+  if(rb) rb.style.display = Object.keys(inspEdits).length ? 'flex' : 'none';
+  if(inspCurrentEl){
+    var r=inspCurrentEl.getBoundingClientRect();
+    var hl=g('inspHighlight');
+    hl.style.left=r.left+'px'; hl.style.top=r.top+'px';
+    hl.style.width=r.width+'px'; hl.style.height=r.height+'px';
+  }
+  renderCritique();
+}
+
+function stepEdit(key, delta){
+  if(!inspCurrentEl) return;
+  var def;
+  for(var i=0;i<EDIT_PROPS.length;i++) if(EDIT_PROPS[i].key===key) def=EDIT_PROPS[i];
+  if(!def) return;
+  var next = inspEditCurrent[key] + delta*def.step;
+  next = Math.max(def.min, Math.min(def.max, next));
+  inspEditCurrent[key] = next;
+  if(next === inspOriginal[key]){
+    inspCurrentEl.style[key] = '';
+    delete inspEdits[key];
+  } else {
+    inspCurrentEl.style[key] = next+'px';
+    inspEdits[key] = { from: inspOriginal[key]+'px', to: next+'px' };
+  }
+  refreshEditUI();
+}
+
+function setEditColor(varVal, label){
+  if(!inspCurrentEl) return;
+  inspCurrentEl.style.color = varVal;
+  inspEdits.color = { from: inspOriginal.color, to: label };
+  refreshEditUI();
+}
+function resetEditColor(){
+  if(!inspCurrentEl) return;
+  inspCurrentEl.style.color = '';
+  delete inspEdits.color;
+  refreshEditUI();
+}
+
+function resetEdits(){
+  if(!inspCurrentEl) return;
+  EDIT_PROPS.forEach(function(p){
+    inspCurrentEl.style[p.key]='';
+    inspEditCurrent[p.key]=inspOriginal[p.key];
+  });
+  inspCurrentEl.style.color='';
+  inspEdits={};
+  refreshEditUI();
 }
 
 function handleInspectClick(e){
@@ -3309,19 +3559,21 @@ function handleInspectClick(e){
   e.preventDefault();
   e.stopPropagation();
 
-  var r = el.getBoundingClientRect();
+  inspCurrentTarget = describeElement(el);
+  inspCurrentEl = inspCurrentTarget.el;
+  inspOriginal = captureOriginal(inspCurrentEl);
+  inspEditCurrent = {fontSize:inspOriginal.fontSize, padding:inspOriginal.padding, borderRadius:inspOriginal.borderRadius};
+  inspEdits = {};
+
   var hl = g('inspHighlight');
   hl.style.display = 'block';
-  hl.style.left = r.left+'px';
-  hl.style.top = r.top+'px';
-  hl.style.width = r.width+'px';
-  hl.style.height = r.height+'px';
 
-  inspCurrentTarget = describeElement(el);
   var t = g('inspNoteTarget');
   t.innerHTML = '<b>'+inspCurrentTarget.selector+'</b>'
     + (inspCurrentTarget.screen ? ' · '+inspCurrentTarget.screen : '')
     + (inspCurrentTarget.text ? '<br>"'+inspCurrentTarget.text+'"' : '');
+
+  refreshEditUI();
 
   var inp = g('inspNoteInp');
   inp.value = '';
@@ -3337,11 +3589,14 @@ function closeInspectNote(){
 function addInspectNote(){
   var note = g('inspNoteInp').value.trim();
   if(note && inspCurrentTarget){
+    var warnings = inspCritiqueCache.filter(function(c){ return c.type==='warn'; }).map(function(c){ return c.text; });
     inspectItems.push({
       selector: inspCurrentTarget.selector,
       screen: inspCurrentTarget.screen,
       text: inspCurrentTarget.text,
-      note: note
+      note: note,
+      edits: Object.keys(inspEdits).length ? inspEdits : undefined,
+      critique: warnings.length ? warnings : undefined
     });
     saveInsp();
     updateInspBadge();
@@ -3362,11 +3617,15 @@ function renderInspectList(){
     return;
   }
   wrap.innerHTML = inspectItems.map(function(item, i){
+    var meta=[];
+    if(item.edits && Object.keys(item.edits).length) meta.push(Object.keys(item.edits).length+' edit'+(Object.keys(item.edits).length===1?'':'s'));
+    if(item.critique && item.critique.length) meta.push(item.critique.length+' design issue'+(item.critique.length===1?'':'s'));
     return '<div class="insp-item">'
       + '<div class="insp-item-info">'
         + '<div class="insp-item-sel">'+item.selector+'</div>'
         + (item.screen ? '<div class="insp-item-scr">'+item.screen+'</div>' : '')
         + '<div class="insp-item-note">'+item.note+'</div>'
+        + (meta.length ? '<div class="insp-item-meta">'+meta.join(' · ')+'</div>' : '')
       + '</div>'
       + '<button class="insp-item-del" onclick="removeInspectItem('+i+')"><i class="ph ph-x"></i></button>'
     + '</div>';
@@ -3392,6 +3651,15 @@ function formatInspectFeedback(){
   inspectItems.forEach(function(item, i){
     lines.push((i+1)+'. `'+item.selector+'`'+(item.screen?' — '+item.screen:''));
     lines.push('   Note: '+item.note);
+    if(item.edits){
+      Object.keys(item.edits).forEach(function(k){
+        var e=item.edits[k];
+        lines.push('   '+EDIT_LABELS[k]+': '+e.from+' → '+e.to);
+      });
+    }
+    if(item.critique && item.critique.length){
+      item.critique.forEach(function(c){ lines.push('   ⚠ '+c); });
+    }
     if(item.text) lines.push('   Element text: "'+item.text+'"');
     lines.push('');
   });
