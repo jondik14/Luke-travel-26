@@ -2466,6 +2466,9 @@ function initCitySwipe(){
   el._swipeInit=true;
   var sx=0, sy=0, tracking=false;
   el.addEventListener('touchstart', function(e){
+    // Ignore touches on the place map — pinch/pan gestures there
+    // shouldn't be read as a horizontal swipe between cities
+    if(e.touches.length>1 || (e.target.closest && e.target.closest('#placeMapWrap'))){ tracking=false; return; }
     var t=e.touches[0]; sx=t.clientX; sy=t.clientY; tracking=true;
   }, {passive:true});
   el.addEventListener('touchend', function(e){
