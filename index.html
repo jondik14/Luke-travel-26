@@ -178,7 +178,7 @@ body {
 .mt5{margin-top:var(--sp5)} .mt6{margin-top:var(--sp6)} .mt8{margin-top:var(--sp8)}
 .mb2{margin-bottom:var(--sp2)} .mb3{margin-bottom:var(--sp3)} .mb4{margin-bottom:var(--sp4)}
 .mb5{margin-bottom:var(--sp5)} .mb6{margin-bottom:var(--sp6)}
-.pt4{padding-top:var(--sp4)} .pt5{padding-top:var(--sp5)} .pt6{padding-top:var(--sp6)}
+.pt4{padding-top:var(--sp4)} .pt5{padding-top:calc(env(safe-area-inset-top,0px) + var(--sp5))} .pt6{padding-top:var(--sp6)}
 .pb4{padding-bottom:var(--sp4)}
 
 /* ─── Layout ─────────────────────────────────────────────── */
@@ -339,33 +339,16 @@ body {
 
 /* ─── TIMELINE ───────────────────────────────────────────── */
 
-/* Phase jump tabs — sticky at top of scroll pane */
-.tl-tabs {
-  position:sticky; top:0; z-index:9;
-  display:flex; gap:var(--sp2); overflow-x:auto;
-  padding:var(--sp3) var(--sp4);
-  background:var(--bg); border-bottom:1px solid var(--bd);
-  transition:background .3s;
-}
-.tl-tab {
-  display:flex; align-items:center; gap:5px;
-  padding:5px 11px; border-radius:var(--r-full);
-  border:1px solid var(--bd); background:var(--s2);
-  font-size:11px; font-weight:700; letter-spacing:.04em;
-  text-transform:uppercase; color:var(--tx2);
-  white-space:nowrap; flex-shrink:0;
-  transition:background .2s, transform .3s var(--spring);
-}
-.tl-tab:active { transform:scale(.93); }
-.tl-tab-dot { width:6px; height:6px; border-radius:var(--r-full); flex-shrink:0; }
-
 /* Phase header */
 .phase-hdr {
   display:flex; align-items:center; gap:var(--sp2);
   padding:var(--sp6) var(--sp4) var(--sp3);
 }
+.phase-hdr.tappable { cursor:pointer; -webkit-user-select:none; user-select:none; }
+.phase-hdr.tappable:active { opacity:.7; }
 .phase-dot { width:8px; height:8px; border-radius:var(--r-full); flex-shrink:0; }
 .phase-label { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.phase-caret { margin-left:auto; color:var(--tx3); font-size:16px; }
 
 /* Day card */
 .day-wrap { padding:0 var(--sp4) var(--sp3); }
@@ -504,6 +487,22 @@ body {
   display:flex; align-items:center; gap:var(--sp2);
   margin-bottom:var(--sp3);
 }
+
+/* Tab switcher for guide content sections (Must Do, Food & Drink, etc.) */
+.guide-tabs {
+  display:flex; gap:var(--sp2); overflow-x:auto;
+  padding-bottom:var(--sp1); margin-bottom:var(--sp3);
+}
+.guide-tab {
+  display:flex; align-items:center; gap:5px;
+  padding:7px 14px; border-radius:var(--r-full);
+  border:1px solid var(--bd); background:var(--s2);
+  font-size:12px; font-weight:700; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--tx2); white-space:nowrap; flex-shrink:0;
+  transition:all .2s, transform .3s var(--spring);
+}
+.guide-tab.on { background:var(--ac); border-color:var(--ac); color:#fff; }
+.guide-tab:active { transform:scale(.94); }
 .guide-hdr-icon {
   width:28px; height:28px; border-radius:var(--r-sm);
   background:var(--ac-dim); border:1px solid rgba(242,100,25,.2);
@@ -525,6 +524,15 @@ body {
   content:''; width:4px; height:4px; border-radius:var(--r-full);
   background:var(--ac); opacity:.6; flex-shrink:0; margin-top:7px;
 }
+.guide-item-txt { flex:1; }
+.guide-item-add {
+  flex-shrink:0; width:24px; height:24px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--s2); border:1px solid var(--bd); color:var(--tx3);
+  font-size:12px; transition:all .2s, transform .3s var(--spring);
+}
+.guide-item-add.on { background:var(--ac); border-color:var(--ac); color:#fff; }
+.guide-item-add:active:not(:disabled) { transform:scale(.9); }
 
 .review-card {
   background:var(--s2); border:1px solid var(--bd);
@@ -684,6 +692,35 @@ body {
 .binp:focus { border-color:var(--ac); }
 .binp.actual { border-color:rgba(74,222,128,.25); }
 
+/* ─── Bank account (Basiq) ───────────────────────────────── */
+.bank-sync-btn {
+  display:flex; align-items:center; gap:4px;
+  font-size:12px; font-weight:700; color:var(--ac);
+  padding:5px 12px; border-radius:var(--r-full);
+  background:var(--ac-dim);
+}
+.bank-sync-btn:active { transform:scale(.94); }
+.bank-sync-btn.spin i { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.bank-headroom {
+  display:flex; align-items:center; gap:var(--sp3);
+  background:var(--s2); border:1px solid var(--bd);
+  border-radius:var(--r-lg); padding:var(--sp4);
+  margin:var(--sp3) 0;
+}
+.bank-txn-row {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp2) 0; border-bottom:1px solid var(--bd);
+}
+.bank-txn-row:last-child { border-bottom:none; }
+.bank-txn-desc { flex:1; min-width:0; }
+.bank-txn-title {
+  font-size:13px; font-weight:600; color:var(--tx);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.bank-txn-meta { font-size:11px; color:var(--tx3); margin-top:1px; }
+.bank-txn-amt { font-size:13px; font-weight:700; flex-shrink:0; }
+
 /* ─── INSTALL SHEET ──────────────────────────────────────── */
 .ovl {
   position:fixed; inset:0; background:rgba(0,0,0,.6);
@@ -748,35 +785,9 @@ body {
 .trip-seg { min-width:0; transition:opacity .3s; }
 .trip-legend { display:flex; }
 .trip-legend-item {
-  font-size:9px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
-  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  font-size:13px; text-align:center;
   padding:0 1px; opacity:.7;
 }
-
-/* ─── Phase kanban strip ─────────────────────────────────── */
-.phase-scroll {
-  display:flex; gap:var(--sp3); overflow-x:auto;
-  padding:0 var(--sp4) var(--sp5);
-  scroll-snap-type:x mandatory;
-  -webkit-overflow-scrolling:touch;
-}
-.pk-card {
-  min-width:150px; max-width:175px; flex-shrink:0;
-  background:var(--s1); border:1px solid var(--bd);
-  border-radius:var(--r-lg); padding:var(--sp3) var(--sp4);
-  scroll-snap-align:start;
-  transition:background .3s, border-color .3s, opacity .3s;
-}
-.pk-card.pk-active { border-color:rgba(242,100,25,.45); }
-.pk-card.pk-past { opacity:.42; }
-.pk-hdr { display:flex; align-items:center; gap:6px; margin-bottom:5px; }
-.pk-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.pk-name { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; flex:1; }
-.pk-dates { font-size:11px; color:var(--tx2); margin-bottom:var(--sp3); }
-.pk-cities { display:flex; flex-wrap:wrap; gap:4px; }
-.pk-city { font-size:11px; font-weight:600; padding:2px 7px; border-radius:var(--r-full); background:var(--s3); color:var(--tx2); white-space:nowrap; }
-.pk-city.pk-city-now { background:var(--ac-dim); color:var(--ac); }
-.pk-footer { margin-top:var(--sp3); }
 
 /* ─── Route map panel ────────────────────────────────────── */
 .map-panel {
@@ -805,7 +816,6 @@ body {
 .map-pin-num.active { background:#fff; color:var(--ac); border-color:var(--ac); transform:scale(1.35); z-index:2; }
 .map-pin-num.done { background:var(--ok); opacity:.85; }
 .map-pin-num.map-pin-home { background:#1a1a1a; border-color:#fff; }
-.map-hint { padding:0 var(--sp4) var(--sp3); }
 
 /* ─── Today: big, satisfying checklist rows ──────────────── */
 .todo-row {
@@ -871,22 +881,6 @@ body {
 }
 .stop-num:active { transform:scale(.85); }
 .stop-num.active { background:var(--ac); color:#fff; }
-
-/* ─── Bookings collapse ──────────────────────────────────── */
-.bk-wrap { background:var(--s1); border:1px solid var(--bd); border-radius:var(--r-lg); overflow:hidden; transition:background .3s; }
-.bk-toggle {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:var(--sp3) var(--sp4); cursor:pointer;
-  -webkit-user-select:none; user-select:none;
-}
-.bk-toggle:active { background:var(--s2); }
-.bk-list { display:none; padding:0 var(--sp4) var(--sp3); border-top:1px solid var(--bd); }
-.bk-row {
-  display:flex; align-items:center; gap:var(--sp3);
-  padding:var(--sp3) 0; border-bottom:1px solid var(--bd);
-  min-height:48px;
-}
-.bk-row:last-child { border-bottom:none; }
 
 /* ─── Weather widget ─────────────────────────────────────── */
 .weather-row {
@@ -961,6 +955,7 @@ body {
   display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--sp2);
   padding:0 var(--sp4);
 }
+.stat-tiles.single { grid-template-columns:1fr; }
 .stat-tile {
   background:var(--s1); border:1px solid var(--bd);
   border-radius:var(--r-lg); padding:var(--sp4) var(--sp3);
@@ -978,7 +973,7 @@ body {
 /* ─── Up next carousel — airline-style trip cards ───────── */
 .upnext-scroll {
   display:flex; gap:var(--sp3); overflow-x:auto;
-  margin:0 calc(-1 * var(--sp4)); padding:0 var(--sp4) var(--sp1);
+  padding:0 var(--sp4) var(--sp5);
   scroll-snap-type:x mandatory;
   -webkit-overflow-scrolling:touch;
 }
@@ -1037,21 +1032,6 @@ body {
 .visit-day-date { font-size:12px; font-weight:600; color:var(--tx2); margin-bottom:4px; }
 .visit-day-item {
   font-size:13px; color:var(--tx); line-height:1.45; padding:1px 0;
-}
-
-/* ─── Suggestions grid (Cities tab) ─────────────────────── */
-.suggest-grid {
-  display:grid; grid-template-columns:1fr 1fr; gap:var(--sp2);
-}
-.suggest-item {
-  background:var(--s2); border:1px solid var(--bd);
-  border-radius:var(--r-md); padding:var(--sp3);
-  font-size:12px; font-weight:500; color:var(--tx2); line-height:1.45;
-  text-align:left; transition:background .2s, transform .3s var(--spring);
-}
-.suggest-item:active { background:var(--ac-dim); color:var(--ac); transform:scale(.96); }
-.suggest-item-plus {
-  font-size:14px; font-weight:700; color:var(--ac); display:block; margin-bottom:2px;
 }
 
 /* ─── Find your people (community links) ────────────────── */
@@ -1709,6 +1689,8 @@ var pks  = JSON.parse(localStorage.getItem('lk_pack')||'{}');
 var todos = JSON.parse(localStorage.getItem('lk_todo')||'{}');
 var booked = JSON.parse(localStorage.getItem('lk_booked')||'{}');
 var POIS = JSON.parse(localStorage.getItem('lk_poi')||'{}');
+var ideas = JSON.parse(localStorage.getItem('lk_ideas')||'{}');
+var addedSuggs = JSON.parse(localStorage.getItem('lk_added_suggs')||'{}');
 var GEO  = JSON.parse(localStorage.getItem('lk_geo')||'{}');
 var openSugg = {};
 var city = 'Athens';
@@ -1740,7 +1722,7 @@ var WMO={
   85:'🌨️ Snow showers',86:'❄️ Snow showers',
   95:'⛈️ Thunderstorm',96:'⛈️ Thunderstorm',99:'⛈️ Thunderstorm'
 };
-var _wxCache={}, _expCat='Food', _goalCat='All';
+var _wxCache={}, _expCat='Food', _goalCat='All', _guideTab={};
 var _xr=parseFloat(localStorage.getItem('lk_xr'))||1.64, _xrFetched=false; // EUR → AUD
 
 function g(id){ return document.getElementById(id); }
@@ -1810,15 +1792,15 @@ function weatherCityFor(entry){
 function fetchWeather(city){
   if(!city||!COORDS[city]) return;
   var key=city+'_'+TODAY.toISOString().split('T')[0];
-  if(_wxCache[key]){ paintWeather(_wxCache[key]); return; }
+  if(_wxCache[key]){ paintWeather(_wxCache[key],city); return; }
   var c=COORDS[city];
   fetch('https://api.open-meteo.com/v1/forecast?latitude='+c[0]+'&longitude='+c[1]
     +'&current=temperature_2m,weathercode&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1')
     .then(function(r){return r.json();})
-    .then(function(d){ _wxCache[key]=d; paintWeather(d); })
+    .then(function(d){ _wxCache[key]=d; paintWeather(d,city); })
     .catch(function(){ var e=g('wxZone'); if(e) e.style.display='none'; });
 }
-function paintWeather(d){
+function paintWeather(d,city){
   var el=g('wxZone'); if(!el||!d||!d.current) return;
   var code=d.current.weathercode||0;
   var cur=Math.round(d.current.temperature_2m);
@@ -1829,7 +1811,7 @@ function paintWeather(d){
     +'<div class="weather-ico">'+ico+'</div>'
     +'<div class="grow1"><div class="weather-temp">'+cur+'°C'
     +'<span style="font-size:12px;font-weight:500;color:var(--tx2);margin-left:8px">'+lo+'° – '+hi+'°</span></div>'
-    +'<div class="weather-desc">'+desc+'</div></div>'
+    +'<div class="weather-desc">'+desc+(city?' · '+city:'')+'</div></div>'
     +'</div>';
 }
 
@@ -1918,6 +1900,33 @@ function togBooked(id){
   localStorage.setItem('lk_booked',JSON.stringify(booked));
   renderBook();
 }
+// Save a guide idea or suggestion into a city's itinerary
+function addToItinerary(city,text){
+  if(!ideas[city]) ideas[city]=[];
+  if(ideas[city].indexOf(text)===-1) ideas[city].push(text);
+  localStorage.setItem('lk_ideas',JSON.stringify(ideas));
+}
+function addIdea(c,text){
+  addToItinerary(c,text);
+  renderGuide();
+}
+// Move a suggestion into the itinerary + the action list to book
+function addSuggestion(id){
+  addedSuggs[id]=true;
+  localStorage.setItem('lk_added_suggs',JSON.stringify(addedSuggs));
+  for(var i=0;i<SUGGESTIONS.length;i++) if(SUGGESTIONS[i].id===id) addToItinerary(SUGGESTIONS[i].city, SUGGESTIONS[i].t);
+  renderBook();
+  renderToday();
+}
+function actionListCount(){
+  var n=0;
+  for(var i=0;i<TODO_ITEMS.length;i++) if(!todos[TODO_ITEMS[i].id]) n++;
+  for(var i=0;i<SUGGESTIONS.length;i++){
+    var s=SUGGESTIONS[i];
+    if(addedSuggs[s.id] && !booked[s.id]) n++;
+  }
+  return n;
+}
 // Tick off a suggested place on the per-city map / list
 function togPoi(key){
   POIS[key]=!POIS[key];
@@ -1990,20 +1999,10 @@ function renderTripVis(){
   for(var s=0;s<segs.length;s++){
     if(s>0) out+='<div style="width:3px;flex-shrink:0"></div>';
     var seg=segs[s], cn=CN[seg.country];
-    out+='<div class="trip-legend-item" style="flex:'+seg.days.length+';color:'+cn.c+'">'+cn.f+' '+seg.country+'</div>';
+    out+='<div class="trip-legend-item" style="flex:'+seg.days.length+';color:'+cn.c+'">'+cn.f+'</div>';
   }
   out+='</div></div>';
   return out;
-}
-
-/* ─── Bookings toggle ────────────────────────────────────── */
-function toggleBookings(){
-  var list=document.getElementById('bkList');
-  var caret=document.getElementById('bkCaret');
-  if(!list) return;
-  var open=list.style.display==='block';
-  list.style.display=open?'none':'block';
-  if(caret) caret.style.transform=open?'':'rotate(180deg)';
 }
 
 /* ─── Route map ───────────────────────────────────────────── */
@@ -2159,42 +2158,29 @@ function gmapsUrl(c, items){
   return 'https://www.google.com/maps/dir/?api=1&destination='+dest+'&waypoints='+wps+'&travelmode=walking';
 }
 
-/* ─── Phase kanban ───────────────────────────────────────── */
-function renderPhaseKanban(ts){
-  var out='<div class="phase-scroll">';
-  var segs=tripSegments();
-  for(var si=0;si<segs.length;si++){
-    var seg=segs[si], pDays=seg.days, cn=CN[seg.country];
-    var start=pDays[0].d, end=pDays[pDays.length-1].d;
-    var isPast=end<ts, isActive=start<=ts&&end>=ts;
-    var cls='pk-card'+(isActive?' pk-active':isPast?' pk-past':'');
-    // Collect unique cities
-    var cities=[], seen={};
-    for(var i=0;i<pDays.length;i++){
-      var parts=pDays[i].c.split(' → ');
-      for(var j=0;j<parts.length;j++){
-        var ct=parts[j].trim();
-        if(ct&&!seen[ct]){seen[ct]=true;cities.push(ct);}
-      }
-    }
-    var sd=new Date(start+'T00:00:00'), ed=new Date(end+'T00:00:00');
-    var sf=sd.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
-    var ef=ed.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
-    out+='<div class="'+cls+'" id="pk'+seg.idx+'">';
-    out+='<div class="pk-hdr"><div class="pk-dot" style="background:'+cn.c+'"></div>';
-    out+='<span class="pk-name" style="color:'+cn.c+'">'+cn.f+' '+seg.country+'</span></div>';
-    out+='<div class="pk-dates">'+sf+' – '+ef+'</div>';
-    out+='<div class="pk-cities">';
-    for(var i=0;i<cities.length;i++){
-      var isCurrent=isActive&&pDays.some(function(d){return d.d===ts&&d.c.indexOf(cities[i])!==-1;});
-      out+='<span class="pk-city'+(isCurrent?' pk-city-now':'')+'">'+cities[i]+'</span>';
-    }
-    out+='</div>';
-    out+='<div class="pk-footer">';
-    if(isActive) out+='<span class="badge b-ac">Active</span>';
-    else if(isPast) out+='<span class="badge b-dim">Done ✓</span>';
-    else{ var dLeft=Math.ceil((new Date(start+'T00:00:00')-new Date(ts+'T00:00:00'))/86400000); out+='<span class="badge b-dim">in '+dLeft+'d</span>'; }
-    out+='</div></div>';
+/* ─── Up next — airline-style swipeable carousel of upcoming moments ── */
+function renderUpNext(moments){
+  if(!moments.length) return '';
+  var out='<div class="label mb3 px">Up next</div>';
+  out+='<div class="upnext-scroll">';
+  for(var i=0;i<moments.length;i++){
+    var mo=moments[i];
+    var mbg=HERO_BG[mo.city]||'135deg,#444,#222';
+    var mdiff=Math.round((new Date(mo.d+'T00:00:00')-TODAY)/86400000);
+    var mlbl = mdiff<=0 ? 'Today' : mdiff===1 ? 'Tomorrow' : 'In '+mdiff+'d';
+    out += '<div class="upnext-card"'+(GUIDES[mo.city]?' onclick="goGuide(\''+mo.city+'\')" style="cursor:pointer"':'')+'>';
+    out += '<div class="upnext-img" style="background:linear-gradient('+mbg+')">';
+    out += '<img class="bg-photo" data-city="'+mo.city+'" alt="" onload="this.classList.add(\'vis\')">';
+    out += '<div class="upnext-img-grad"></div>';
+    out += '<span class="upnext-emoji">'+mo.ico+'</span>';
+    out += '<span class="upnext-pill">'+mlbl+'</span>';
+    out += '</div>';
+    out += '<div class="upnext-body">';
+    out += '<div class="upnext-kind">'+mo.kind+'</div>';
+    out += '<div class="upnext-route">'+mo.route+'</div>';
+    out += '<div class="upnext-date">'+fmt(mo.d)+' · Day '+mo.dn+'</div>';
+    if(mo.plan) out += '<div class="upnext-plan">'+mo.plan+'</div>';
+    out += '</div></div>';
   }
   out+='</div>';
   return out;
@@ -2204,9 +2190,9 @@ function renderPhaseKanban(ts){
 function renderToday(){
   var ts  = TODAY.toISOString().split('T')[0];
   var on  = TODAY >= TS && TODAY <= TE;
-  var done= 0; for(var i=0;i<GOALS.length;i++) if(gs[GOALS[i].id]) done++;
   var entry=null, entryIdx=-1; for(var i=0;i<DAYS.length;i++) if(DAYS[i].d===ts){entry=DAYS[i];entryIdx=i;break;}
   var left= Math.ceil((TS-TODAY)/86400000);
+  var moments=upcomingMoments(ts, 8);
   var out ='';
 
   // Utility bar
@@ -2235,9 +2221,9 @@ function renderToday(){
     out += '<div class="hero-display">'+left+'</div>';
     out += '<div class="hero-sub">days &nbsp;·&nbsp; Tue 9 June · Sydney → Athens</div>';
     out += '</div>';
-    // Phase strip + kanban
+    // Trip progress + up next
     out += renderTripVis();
-    out += renderPhaseKanban(ts);
+    out += renderUpNext(moments);
     out += '<div class="px">';
     // Athens weather preview (anticipation!)
     out += '<div id="wxZone"><div class="weather-row" style="opacity:.6">';
@@ -2259,9 +2245,9 @@ function renderToday(){
       out += '<div class="hero-sub">'+dayTag+'</div>';
     }
     out += '</div>';
-    // Phase strip + kanban
+    // Trip progress + up next
     out += renderTripVis();
-    out += renderPhaseKanban(ts);
+    out += renderUpNext(moments);
     out += '<div class="px">';
 
     // Travel
@@ -2298,13 +2284,6 @@ function renderToday(){
     if(planTh.length || todaySugg.length){
       var planKeys=[];
       for(var i=0;i<planTh.length;i++) planKeys.push('plan|'+ts+'|'+planTh[i].replace('🔒 ',''));
-      var allTotal=planKeys.length+todaySugg.length;
-      var allDone=0;
-      for(var i=0;i<planKeys.length;i++) if(POIS[planKeys[i]]) allDone++;
-      for(var i=0;i<todaySugg.length;i++) if(POIS[poiKey(todaySugg[i].city,todaySugg[i].title)]) allDone++;
-
-      out += '<div class="row between mb2"><div class="label">Today\'s checklist</div><span class="cap accent" style="font-weight:700">'+allDone+' / '+allTotal+'</span></div>';
-      out += '<div class="prog-rail mb3" style="height:5px"><div class="prog-bar" style="width:'+Math.round(allTotal?allDone/allTotal*100:0)+'%;height:100%"></div></div>';
 
       if(planTh.length){
         out += '<div class="card mb3">';
@@ -2316,7 +2295,7 @@ function renderToday(){
           out += '<div class="todo-row'+(pdone?' done':'')+'" onclick="togToday(\''+pkey.replace(/'/g,"\\'")+'\')">';
           out += '<div class="todo-chk'+(pdone?' on':'')+'"><i class="ph-fill ph-check"></i></div>';
           out += '<div class="todo-body"><div class="todo-title">'+title+'</div>';
-          out += '<div class="todo-meta">'+(locked?'<span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked in</span>':'<span class="badge b-ok">Confirmed</span>')+'</div>';
+          if(locked) out += '<div class="todo-meta"><span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked in</span></div>';
           out += '</div></div>';
         }
         out += '</div>';
@@ -2396,7 +2375,7 @@ function renderToday(){
     out += '<div class="hero-sub">39 days · 13 cities · Europe 2026</div>';
     out += '</div>';
     out += renderTripVis();
-    out += renderPhaseKanban(ts);
+    out += renderUpNext(moments);
     out += '<div class="px">';
     out += '<div class="card card-ok mb4 row">';
     out += '<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
@@ -2405,7 +2384,7 @@ function renderToday(){
   }
 
   // To book — compact summary, links through to the To Book tab
-  var todoLeft=0; for(var i=0;i<TODO_ITEMS.length;i++) if(!todos[TODO_ITEMS[i].id]) todoLeft++;
+  var todoLeft=actionListCount();
   if(todoLeft>0){
     out += '<div class="card card-wn mb4 row" onclick="goBook()" style="cursor:pointer">';
     out += '<div class="ico" style="background:var(--warn-dim);border-color:rgba(251,191,36,.2)"><i class="ph-fill ph-ticket" style="color:var(--warn)"></i></div>';
@@ -2414,84 +2393,14 @@ function renderToday(){
     out += '</div>';
   }
 
-  // Stats tiles
-  var loggedTotal2=0; for(var i=0;i<exps.length;i++) loggedTotal2+=exps[i].amt;
+  // Day counter tile
   var dayTileVal, dayTileLbl;
   if(!on&&left>0){ dayTileVal=left+'d'; dayTileLbl='to depart'; }
   else if(on){ dayTileVal=dayNum(ts)+'/39'; dayTileLbl='day'; }
   else { dayTileVal='Done'; dayTileLbl='39 days'; }
-  out += '<div class="stat-tiles mb4">';
-  out += '<div class="stat-tile"><div class="stat-tile-val">€'+Math.round(loggedTotal2)+'</div><div class="stat-tile-lbl">logged</div></div>';
-  out += '<div class="stat-tile"><div class="stat-tile-val">'+done+'/'+GOALS.length+'</div><div class="stat-tile-lbl">goals</div></div>';
+  out += '<div class="stat-tiles single mb4">';
   out += '<div class="stat-tile"><div class="stat-tile-val">'+dayTileVal+'</div><div class="stat-tile-lbl">'+dayTileLbl+'</div></div>';
   out += '</div>';
-
-  // Up next — airline-style swipeable carousel of upcoming moments
-  var moments=upcomingMoments(ts, 8);
-  if(moments.length){
-    out += '<div class="label mb3">Up next</div>';
-    out += '<div class="upnext-scroll mb4">';
-    for(var i=0;i<moments.length;i++){
-      var mo=moments[i];
-      var mbg=HERO_BG[mo.city]||'135deg,#444,#222';
-      var mdiff=Math.round((new Date(mo.d+'T00:00:00')-TODAY)/86400000);
-      var mlbl = mdiff<=0 ? 'Today' : mdiff===1 ? 'Tomorrow' : 'In '+mdiff+'d';
-      out += '<div class="upnext-card"'+(GUIDES[mo.city]?' onclick="goGuide(\''+mo.city+'\')" style="cursor:pointer"':'')+'>';
-      out += '<div class="upnext-img" style="background:linear-gradient('+mbg+')">';
-      out += '<img class="bg-photo" data-city="'+mo.city+'" alt="" onload="this.classList.add(\'vis\')">';
-      out += '<div class="upnext-img-grad"></div>';
-      out += '<span class="upnext-emoji">'+mo.ico+'</span>';
-      out += '<span class="upnext-pill">'+mlbl+'</span>';
-      out += '</div>';
-      out += '<div class="upnext-body">';
-      out += '<div class="upnext-kind">'+mo.kind+'</div>';
-      out += '<div class="upnext-route">'+mo.route+'</div>';
-      out += '<div class="upnext-date">'+fmt(mo.d)+' · Day '+mo.dn+'</div>';
-      if(mo.plan) out += '<div class="upnext-plan">'+mo.plan+'</div>';
-      out += '</div></div>';
-    }
-    out += '</div>';
-  }
-
-  // Confirmed bookings — collapsed
-  var totalBk=3+9; // flights + stays/buses
-  out += '<div class="bk-wrap mb4">';
-  out += '<div class="bk-toggle" onclick="toggleBookings()">';
-  out += '<div class="row gap3"><div class="ico ico-ok" style="width:32px;height:32px"><i class="ph-fill ph-check-circle"></i></div>';
-  out += '<div><div class="title">Confirmed bookings</div><div class="cap mt1">'+totalBk+' confirmed</div></div></div>';
-  out += '<i class="ph ph-caret-down" id="bkCaret" style="color:var(--tx3);font-size:16px;transition:transform .3s var(--spring)"></i>';
-  out += '</div>';
-  out += '<div class="bk-list" id="bkList">';
-  var bkeys=['ams-opo','bcn-ibz','ibz-bcn'];
-  for(var i=0;i<bkeys.length;i++){
-    var b=BK[bkeys[i]];
-    out += '<div class="bk-row">';
-    out += '<div class="ico ico-ok" style="width:32px;height:32px"><i class="ph-fill ph-airplane"></i></div>';
-    out += '<div class="grow1"><div class="title">'+b.from+' → '+b.to+'</div><div class="cap mt1">'+b.date+' · '+b.fl+' · €'+b.eur+'</div></div>';
-    out += '<span class="badge b-ok">'+b.ref+'</span>';
-    out += '</div>';
-  }
-  var stays=[
-    {i:'ph-bed',t:"Wombat's Munich (21–22 Jun)",s:'Agoda · AUD 51.15'},
-    {i:'ph-bed',t:"Wombat's Munich (24 Jun)",s:'€64.10'},
-    {i:'ph-bus',t:'FlixBus Munich ↔ Innsbruck',s:'22 & 24 Jun · #3345637470'},
-    {i:'ph-bed',t:'Hans Brinker Amsterdam',s:'25–28 Jun'},
-    {i:'ph-bed',t:'MEININGER Innsbruck',s:'22–24 Jun'},
-    {i:'ph-bed',t:'Generator Madrid',s:'8–10 Jul'},
-    {i:'ph-bed',t:'Itaca Barcelona',s:'11–13 Jul'},
-    {i:'ph-bed',t:'Giramundo Ibiza',s:'13–15 Jul'},
-    {i:'ph-airplane',t:'TAP Portugal OPO → LIS',s:'Z7GFA9'},
-  ];
-  for(var i=0;i<stays.length;i++){
-    var s=stays[i];
-    out += '<div class="bk-row">';
-    out += '<div class="ico ico-ok" style="width:32px;height:32px"><i class="ph-fill '+s.i+'"></i></div>';
-    out += '<div class="grow1"><div class="title">'+s.t+'</div><div class="cap mt1">'+s.s+'</div></div>';
-    out += '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i></span>';
-    out += '</div>';
-  }
-  out += '</div>'; // bkList
-  out += '</div>'; // bkWrap
   out += '</div>'; // px
 
   g('pToday').innerHTML = out;
@@ -2499,11 +2408,6 @@ function renderToday(){
   // Update theme icon
   var tb=g('themeBtn');
   if(tb) tb.querySelector('i').className = dark ? 'ph ph-moon' : 'ph ph-sun';
-  // Scroll active phase card into view
-  requestAnimationFrame(function(){
-    var active=document.querySelector('.pk-card.pk-active');
-    if(active) active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'start'});
-  });
   // Fetch weather (async — paints into #wxZone)
   if(!on && left>0) setTimeout(function(){ fetchWeather('Athens'); },80);
   else if(entry){ var wc=weatherCityFor(entry); if(wc) setTimeout(function(){ fetchWeather(wc); },80); }
@@ -2516,7 +2420,7 @@ var WIKI_MAP={
   Athens:'Athens',Milos:'Milos',Catania:'Catania',Taormina:'Taormina',
   Bristol:'Bristol',Munich:'Munich',Innsbruck:'Innsbruck',Amsterdam:'Amsterdam',
   Porto:'Porto',Ericeira:'Ericeira',Madrid:'Madrid',Barcelona:'Barcelona',
-  Ibiza:'Ibiza',Sydney:'Sydney'
+  Ibiza:'Ibiza Town',Sydney:'Sydney'
 };
 
 // Find the full contiguous stay (check-in → check-out) the given day sits within
@@ -2573,12 +2477,6 @@ function guideCity(c){
   var p=c.split(' → ');
   for(var i=p.length-1;i>=0;i--) if(GUIDES[p[i]]) return p[i];
   return null;
-}
-function jumpPhase(ph){
-  var el=g('ph'+ph), main=g('main');
-  if(!el||!main) return;
-  var r=el.getBoundingClientRect(), mr=main.getBoundingClientRect();
-  main.scrollBy({top:r.top-mr.top-52, behavior:'smooth'});
 }
 function goGuide(city){
   selCity(city);
@@ -2648,18 +2546,19 @@ function renderTimeline(){
   out+='<i class="ph ph-caret-down map-caret-icon open" id="mapCaret"></i>';
   out+='</div>';
   out+='<div id="mapWrap" style="height:260px;overflow:hidden;transition:height .3s ease"><div id="routeMap"></div></div>';
-  out+='<div class="cap map-hint" style="color:var(--tx3)">Tap a numbered pin to jump to that stop below, or tap a number in the list to find it on the map.</div>';
   out+='</div>';
 
-  // Sticky phase jump tabs
   var segs=tripSegments();
   var segOf={}; for(var s=0;s<segs.length;s++) for(var k=0;k<segs[s].days.length;k++) segOf[segs[s].days[k].d]=s;
-  out+='<div class="tl-tabs">';
+
+  // First guide-covered city in each phase — lets the phase header drill into that guide
+  var segGuideCity={};
   for(var s=0;s<segs.length;s++){
-    var cn=CN[segs[s].country];
-    out+='<button class="tl-tab" onclick="jumpPhase('+s+')"><span class="tl-tab-dot" style="background:'+cn.c+'"></span>'+cn.f+' '+segs[s].country+'</button>';
+    for(var k=0;k<segs[s].days.length;k++){
+      var gcc=guideCity(segs[s].days[k].c);
+      if(gcc){ segGuideCity[s]=gcc; break; }
+    }
   }
-  out+='</div>';
 
   var lp=-1;
   for(var i=0;i<DAYS.length;i++){
@@ -2675,13 +2574,15 @@ function renderTimeline(){
     if(si!==lp){
       lp=si;
       var cn=CN[segs[si].country];
-      out+='<div class="phase-hdr" id="ph'+si+'">';
+      var pgc=segGuideCity[si];
+      out+='<div class="phase-hdr'+(pgc?' tappable':'')+'"'+(pgc?' onclick="goGuide(\''+pgc+'\')"':'')+'>';
       out+='<div class="phase-dot" style="background:'+cn.c+'"></div>';
       out+='<span class="phase-label" style="color:'+cn.c+'">'+cn.f+' '+segs[si].country+'</span>';
+      if(pgc) out+='<i class="ph ph-caret-right phase-caret"></i>';
       out+='</div>';
     }
 
-    out+='<div class="day-wrap"><div class="day-card'+(isToday?' today':'')+(isPast?' past':'')+(isOpen?' open':'')+(d.t==='travel'?' travel-day':'')+'" id="dc'+i+'">';
+    out+='<div class="day-wrap"><div class="day-card'+(isToday?' today':'')+(isPast?' past':'')+(isOpen?' open':'')+(d.t==='travel'?' travel-day':'')+'" style="border-left:3px solid '+CN[segs[si].country].c+'4d" id="dc'+i+'">';
 
     // ── Tap header ──
     out+='<div class="day-tog" onclick="toggleDay('+i+')">';
@@ -2699,9 +2600,7 @@ function renderTimeline(){
       badges.push('<span class="badge b-sky"><i class="ph-fill ph-airplane-in-flight"></i>'+tLbl+'</span>');
     }
     if(d.bus) badges.push('<span class="badge b-sky"><i class="ph-fill ph-bus"></i>'+d.bus.dep+' → '+d.bus.arr+'</span>');
-    if(d.a&&d.r)    badges.push('<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>Booked</span>');
-    else if(d.a&&!d.r) badges.push('<span class="badge b-warn">Unconfirmed</span>');
-    else if(!d.a&&d.t!=='travel'&&d.t!=='home') badges.push('<span class="badge b-warn">Book accomm.</span>');
+    if(d.a) badges.push('<span class="badge b-dim"><i class="ph-fill ph-bed"></i>'+d.a+'</span>');
     if(badges.length) out+='<div class="day-tog-badge">'+badges.join('')+'</div>';
     out+='</div>';
     out+='<i class="ph ph-caret-down day-caret"></i>';
@@ -2763,6 +2662,10 @@ function selCity(c){
   city=c;
   renderGuide();
   try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
+}
+function setGuideTab(k){
+  _guideTab[city]=k;
+  renderGuide();
 }
 function prevCity(){
   var i=CITY_ORDER.indexOf(city);
@@ -2851,7 +2754,6 @@ function renderGuide(){
     out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-map-trifold"></i></div><span class="guide-hdr-label">Explore on map</span>';
     out+='<a class="cap accent" style="margin-left:auto;font-weight:700;display:inline-flex;align-items:center;gap:4px" href="'+gmapsUrl(city,mapItems)+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Open in Maps</a>';
     out+='</div>';
-    out+='<div class="cap mb3" style="color:var(--tx3)">Pins show ideas near your stay — tick off the ones you\'ve done, or open them all in Google Maps to plan a route.</div>';
     out+='<div id="placeMapWrap" style="height:220px;border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--sp3)"><div id="placeMap" style="height:100%"></div></div>';
     out+='<div class="place-list">';
     for(var i=0;i<mapItems.length;i++){
@@ -2865,43 +2767,55 @@ function renderGuide(){
     out+='</div></div>';
   }
 
-  // ── Insider Tips ──
-  if(gu.reviews&&gu.reviews.length){
+  // ── Guide content tabs — Insider Tips + per-category sections, one at a time ──
+  var tabs=[];
+  if(gu.reviews&&gu.reviews.length) tabs.push({k:'reviews',ph:'ph-star',pf:true,l:'Insider Tips'});
+  for(var i=0;i<GSECS.length;i++){
+    var s=GSECS[i];
+    if(gu[s.k]&&gu[s.k].length) tabs.push({k:s.k,ph:s.ph,l:s.l});
+  }
+  if(tabs.length){
+    var activeTab=_guideTab[city];
+    if(!activeTab||!tabs.some(function(t){return t.k===activeTab;})) activeTab=tabs[0].k;
+    out+='<div class="guide-tabs">';
+    for(var i=0;i<tabs.length;i++){
+      var t=tabs[i];
+      out+='<button class="guide-tab'+(t.k===activeTab?' on':'')+'" onclick="setGuideTab(\''+t.k+'\')"><i class="ph'+(t.pf?'-fill':'')+' '+t.ph+'"></i>'+t.l+'</button>';
+    }
+    out+='</div>';
     out+='<div class="guide-sec">';
-    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph-fill ph-star"></i></div><span class="guide-hdr-label">Insider Tips</span></div>';
-    for(var i=0;i<gu.reviews.length;i++){
-      var rv=gu.reviews[i];
-      out+='<div class="review-card">';
-      out+='<div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div>';
-      out+='<div class="review-txt">'+rv.t+'</div>';
-      out+='</div>';
+    if(activeTab==='reviews'){
+      for(var i=0;i<gu.reviews.length;i++){
+        var rv=gu.reviews[i];
+        out+='<div class="review-card">';
+        out+='<div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div>';
+        out+='<div class="review-txt">'+rv.t+'</div>';
+        out+='</div>';
+      }
+    } else {
+      var items=gu[activeTab];
+      for(var j=0;j<items.length;j++){
+        var txt=items[j];
+        var added=ideas[city]&&ideas[city].indexOf(txt)!==-1;
+        out+='<div class="guide-item"><span class="guide-item-txt">'+txt+'</span>';
+        out+='<button class="guide-item-add'+(added?' on':'')+'" onclick="event.stopPropagation();addIdea(\''+city.replace(/'/g,"\\'")+'\',\''+txt.replace(/'/g,"\\'")+'\')"'+(added?' disabled':'')+'><i class="ph'+(added?'-fill ph-check':' ph-plus')+'"></i></button>';
+        out+='</div>';
+      }
     }
     out+='</div>';
   }
 
-  // ── Guide sections ──
-  for(var i=0;i<GSECS.length;i++){
-    var s=GSECS[i];
-    var items=gu[s.k]; if(!items||!items.length) continue;
+  // ── Added to itinerary — ideas saved from the guide sections above ──
+  if(ideas[city]&&ideas[city].length){
     out+='<div class="guide-sec">';
-    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph '+s.ph+'"></i></div><span class="guide-hdr-label">'+s.l+'</span></div>';
-    for(var j=0;j<items.length;j++) out+='<div class="guide-item">'+items[j]+'</div>';
-    out+='</div>';
-  }
-
-  // ── Add to your plans ──
-  var suggs=[];
-  if(gu.mustdo) suggs=suggs.concat(gu.mustdo.slice(0,2));
-  if(gu.food)   suggs=suggs.concat(gu.food.slice(0,2));
-  if(gu.photo)  suggs=suggs.concat(gu.photo.slice(0,1));
-  suggs=suggs.slice(0,4);
-  if(suggs.length){
-    out+='<div class="guide-sec">';
-    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-plus-circle"></i></div><span class="guide-hdr-label">Add to your plans</span></div>';
-    out+='<div class="suggest-grid">';
-    for(var i=0;i<suggs.length;i++){
-      var sg=suggs[i]; if(sg.length>62) sg=sg.substring(0,60)+'…';
-      out+='<button class="suggest-item"><span class="suggest-item-plus">+</span>'+sg+'</button>';
+    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph-fill ph-bookmark-simple"></i></div><span class="guide-hdr-label">Added to itinerary</span></div>';
+    out+='<div class="place-list">';
+    for(var i=0;i<ideas[city].length;i++){
+      var txt=ideas[city][i], ikey=poiKey(city,txt), idone=!!POIS[ikey];
+      out+='<div class="place-item'+(idone?' done':'')+'" onclick="togPoi(\''+ikey.replace(/'/g,"\\'")+'\')">';
+      out+='<div class="pack-chk'+(idone?' on':'')+'"></div>';
+      out+='<div class="grow1"><div class="place-item-title">'+txt+'</div></div>';
+      out+='</div>';
     }
     out+='</div></div>';
   }
@@ -2930,16 +2844,22 @@ function renderGuide(){
 
 /* ─── TO BOOK ────────────────────────────────────────────── */
 function renderBook(){
-  var todoLeft=0; for(var i=0;i<TODO_ITEMS.length;i++) if(!todos[TODO_ITEMS[i].id]) todoLeft++;
-  var openSugg=SUGGESTIONS.filter(function(s){return !booked[s.id];});
-  var doneSugg=SUGGESTIONS.filter(function(s){return booked[s.id];});
-  var totalLeft=todoLeft+openSugg.length;
-  var doneGoals=0; for(var i=0;i<GOALS.length;i++) if(gs[GOALS[i].id]) doneGoals++;
+  var actionItems=[];
+  for(var i=0;i<TODO_ITEMS.length;i++){
+    var td=TODO_ITEMS[i];
+    actionItems.push({id:td.id, t:td.t, city:td.city, note:td.note, link:td.link, done:!!todos[td.id], fn:'togTodo'});
+  }
+  for(var i=0;i<SUGGESTIONS.length;i++){
+    var s=SUGGESTIONS[i];
+    if(addedSuggs[s.id]) actionItems.push({id:s.id, t:s.t, city:s.city, note:s.note, link:s.link, done:!!booked[s.id], fn:'togBooked'});
+  }
+  var actionLeft=0; for(var i=0;i<actionItems.length;i++) if(!actionItems[i].done) actionLeft++;
+  var openSugg=SUGGESTIONS.filter(function(s){return !addedSuggs[s.id];});
 
   var out='<div class="px pt5 pb4">';
   out+='<div class="row between mb2"><span class="head" style="letter-spacing:-.03em">To Book</span>';
-  out+= totalLeft>0
-    ? '<span class="badge b-warn">'+totalLeft+' open</span>'
+  out+= actionLeft>0
+    ? '<span class="badge b-warn">'+actionLeft+' open</span>'
     : '<span class="badge b-ok"><i class="ph-fill ph-check-circle"></i>All sorted</span>';
   out+='</div>';
   out+='<div class="cap" style="color:var(--tx3)">Tickets to lock in, plus ideas worth adding to the trip.</div>';
@@ -2948,18 +2868,18 @@ function renderBook(){
   out+='<div class="px">';
 
   // ── Action list ──
-  if(TODO_ITEMS.length){
-    out+='<div class="row between mb3"><span class="label" style="margin-bottom:0">Action list</span><span class="badge b-warn">'+todoLeft+' left</span></div>';
+  if(actionItems.length){
+    out+='<div class="row between mb3"><span class="label" style="margin-bottom:0">Action list</span><span class="badge b-warn">'+actionLeft+' left</span></div>';
     out+='<div class="card mb4">';
-    for(var i=0;i<TODO_ITEMS.length;i++){
-      var td=TODO_ITEMS[i], tdone=!!todos[td.id];
+    for(var i=0;i<actionItems.length;i++){
+      var it=actionItems[i];
       out+='<div class="list-row">';
-      out+='<div class="pack-chk'+(tdone?' on':'')+'" onclick="togTodo(\''+td.id+'\')"></div>';
+      out+='<div class="pack-chk'+(it.done?' on':'')+'" onclick="'+it.fn+'(\''+it.id+'\')"></div>';
       out+='<div class="grow1">';
-      out+='<div class="pack-lbl'+(tdone?' done':'')+'">'+td.t+'</div>';
-      out+='<div class="cap mt1">'+td.city+' · '+td.note+'</div>';
+      out+='<div class="pack-lbl'+(it.done?' done':'')+'">'+it.t+'</div>';
+      out+='<div class="cap mt1">'+it.city+' · '+it.note+'</div>';
       out+='</div>';
-      out+='<a class="cta-sm" style="margin-top:0" href="'+td.link+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Book</a>';
+      out+='<a class="cta-sm" style="margin-top:0" href="'+it.link+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Book</a>';
       out+='</div>';
     }
     out+='</div>';
@@ -2976,38 +2896,12 @@ function renderBook(){
       out+='<div class="grow1">';
       out+='<div class="pack-lbl">'+s.t+'</div>';
       out+='<div class="cap mt1">'+s.city+' · '+s.note+'</div>';
-      out+='<div class="row gap2 mt2">';
-      out+='<a class="cta-sm" style="margin-top:0" href="'+s.link+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Book now</a>';
-      out+='<button class="cta-sm" style="margin-top:0" onclick="togBooked(\''+s.id+'\')"><i class="ph ph-check"></i>Mark booked</button>';
-      out+='</div>';
+      out+='<button class="cta-sm" style="margin-top:var(--sp2)" onclick="addSuggestion(\''+s.id+'\')"><i class="ph ph-plus-circle"></i>Add to itinerary</button>';
       out+='</div>';
       out+='</div>';
     }
     out+='</div>';
   }
-
-  // ── Booked extras ──
-  if(doneSugg.length){
-    out+='<div class="label mb3">Booked extras</div>';
-    out+='<div class="card mb4">';
-    for(var i=0;i<doneSugg.length;i++){
-      var s=doneSugg[i];
-      out+='<div class="list-row">';
-      out+='<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
-      out+='<div class="grow1"><div class="pack-lbl done">'+s.t+'</div><div class="cap mt1">'+s.city+'</div></div>';
-      out+='<button class="cta-sm" style="margin-top:0" onclick="togBooked(\''+s.id+'\')"><i class="ph ph-arrow-counter-clockwise"></i></button>';
-      out+='</div>';
-    }
-    out+='</div>';
-  }
-
-  // ── Bucket list entry ──
-  out+='<div class="label mb3">More to explore</div>';
-  out+='<div class="card row mb4" onclick="openGoalsSheet()" style="cursor:pointer">';
-  out+='<div class="ico ico-ac"><i class="ph-fill ph-trophy"></i></div>';
-  out+='<div class="grow1"><div class="title">Bucket List</div><div class="cap mt1">'+doneGoals+' / '+GOALS.length+' done · goals & ideas for the trip</div></div>';
-  out+='<i class="ph ph-caret-right" style="color:var(--tx3)"></i>';
-  out+='</div>';
 
   out+='</div>';
   g('pBook').innerHTML=out;
@@ -3135,6 +3029,134 @@ var CONFIRMED_COSTS=[
   {ico:'ph-airplane',t:'IBZ → BCN · Vueling',sub:'Wed 15 Jul · VY3511',eur:102.99},
   {ico:'ph-bed',t:'Wombat\'s Munich (24 Jun)',sub:'€9.56 + €56.41 at property',eur:64.10},
 ];
+/* ─── Bank account (Basiq) ───────────────────────────────── */
+function matchTxnDay(date){
+  for(var i=0;i<DAYS.length;i++) if(DAYS[i].d===date) return DAYS[i];
+  return null;
+}
+function renderBankCard(tB){
+  var connected = localStorage.getItem('lk_bank_connected')==='1';
+  var txns = JSON.parse(localStorage.getItem('lk_bank_txns')||'[]');
+  var syncedAt = localStorage.getItem('lk_bank_synced_at');
+
+  var out='<div class="card mb4" id="bankCard">';
+  out+='<div class="row between mb1"><span class="title">Bank activity</span>';
+  if(connected) out+='<button class="bank-sync-btn" id="bankSyncBtn" onclick="syncBank()"><i class="ph ph-arrows-clockwise"></i>Sync</button>';
+  out+='</div>';
+
+  if(!connected){
+    out+='<div class="cap" style="color:var(--tx2);line-height:1.5;margin:var(--sp2) 0 var(--sp3)">Connect your bank via Basiq (Open Banking) so real transactions line up with your itinerary — your bank login goes straight to your bank, never to this app.</div>';
+    out+='<button class="cta-btn" style="margin-top:0" onclick="connectBank()" id="bankConnectBtn">Connect bank account</button>';
+    out+='<div class="cap mt2" id="bankMsg" style="color:var(--tx3);min-height:14px"></div>';
+    out+='</div>';
+    return out;
+  }
+
+  // Trip-window spend from live bank data — already in AUD, same currency as the budget
+  var tripTxns=[];
+  for(var i=0;i<txns.length;i++){
+    var t=txns[i];
+    if(t.amount<0 && t.date>=DAYS[0].d && t.date<=DAYS[DAYS.length-1].d) tripTxns.push(t);
+  }
+  var spentLive=0; for(var i=0;i<tripTxns.length;i++) spentLive+=Math.abs(tripTxns[i].amount);
+  var remaining = tB-spentLive;
+
+  var ts=TODAY.toISOString().split('T')[0];
+  var tripOn = TODAY>=TS && TODAY<=TE;
+  var daysLeft = tripOn ? Math.max(39-dayNum(ts)+1,0) : 39;
+
+  if(tB>0){
+    var perDay = daysLeft>0 ? remaining/daysLeft : remaining;
+    var ok = remaining>=0;
+    out+='<div class="bank-headroom">';
+    out+='<div class="budget-pace-ico" style="background:'+(ok?'rgba(74,222,128,.13)':'rgba(248,81,73,.13)')+';color:'+(ok?'var(--ok)':'var(--err)')+'"><i class="ph-fill ph-'+(ok?'wallet':'warning-circle')+'"></i></div>';
+    out+='<div class="budget-pace-txt">';
+    out+='<div class="budget-pace-num">A$'+Math.round(spentLive).toLocaleString()+' spent so far (live)</div>';
+    out+='<div class="budget-pace-sub">'+(ok
+      ? 'A$'+Math.round(remaining).toLocaleString()+' left'+(tripOn?' · ≈A$'+Math.round(perDay).toLocaleString()+'/day for '+daysLeft+' day'+(daysLeft===1?'':'s')+' to go — room for extras':'')
+      : 'A$'+Math.round(Math.abs(remaining)).toLocaleString()+' over your trip budget so far')+'</div>';
+    out+='</div></div>';
+  }
+
+  // Per-city breakdown for days that have passed
+  var byCity={}, cityOrder=[];
+  for(var i=0;i<tripTxns.length;i++){
+    var day=matchTxnDay(tripTxns[i].date);
+    var c=day?day.c:'Other';
+    if(!byCity[c]){ byCity[c]=0; cityOrder.push(c); }
+    byCity[c]+=Math.abs(tripTxns[i].amount);
+  }
+  if(cityOrder.length){
+    out+='<div class="label mb2 mt3">By city</div>';
+    for(var i=0;i<cityOrder.length;i++){
+      out+='<div class="row between" style="padding:4px 0"><span class="cap">'+cityOrder[i]+'</span><span class="cap" style="font-weight:700">A$'+Math.round(byCity[cityOrder[i]]).toLocaleString()+'</span></div>';
+    }
+  }
+
+  // Recent transactions
+  if(txns.length){
+    out+='<div class="label mb2 mt3">Recent transactions</div>';
+    var recent=txns.slice(0,12);
+    for(var i=0;i<recent.length;i++){
+      var t=recent[i];
+      var day=matchTxnDay(t.date);
+      var tagTxt = day ? day.c+' · '+fmtShort(t.date) : fmtShort(t.date);
+      var credit=t.amount>=0;
+      out+='<div class="bank-txn-row">';
+      out+='<div class="bank-txn-desc"><div class="bank-txn-title">'+t.description+'</div><div class="bank-txn-meta">'+tagTxt+'</div></div>';
+      out+='<div class="bank-txn-amt" style="color:'+(credit?'var(--ok)':'var(--tx)')+'">'+(credit?'+':'−')+'A$'+Math.abs(t.amount).toFixed(2)+'</div>';
+      out+='</div>';
+    }
+  } else {
+    out+='<div class="cap mt3" style="color:var(--tx3)">No transactions synced yet — tap Sync.</div>';
+  }
+
+  if(syncedAt){
+    out+='<div class="cap mt3" style="color:var(--tx3)">Last synced '+new Date(syncedAt).toLocaleString('en-AU',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})+'</div>';
+  }
+
+  out+='</div>';
+  return out;
+}
+function connectBank(){
+  var btn=g('bankConnectBtn'), msg=g('bankMsg');
+  if(btn){ btn.disabled=true; btn.textContent='Connecting…'; }
+  fetch('/api/basiq-connect-link').then(function(r){return r.json();}).then(function(data){
+    if(data.error){
+      if(msg) msg.textContent='Could not start bank connection — check the server is configured.';
+      if(btn){ btn.disabled=false; btn.textContent='Connect bank account'; }
+      return;
+    }
+    window.open(data.url,'_blank');
+    if(msg) msg.textContent='Complete the steps in the new tab, then come back and tap the button below.';
+    if(btn){
+      btn.disabled=false; btn.textContent="I've connected my bank";
+      btn.onclick=finishBankConnect;
+    }
+  }).catch(function(){
+    if(msg) msg.textContent='Network error — try again.';
+    if(btn){ btn.disabled=false; btn.textContent='Connect bank account'; }
+  });
+}
+function finishBankConnect(){
+  localStorage.setItem('lk_bank_connected','1');
+  renderBudget();
+  syncBank();
+}
+function syncBank(){
+  var btn=g('bankSyncBtn');
+  if(btn) btn.classList.add('spin');
+  fetch('/api/basiq-transactions').then(function(r){return r.json();}).then(function(data){
+    if(btn) btn.classList.remove('spin');
+    if(data.error) return;
+    localStorage.setItem('lk_bank_txns', JSON.stringify(data.transactions||[]));
+    localStorage.setItem('lk_bank_synced_at', new Date().toISOString());
+    renderBudget();
+  }).catch(function(){
+    if(btn) btn.classList.remove('spin');
+  });
+}
+
 function renderBudget(){
   fetchXR();
   // Compute logged totals per category (in EUR, as logged on the trip)
@@ -3180,6 +3202,9 @@ function renderBudget(){
         : 'Set a trip budget below to see if you\'re on pace'))+'</div>';
     out+='</div></div>';
   }
+
+  // Live bank activity (Basiq)
+  out+=renderBankCard(tB);
 
   // Confirmed costs
   out+='<div class="label mb3">Confirmed from bookings</div>';
