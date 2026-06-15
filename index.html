@@ -1151,6 +1151,15 @@ body.build-on .insp-banner { display:flex; }
   border-radius:6px; transition:all .15s ease;
 }
 
+.insp-preview {
+  position:relative; display:flex; align-items:flex-start; justify-content:center;
+  min-height:64px; max-height:170px; overflow:hidden;
+  margin-bottom:var(--sp3); padding:var(--sp2);
+  border:2px solid var(--ac); border-radius:var(--r-md);
+  background:rgba(242,100,25,.08);
+}
+.insp-preview, .insp-preview * { pointer-events:none!important; }
+
 .insp-note-target {
   background:var(--s2); border:1px solid var(--bd);
   border-radius:var(--r-md); padding:var(--sp3) var(--sp4);
@@ -1361,6 +1370,7 @@ superballs.register();
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="sheet-handle"></div>
     <div class="sheet-title" style="text-align:left;margin-bottom:var(--sp3)">What needs to change?</div>
+    <div class="insp-preview" id="inspPreview"></div>
     <div class="insp-note-target" id="inspNoteTarget"></div>
 
     <div class="insp-crit-wrap" id="inspCritique"></div>
@@ -3332,6 +3342,7 @@ var inspOriginal = {};
 var inspEditCurrent = {};
 var inspEdits = {};
 var inspCritiqueCache = [];
+var inspPreviewClone = null;
 var EDIT_PROPS = [
   {key:'fontSize', label:'Text size', step:1, min:8, max:48},
   {key:'padding', label:'Spacing', step:4, min:0, max:48},
@@ -3453,6 +3464,16 @@ function critiqueElement(el){
   return out;
 }
 
+function sanitizePreview(node){
+  if(node.nodeType!==1) return;
+  node.removeAttribute('id');
+  for(var i=node.attributes.length-1;i>=0;i--){
+    var a=node.attributes[i];
+    if(/^on/i.test(a.name)) node.removeAttribute(a.name);
+  }
+  for(var i=0;i<node.children.length;i++) sanitizePreview(node.children[i]);
+}
+
 function captureOriginal(el){
   var cs=getComputedStyle(el);
   return {
@@ -3499,9 +3520,11 @@ function stepEdit(key, delta){
   inspEditCurrent[key] = next;
   if(next === inspOriginal[key]){
     inspCurrentEl.style[key] = '';
+    if(inspPreviewClone) inspPreviewClone.style[key] = '';
     delete inspEdits[key];
   } else {
     inspCurrentEl.style[key] = next+'px';
+    if(inspPreviewClone) inspPreviewClone.style[key] = next+'px';
     inspEdits[key] = { from: inspOriginal[key]+'px', to: next+'px' };
   }
   refreshEditUI();
@@ -3510,12 +3533,14 @@ function stepEdit(key, delta){
 function setEditColor(varVal, label){
   if(!inspCurrentEl) return;
   inspCurrentEl.style.color = varVal;
+  if(inspPreviewClone) inspPreviewClone.style.color = varVal;
   inspEdits.color = { from: inspOriginal.color, to: label };
   refreshEditUI();
 }
 function resetEditColor(){
   if(!inspCurrentEl) return;
   inspCurrentEl.style.color = '';
+  if(inspPreviewClone) inspPreviewClone.style.color = '';
   delete inspEdits.color;
   refreshEditUI();
 }
@@ -3524,9 +3549,11 @@ function resetEdits(){
   if(!inspCurrentEl) return;
   EDIT_PROPS.forEach(function(p){
     inspCurrentEl.style[p.key]='';
+    if(inspPreviewClone) inspPreviewClone.style[p.key]='';
     inspEditCurrent[p.key]=inspOriginal[p.key];
   });
   inspCurrentEl.style.color='';
+  if(inspPreviewClone) inspPreviewClone.style.color='';
   inspEdits={};
   refreshEditUI();
 }
@@ -3546,6 +3573,15 @@ function handleInspectClick(e){
   var hl = g('inspHighlight');
   hl.style.display = 'block';
 
+  var prevWrap = g('inspPreview');
+  prevWrap.innerHTML = '';
+  inspPreviewClone = inspCurrentEl.cloneNode(true);
+  sanitizePreview(inspPreviewClone);
+  var pr = inspCurrentEl.getBoundingClientRect();
+  if(pr.width>0) inspPreviewClone.style.width = pr.width+'px';
+  inspPreviewClone.style.flexShrink = '0';
+  prevWrap.appendChild(inspPreviewClone);
+
   var t = g('inspNoteTarget');
   t.innerHTML = '<b>'+inspCurrentTarget.selector+'</b>'
     + (inspCurrentTarget.screen ? ' · '+inspCurrentTarget.screen : '')
@@ -3562,6 +3598,8 @@ function handleInspectClick(e){
 function closeInspectNote(){
   g('inspNoteOvl').classList.remove('on');
   g('inspHighlight').style.display = 'none';
+  g('inspPreview').innerHTML = '';
+  inspPreviewClone = null;
 }
 
 function addInspectNote(){
