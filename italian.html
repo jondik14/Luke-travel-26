@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Italiano">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d0d">
+<title>Italiano · Flashcards</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:#0d0d0d;height:100%;-webkit-text-size-adjust:100%}
+::-webkit-scrollbar{display:none}
+*{scrollbar-width:none;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#0d0d0d; --s1:#181818; --s2:#222; --s3:#2d2d2d;
+  --tx:#f0ede8; --tx2:#888; --tx3:#484848;
+  --bd:rgba(255,255,255,.07); --bd2:rgba(255,255,255,.13);
+  --ac:#F26419; --ac-dim:rgba(242,100,25,.13); --ac-tx:#F58A50;
+  --ok:#4ade80; --ok-dim:rgba(74,222,128,.12);
+  --warn:#fbbf24; --warn-dim:rgba(251,191,36,.12);
+  --err:#f87171; --err-dim:rgba(248,113,113,.12);
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif;
+  --spring:linear(0,.009,.035 2.1%,.141 4.4%,.723 12.4%,.938 16%,1.017,1.06,1.076 22.3%,1.07 24%,1.013 27.3%,.992 29.2%,.977 31.5%,.975 33%,.984 36.8%,1.001 40%,1.006 43.3%,1 50%);
+}
+
+body{
+  font-family:var(--font);background:var(--bg);color:var(--tx);
+  max-width:430px;margin:0 auto;
+  min-height:100vh;min-height:100dvh;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+button{font-family:var(--font);cursor:pointer;border:none;background:none;color:inherit}
+
+/* ── Screens ──────────────────────────────────────────── */
+.scr{display:none;flex-direction:column;min-height:100vh;min-height:100dvh;overflow-y:auto}
+.scr.on{display:flex}
+
+/* ── Home header ──────────────────────────────────────── */
+.home-top{
+  padding:calc(env(safe-area-inset-top,0px) + 18px) 20px 0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.home-eyebrow{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:3px}
+.home-title{font-size:20px;font-weight:900;letter-spacing:-.03em}
+.home-title span{color:var(--ac)}
+
+.streak-pill{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 14px;border-radius:999px;
+  background:var(--warn-dim);border:1px solid rgba(251,191,36,.2);
+  font-size:14px;font-weight:800;color:var(--warn);
+  letter-spacing:-.01em;
+}
+
+/* ── Stats row ────────────────────────────────────────── */
+.stats-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+  padding:20px 20px 0;
+}
+.stat-card{
+  background:var(--s1);border:1px solid var(--bd);
+  border-radius:16px;padding:14px 10px;text-align:center;
+}
+.stat-val{font-size:24px;font-weight:900;letter-spacing:-.04em;color:var(--ac);line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tx3)}
+
+/* ── Main CTA ─────────────────────────────────────────── */
+.cta-wrap{padding:14px 20px 0}
+.study-cta{
+  width:100%;
+  background:var(--ac);color:#fff;
+  border-radius:18px;padding:20px 24px;
+  font-size:17px;font-weight:800;letter-spacing:-.01em;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:transform .25s var(--spring),opacity .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.study-cta:active{transform:scale(.97);opacity:.9}
+.study-cta.dim{opacity:.45;pointer-events:none}
+.cta-arrow{font-size:22px;opacity:.8}
+
+/* ── Section label ────────────────────────────────────── */
+.sec-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tx3);padding:22px 20px 12px;
+}
+
+/* ── Category grid ────────────────────────────────────── */
+.cat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  padding:0 20px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px);
+}
+.cat-card{
+  background:var(--s1);border:1px solid var(--bd);
+  border-radius:16px;padding:14px 12px;
+  display:flex;flex-direction:column;gap:5px;
+  cursor:pointer;min-height:100px;
+  transition:transform .25s var(--spring),background .15s,border-color .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.cat-card:active{transform:scale(.93);background:var(--s2)}
+.cat-card.has-due{border-color:rgba(242,100,25,.35);background:rgba(242,100,25,.07)}
+.cat-em{font-size:28px;line-height:1}
+.cat-name{font-size:11px;font-weight:700;color:var(--tx);line-height:1.3}
+.cat-prog{font-size:10px;color:var(--tx3);font-weight:600}
+.cat-due-badge{
+  display:inline-flex;align-items:center;
+  font-size:10px;font-weight:800;color:var(--ac);letter-spacing:.02em;
+  margin-top:1px;
+}
+
+/* ── Science note ─────────────────────────────────────── */
+.science-note{
+  margin:0 20px 20px;
+  background:var(--s1);border:1px solid var(--bd);
+  border-radius:14px;padding:14px 16px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.science-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.science-text{font-size:12px;color:var(--tx2);line-height:1.6}
+.science-text strong{color:var(--tx);font-weight:700}
+
+/* ── Study header ─────────────────────────────────────── */
+.study-hdr{
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px;
+  display:flex;align-items:center;gap:14px;flex-shrink:0;
+}
+.back-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--s1);border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:var(--tx2);flex-shrink:0;
+  transition:transform .25s var(--spring),background .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.back-btn:active{transform:scale(.88);background:var(--s2)}
+
+.prog-rail{flex:1;height:6px;background:var(--s3);border-radius:999px;overflow:hidden}
+.prog-fill{height:100%;background:var(--ac);border-radius:999px;transition:width .4s ease}
+.prog-lbl{font-size:12px;font-weight:700;color:var(--tx2);flex-shrink:0;min-width:40px;text-align:right}
+
+/* ── Card ─────────────────────────────────────────────── */
+.card-scene{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:12px 20px;perspective:1200px;
+  cursor:pointer;-webkit-user-select:none;user-select:none;
+}
+.card-wrap{
+  width:100%;height:300px;
+  position:relative;
+  transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.4,0,.2,1);
+}
+.card-wrap.flipped{transform:rotateY(180deg)}
+
+.card-face{
+  position:absolute;inset:0;border-radius:24px;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 24px;gap:12px;
+  background:var(--s1);border:1px solid var(--bd2);
+}
+.card-back{transform:rotateY(180deg)}
+
+/* Card badges */
+.card-badge{
+  position:absolute;top:16px;left:16px;
+  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:4px 11px;border-radius:999px;
+  background:var(--ac-dim);color:var(--ac);border:1px solid rgba(242,100,25,.22);
+}
+.card-new-badge{
+  position:absolute;top:16px;right:16px;
+  font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;
+  background:var(--s3);color:var(--tx3);
+}
+
+/* Front face content */
+.card-word{
+  font-size:clamp(28px,8vw,42px);
+  font-weight:900;letter-spacing:-.03em;
+  text-align:center;color:var(--tx);line-height:1.1;
+}
+.card-pron{
+  font-size:14px;color:var(--tx3);font-style:italic;font-weight:500;text-align:center;
+}
+.tap-hint{
+  position:absolute;bottom:18px;
+  font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.05em;
+  text-transform:uppercase;
+  animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* Back face content */
+.card-en{
+  font-size:clamp(20px,5.5vw,30px);
+  font-weight:900;letter-spacing:-.02em;
+  text-align:center;color:var(--ok);line-height:1.2;
+}
+.card-pron-back{
+  font-size:13px;color:var(--tx2);font-style:italic;font-weight:600;text-align:center;
+}
+.card-divider{width:100%;height:1px;background:var(--bd);margin:4px 0}
+.card-eg{
+  font-size:13px;color:var(--tx2);text-align:center;line-height:1.65;font-style:italic;
+}
+.card-eg-label{
+  font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--tx3);margin-bottom:6px;font-style:normal;
+}
+
+/* ── Answer buttons ───────────────────────────────────── */
+.answer-wrap{
+  padding:12px 20px calc(env(safe-area-inset-bottom,0px) + 20px);
+  flex-shrink:0;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s ease;
+}
+.answer-wrap.show{opacity:1;pointer-events:auto}
+.answer-hint{
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--tx3);text-align:center;margin-bottom:10px;
+}
+.answer-row{display:flex;gap:10px}
+.answer-btn{
+  flex:1;height:60px;border-radius:16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  transition:transform .25s var(--spring),opacity .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.answer-btn:active{transform:scale(.92);opacity:.8}
+.ab-icon{font-size:20px;line-height:1}
+.ab-lbl{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+
+.btn-miss{background:var(--err-dim);color:var(--err);border:1px solid rgba(248,113,113,.2)}
+.btn-almost{background:var(--warn-dim);color:var(--warn);border:1px solid rgba(251,191,36,.2)}
+.btn-got{flex:1.5;background:var(--ok-dim);color:var(--ok);border:1px solid rgba(74,222,128,.2)}
+
+/* ── Done screen ──────────────────────────────────────── */
+.done-inner{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px calc(env(safe-area-inset-bottom,0px) + 40px);
+  text-align:center;
+}
+.done-em{
+  font-size:72px;line-height:1;margin-bottom:24px;
+  animation:pop .5s var(--spring) both;
+}
+@keyframes pop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+.done-title{font-size:30px;font-weight:900;letter-spacing:-.04em;margin-bottom:8px}
+.done-sub{font-size:14px;color:var(--tx2);line-height:1.65;margin-bottom:32px;max-width:300px}
+
+.done-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;width:100%;margin-bottom:32px}
+.done-stat{background:var(--s1);border:1px solid var(--bd);border-radius:16px;padding:16px 8px}
+.done-stat-val{font-size:26px;font-weight:900;letter-spacing:-.04em;line-height:1;margin-bottom:5px}
+.done-stat-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3)}
+
+.done-btn{
+  width:100%;height:58px;background:var(--ac);color:#fff;
+  border-radius:18px;font-size:17px;font-weight:800;
+  transition:transform .25s var(--spring),opacity .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.done-btn:active{transform:scale(.97);opacity:.9}
+
+/* ── Reduced motion ───────────────────────────────────── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     HOME
+════════════════════════════════════════════════════════ -->
+<div id="sHome" class="scr on">
+
+  <div class="home-top">
+    <div>
+      <div class="home-eyebrow">Italy survival kit</div>
+      <div class="home-title">🇮🇹 <span>Italiano</span></div>
+    </div>
+    <div class="streak-pill" id="streakPill">🔥 0</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="statLearned">0</div>
+      <div class="stat-lbl">Learned</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statDue">0</div>
+      <div class="stat-lbl">Due today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statNew">0</div>
+      <div class="stat-lbl">New</div>
+    </div>
+  </div>
+
+  <div class="cta-wrap">
+    <button class="study-cta" id="ctaMain" onclick="startSession(null)">
+      <span id="ctaText">Start learning</span>
+      <span class="cta-arrow">→</span>
+    </button>
+  </div>
+
+  <div class="science-note">
+    <span class="science-icon">🧠</span>
+    <div class="science-text">
+      <strong>Spaced repetition</strong> — cards you struggle with come back sooner, ones you nail get spaced out.
+      The same algorithm used by Anki &amp; medical students worldwide.
+    </div>
+  </div>
+
+  <div class="sec-lbl">Study by topic</div>
+  <div class="cat-grid" id="catGrid"></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     STUDY
+════════════════════════════════════════════════════════ -->
+<div id="sStudy" class="scr">
+
+  <div class="study-hdr">
+    <button class="back-btn" onclick="exitStudy()">✕</button>
+    <div class="prog-rail">
+      <div class="prog-fill" id="progFill" style="width:0%"></div>
+    </div>
+    <div class="prog-lbl" id="progLbl">0 / 0</div>
+  </div>
+
+  <div class="card-scene" id="cardScene" onclick="flipCard()">
+    <div class="card-wrap" id="cardWrap">
+
+      <!-- Front -->
+      <div class="card-face card-front">
+        <div class="card-badge" id="cardBadge">—</div>
+        <div class="card-new-badge" id="newBadge" style="display:none">NEW</div>
+        <div class="card-word" id="cardWord">—</div>
+        <div class="card-pron" id="cardPron">—</div>
+        <div class="tap-hint" id="tapHint">Tap to reveal</div>
+      </div>
+
+      <!-- Back -->
+      <div class="card-face card-back">
+        <div class="card-badge" id="cardBadge2">—</div>
+        <div class="card-en" id="cardEn">—</div>
+        <div class="card-pron-back" id="cardPronBack">—</div>
+        <div class="card-divider"></div>
+        <div style="text-align:center">
+          <div class="card-eg-label">Example</div>
+          <div class="card-eg" id="cardEg">—</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="answer-wrap" id="answerWrap">
+    <div class="answer-hint">How well did you know it?</div>
+    <div class="answer-row">
+      <button class="answer-btn btn-miss" onclick="answer(1)">
+        <span class="ab-icon">✕</span>
+        <span class="ab-lbl">Missed</span>
+      </button>
+      <button class="answer-btn btn-almost" onclick="answer(3)">
+        <span class="ab-icon">≈</span>
+        <span class="ab-lbl">Almost</span>
+      </button>
+      <button class="answer-btn btn-got" onclick="answer(5)">
+        <span class="ab-icon">✓</span>
+        <span class="ab-lbl">Got it!</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════
+     DONE
+════════════════════════════════════════════════════════ -->
+<div id="sDone" class="scr">
+  <div class="done-inner">
+    <div class="done-em" id="doneEm">🎉</div>
+    <div class="done-title">Session done!</div>
+    <div class="done-sub" id="doneSub">—</div>
+
+    <div class="done-stats">
+      <div class="done-stat">
+        <div class="done-stat-val" id="doneTotal" style="color:var(--ac)">0</div>
+        <div class="done-stat-lbl">Reviewed</div>
+      </div>
+      <div class="done-stat">
+        <div class="done-stat-val" id="doneGot" style="color:var(--ok)">0</div>
+        <div class="done-stat-lbl">Knew it</div>
+      </div>
+      <div class="done-stat">
+        <div class="done-stat-val" id="doneMissed" style="color:var(--err)">0</div>
+        <div class="done-stat-lbl">Missed</div>
+      </div>
+    </div>
+
+    <button class="done-btn" onclick="goHome()">Back home →</button>
+  </div>
+</div>
+
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════
+   VOCABULARY DATA — 100 travel-essential Italian words
+═══════════════════════════════════════════════════════════ */
+
+var CATS = {
+  basics:    {name:'Basics',     em:'🤝'},
+  food:      {name:'Food',       em:'🍕'},
+  directions:{name:'Directions', em:'🗺️'},
+  transport: {name:'Transport',  em:'🚆'},
+  stay:      {name:'Stay',       em:'🏨'},
+  shop:      {name:'Shopping',   em:'🛍️'},
+  emergency: {name:'Emergency',  em:'🚨'},
+  numbers:   {name:'Numbers',    em:'🔢'},
+  time:      {name:'Time',       em:'⏰'},
+};
+
+var WORDS = [
+  // BASICS (15)
+  {id:0,  cat:'basics', it:'Ciao',            en:'Hello / Bye',           pron:'cha-oh',              eg:'Ciao! Come stai?'},
+  {id:1,  cat:'basics', it:'Buongiorno',      en:'Good morning',          pron:'bwon-JOR-no',         eg:'Buongiorno! Un caffè, per favore.'},
+  {id:2,  cat:'basics', it:'Buonasera',       en:'Good evening',          pron:'bwon-ah-SAY-rah',     eg:'Buonasera! Ha un tavolo libero?'},
+  {id:3,  cat:'basics', it:'Per favore',      en:'Please',                pron:'pair fah-VOH-ray',    eg:"Un'acqua, per favore."},
+  {id:4,  cat:'basics', it:'Grazie',          en:'Thank you',             pron:'GRAT-syeh',           eg:'Grazie mille!'},
+  {id:5,  cat:'basics', it:'Prego',           en:"You're welcome",        pron:'PRAY-go',             eg:'"Grazie!" "Prego!"'},
+  {id:6,  cat:'basics', it:'Scusa',           en:'Excuse me / Sorry',     pron:'SKOO-zah',            eg:"Scusa, dov'è il bagno?"},
+  {id:7,  cat:'basics', it:'Mi dispiace',     en:"I'm sorry",             pron:'mee dis-PYAH-chay',   eg:'Mi dispiace, non capisco.'},
+  {id:8,  cat:'basics', it:'Sì',              en:'Yes',                   pron:'see',                 eg:'Sì, grazie!'},
+  {id:9,  cat:'basics', it:'No',              en:'No',                    pron:'no',                  eg:'No, grazie.'},
+  {id:10, cat:'basics', it:'Non capisco',     en:"I don't understand",    pron:'non kah-PEES-ko',     eg:'Scusa, non capisco. Parla più lento?'},
+  {id:11, cat:'basics', it:'Parla inglese?',  en:'Do you speak English?', pron:'PAR-lah in-GLAY-zay', eg:'Parla inglese? Non parlo italiano bene.'},
+  {id:12, cat:'basics', it:'Quanto costa?',   en:'How much is it?',       pron:'KWAN-toh KOS-tah',    eg:'Quanto costa questo?'},
+  {id:13, cat:'basics', it:"Dov'è...?",       en:'Where is...?',          pron:'doh-VEH',             eg:"Dov'è la stazione?"},
+  {id:14, cat:'basics', it:'Basta',           en:'That\'s enough / Stop', pron:'BAS-tah',             eg:'Basta, grazie!'},
+
+  // FOOD & DRINK (16)
+  {id:15, cat:'food', it:'Acqua',             en:'Water',                 pron:'AH-kwah',             eg:"Un'acqua naturale, per favore."},
+  {id:16, cat:'food', it:'Vino',              en:'Wine',                  pron:'VEE-no',              eg:'Un bicchiere di vino rosso.'},
+  {id:17, cat:'food', it:'Birra',             en:'Beer',                  pron:'BEER-rah',            eg:'Una birra alla spina, per favore.'},
+  {id:18, cat:'food', it:'Caffè',             en:'Coffee',                pron:'kah-FEH',             eg:'Un caffè, per favore.'},
+  {id:19, cat:'food', it:'Pane',              en:'Bread',                 pron:'PAH-nay',             eg:'Posso avere del pane?'},
+  {id:20, cat:'food', it:'Il conto',          en:'The bill',              pron:'eel KON-toh',         eg:'Il conto, per favore!'},
+  {id:21, cat:'food', it:'Un tavolo',         en:'A table',               pron:'oon TAH-vo-lo',       eg:'Un tavolo per due, per favore.'},
+  {id:22, cat:'food', it:'Menù',              en:'Menu',                  pron:'meh-NOO',             eg:'Posso vedere il menù?'},
+  {id:23, cat:'food', it:'Vegetariano',       en:'Vegetarian',            pron:'veh-jeh-tah-RYAH-no', eg:'Avete piatti vegetariani?'},
+  {id:24, cat:'food', it:'Senza glutine',     en:'Gluten free',           pron:'SEN-tsah GLOO-tee-nay',eg:'È senza glutine?'},
+  {id:25, cat:'food', it:'Allergia',          en:'Allergy',               pron:'ah-lair-JEE-ah',      eg:"Ho un'allergia alle noci."},
+  {id:26, cat:'food', it:'Delizioso',         en:'Delicious',             pron:'deh-leet-SYOH-zo',    eg:'Questo è delizioso!'},
+  {id:27, cat:'food', it:'Cameriere',         en:'Waiter',                pron:'kah-mair-YEH-ray',    eg:'Cameriere! Il conto, per favore.'},
+  {id:28, cat:'food', it:'Antipasto',         en:'Starter',               pron:'an-tee-PAS-toh',      eg:'Come antipasto, vorrei il prosciutto.'},
+  {id:29, cat:'food', it:'Dolce',             en:'Dessert / Sweet',       pron:'DOL-chay',            eg:'Per dolce, un tiramisù per favore.'},
+  {id:30, cat:'food', it:'Prenotazione',      en:'Reservation',           pron:'preh-no-tat-SYOH-nay',eg:'Ho una prenotazione per le 20:00.'},
+
+  // DIRECTIONS (12)
+  {id:31, cat:'directions', it:'A sinistra',  en:'To the left',           pron:'ah see-NEES-trah',    eg:'Gira a sinistra alla piazza.'},
+  {id:32, cat:'directions', it:'A destra',    en:'To the right',          pron:'ah DES-trah',         eg:'La stazione è a destra.'},
+  {id:33, cat:'directions', it:'Dritto',      en:'Straight ahead',        pron:'DREET-toh',           eg:'Vai dritto per 200 metri.'},
+  {id:34, cat:'directions', it:'Gira',        en:'Turn',                  pron:'JEE-rah',             eg:'Gira a destra al semaforo.'},
+  {id:35, cat:'directions', it:'Qui',         en:'Here',                  pron:'KWEE',                eg:'Fermati qui, per favore.'},
+  {id:36, cat:'directions', it:'Lì',          en:'There',                 pron:'lee',                 eg:'Il ristorante è lì.'},
+  {id:37, cat:'directions', it:'Lontano',     en:'Far away',              pron:'lon-TAH-no',          eg:'È lontano? Posso andare a piedi?'},
+  {id:38, cat:'directions', it:'Vicino',      en:'Near / Close',          pron:'vee-CHEE-no',         eg:'È vicino alla stazione.'},
+  {id:39, cat:'directions', it:'Strada',      en:'Street / Road',         pron:'STRAH-dah',           eg:'Qual è questa strada?'},
+  {id:40, cat:'directions', it:'Piazza',      en:'Square / Plaza',        pron:'PYAT-tsah',           eg:'Ci troviamo in piazza?'},
+  {id:41, cat:'directions', it:'Centro',      en:'City centre',           pron:'CHEN-tro',            eg:'Come arrivo al centro?'},
+  {id:42, cat:'directions', it:'Mi sono perso', en:"I'm lost",            pron:'mee SOH-no PAIR-so',  eg:'Mi sono perso. Può aiutarmi?'},
+
+  // TRANSPORT (12)
+  {id:43, cat:'transport', it:'Treno',        en:'Train',                 pron:'TRAY-no',             eg:'A che ora parte il treno?'},
+  {id:44, cat:'transport', it:'Autobus',      en:'Bus',                   pron:'OW-toh-boos',         eg:"Dov'è la fermata dell'autobus?"},
+  {id:45, cat:'transport', it:'Taxi',         en:'Taxi',                  pron:'TAH-ksee',            eg:'Può chiamarmi un taxi?'},
+  {id:46, cat:'transport', it:'Aeroporto',    en:'Airport',               pron:'ah-ay-ro-POR-toh',    eg:"Come arrivo all'aeroporto?"},
+  {id:47, cat:'transport', it:'Biglietto',    en:'Ticket',                pron:'beel-YET-toh',        eg:'Un biglietto per Roma, per favore.'},
+  {id:48, cat:'transport', it:'Binario',      en:'Platform',              pron:'bee-NAH-ryoh',        eg:'Da quale binario parte il treno?'},
+  {id:49, cat:'transport', it:'Quando parte?',en:'When does it leave?',   pron:'KWAN-doh PAR-tay',   eg:'Quando parte il prossimo treno?'},
+  {id:50, cat:'transport', it:'Fermata',      en:'Stop',                  pron:'fair-MAH-tah',        eg:'È la prossima fermata?'},
+  {id:51, cat:'transport', it:'Metro',        en:'Metro / Subway',        pron:'MET-roh',             eg:"Dov'è la stazione della metro?"},
+  {id:52, cat:'transport', it:'Andata e ritorno',en:'Return ticket',      pron:'an-DAH-tah ay ree-TOR-no',eg:'Un biglietto andata e ritorno.'},
+  {id:53, cat:'transport', it:'In ritardo',   en:'Delayed / Late',        pron:'in ree-TAR-doh',      eg:'Il treno è in ritardo di 20 minuti.'},
+  {id:54, cat:'transport', it:'Stazione',     en:'Station',               pron:'stat-SYOH-nay',       eg:"Dov'è la stazione centrale?"},
+
+  // STAY (8)
+  {id:55, cat:'stay', it:'Camera',            en:'Room',                  pron:'KAH-meh-rah',         eg:'Ho prenotato una camera doppia.'},
+  {id:56, cat:'stay', it:'Bagno',             en:'Bathroom',              pron:'BAH-nyo',             eg:"Dov'è il bagno?"},
+  {id:57, cat:'stay', it:'Chiave',            en:'Key',                   pron:'KYAH-vay',            eg:'Posso avere la chiave della camera?'},
+  {id:58, cat:'stay', it:'Colazione',         en:'Breakfast',             pron:'ko-lat-SYOH-nay',     eg:'La colazione è inclusa?'},
+  {id:59, cat:'stay', it:'Ascensore',         en:'Lift / Elevator',       pron:'ah-shen-SOH-ray',     eg:"Dov'è l'ascensore?"},
+  {id:60, cat:'stay', it:'Piano',             en:'Floor',                 pron:'PYAH-no',             eg:'Sono al secondo piano.'},
+  {id:61, cat:'stay', it:'Wi-Fi',             en:'Wi-Fi password',        pron:'wee-FEE',             eg:'Qual è la password del Wi-Fi?'},
+  {id:62, cat:'stay', it:'Check-out',         en:'Check out',             pron:'chek-owt',            eg:'A che ora è il check-out?'},
+
+  // SHOPPING (9)
+  {id:63, cat:'shop', it:'Caro',              en:'Expensive',             pron:'KAH-ro',              eg:'È troppo caro per me.'},
+  {id:64, cat:'shop', it:'Economico',         en:'Cheap / Affordable',    pron:'eh-ko-NOH-mee-ko',    eg:'Avete qualcosa di più economico?'},
+  {id:65, cat:'shop', it:'Vorrei...',         en:'I would like...',       pron:'vor-RAY',             eg:'Vorrei questo, per favore.'},
+  {id:66, cat:'shop', it:'Contanti',          en:'Cash',                  pron:'kon-TAN-tee',         eg:'Pago in contanti.'},
+  {id:67, cat:'shop', it:'Carta',             en:'Card (payment)',        pron:'KAR-tah',             eg:'Accettate la carta?'},
+  {id:68, cat:'shop', it:'Mercato',           en:'Market',                pron:'mair-KAH-toh',        eg:'A che ora apre il mercato?'},
+  {id:69, cat:'shop', it:'Aperto',            en:'Open',                  pron:'ah-PAIR-toh',         eg:'Il negozio è aperto?'},
+  {id:70, cat:'shop', it:'Chiuso',            en:'Closed',                pron:'KYOO-zo',             eg:'Mi dispiace, siamo chiusi.'},
+  {id:71, cat:'shop', it:'Sconto',            en:'Discount',              pron:'SKON-toh',            eg:"C'è uno sconto?"},
+
+  // EMERGENCY (7)
+  {id:72, cat:'emergency', it:'Aiuto!',       en:'Help!',                 pron:'ah-YOO-toh',          eg:'Aiuto! Ho bisogno di aiuto!'},
+  {id:73, cat:'emergency', it:'Dottore',      en:'Doctor',                pron:'dot-TOH-ray',         eg:'Ho bisogno di un dottore.'},
+  {id:74, cat:'emergency', it:'Polizia',      en:'Police',                pron:'po-LEET-syah',        eg:'Chiamate la polizia!'},
+  {id:75, cat:'emergency', it:'Farmacia',     en:'Pharmacy',              pron:'far-mah-CHEE-ah',     eg:"Dov'è la farmacia più vicina?"},
+  {id:76, cat:'emergency', it:'Ospedale',     en:'Hospital',              pron:'os-peh-DAH-lay',      eg:"Mi porti all'ospedale, per favore."},
+  {id:77, cat:'emergency', it:'Ambulanza',    en:'Ambulance',             pron:'am-boo-LAN-tsah',     eg:"Chiamate un'ambulanza!"},
+  {id:78, cat:'emergency', it:'Sto male',     en:"I don't feel well",     pron:'stoh MAH-lay',        eg:'Sto male. Ho bisogno di aiuto.'},
+
+  // NUMBERS (12)
+  {id:79, cat:'numbers', it:'Uno',            en:'One (1)',               pron:'OO-no',               eg:'Un caffè, per favore.'},
+  {id:80, cat:'numbers', it:'Due',            en:'Two (2)',               pron:'DOO-ay',              eg:'Un tavolo per due.'},
+  {id:81, cat:'numbers', it:'Tre',            en:'Three (3)',             pron:'tray',                eg:'Tre biglietti, per favore.'},
+  {id:82, cat:'numbers', it:'Quattro',        en:'Four (4)',              pron:'KWAT-tro',            eg:'Quattro persone.'},
+  {id:83, cat:'numbers', it:'Cinque',         en:'Five (5)',              pron:'CHEEN-kway',          eg:'Cinque euro.'},
+  {id:84, cat:'numbers', it:'Sei',            en:'Six (6)',               pron:'say',                 eg:'Sei ore.'},
+  {id:85, cat:'numbers', it:'Sette',          en:'Seven (7)',             pron:'SET-tay',             eg:'Sette giorni.'},
+  {id:86, cat:'numbers', it:'Otto',           en:'Eight (8)',             pron:'OT-toh',              eg:'Otto persone.'},
+  {id:87, cat:'numbers', it:'Nove',           en:'Nine (9)',              pron:'NOH-vay',             eg:'Nove euro.'},
+  {id:88, cat:'numbers', it:'Dieci',          en:'Ten (10)',              pron:'DYEH-chee',           eg:'Dieci minuti.'},
+  {id:89, cat:'numbers', it:'Venti',          en:'Twenty (20)',           pron:'VEN-tee',             eg:'Venti euro.'},
+  {id:90, cat:'numbers', it:'Cento',          en:'One hundred (100)',     pron:'CHEN-toh',            eg:'Cento euro.'},
+
+  // TIME (9)
+  {id:91, cat:'time', it:'Oggi',              en:'Today',                 pron:'OJ-jee',              eg:'Oggi fa caldo.'},
+  {id:92, cat:'time', it:'Domani',            en:'Tomorrow',              pron:'doh-MAH-nee',         eg:'Ci vediamo domani.'},
+  {id:93, cat:'time', it:'Ieri',              en:'Yesterday',             pron:'YEH-ree',             eg:'Ieri siamo stati a Roma.'},
+  {id:94, cat:'time', it:'Mattina',           en:'Morning',               pron:'mat-TEE-nah',         eg:'Di mattina bevo il caffè.'},
+  {id:95, cat:'time', it:'Pomeriggio',        en:'Afternoon',             pron:'poh-meh-REE-joh',     eg:'Nel pomeriggio andiamo al museo.'},
+  {id:96, cat:'time', it:'Sera',              en:'Evening',               pron:'SAY-rah',             eg:'Buona sera!'},
+  {id:97, cat:'time', it:'Adesso',            en:'Now',                   pron:'ah-DES-so',           eg:'Partiamo adesso.'},
+  {id:98, cat:'time', it:'Dopo',              en:'Later',                 pron:'DOH-po',              eg:'Ci vediamo dopo.'},
+  {id:99, cat:'time', it:'Che ore sono?',     en:'What time is it?',      pron:'kay OH-ray SOH-no',   eg:'Scusa, che ore sono?'},
+];
+
+/* ═══════════════════════════════════════════════════════════
+   STATE — localStorage
+═══════════════════════════════════════════════════════════ */
+var SK = 'lk_it';   // card progress state
+var STK = 'lk_itst'; // streak state
+var NEW_LIMIT = 10; // new cards per global session
+
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(SK) || '{}'); }catch(e){ return {}; }
+}
+function saveState(s){ localStorage.setItem(SK, JSON.stringify(s)); }
+
+function loadStreak(){
+  try{ return JSON.parse(localStorage.getItem(STK) || '{"days":0,"last":""}'); }
+  catch(e){ return {days:0,last:''}; }
+}
+function saveStreak(s){ localStorage.setItem(STK, JSON.stringify(s)); }
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+/* ═══════════════════════════════════════════════════════════
+   SM-2 ALGORITHM (Ebbinghaus / Anki-style)
+
+   Quality: 5=perfect  3=hesitant/almost  1=missed
+   - Interval grows with each successful review
+   - EF (easiness factor) adjusts based on difficulty
+   - Missed cards reset to 1-day interval
+═══════════════════════════════════════════════════════════ */
+function sm2(prev, q){
+  var ef  = prev.ef  !== undefined ? prev.ef  : 2.5;
+  var n   = prev.reps !== undefined ? prev.reps : 0;
+  var int = prev.interval || 0;
+
+  if(q >= 3){
+    if(n === 0)     int = 1;
+    else if(n === 1) int = 6;
+    else             int = Math.round(int * ef);
+    n++;
+    ef = Math.max(1.3, ef + 0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+  } else {
+    int = 1;
+    n = 0;
+    // Keep EF — harsh penalty avoided so user isn't discouraged
+  }
+
+  return {
+    ef: ef,
+    interval: int,
+    reps: n,
+    due: Date.now() + int * 86400000,
+    total: (prev.total || 0) + 1
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SESSION LOGIC
+═══════════════════════════════════════════════════════════ */
+var sess = {queue:[], idx:0, got:0, almost:0, missed:0};
+var flipped = false;
+
+function buildQueue(filterCat){
+  var now = Date.now();
+  var state = loadState();
+  var reviews = [], newCards = [], future = [];
+
+  WORDS.forEach(function(w){
+    if(filterCat && w.cat !== filterCat) return;
+    var s = state[w.id];
+    if(s && s.due && s.due <= now)  reviews.push(w);
+    else if(!s)                      newCards.push(w);
+    else                             future.push(w);
+  });
+
+  shuffle(reviews);
+  shuffle(newCards);
+
+  var maxNew = filterCat ? newCards.length : Math.min(NEW_LIMIT, newCards.length);
+  var queue = reviews.concat(newCards.slice(0, maxNew));
+
+  // Category practice mode: nothing due/new → practice all in category
+  if(filterCat && queue.length === 0){
+    shuffle(future);
+    return future;
+  }
+  return queue;
+}
+
+function shuffle(arr){
+  for(var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN SWITCHING
+═══════════════════════════════════════════════════════════ */
+function show(id){
+  document.querySelectorAll('.scr').forEach(function(el){ el.classList.remove('on'); });
+  document.getElementById(id).classList.add('on');
+}
+
+function goHome(){
+  show('sHome');
+  renderHome();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOME
+═══════════════════════════════════════════════════════════ */
+function renderHome(){
+  var now = Date.now();
+  var state = loadState();
+  var streak = loadStreak();
+
+  var learned = 0, due = 0, newCount = 0;
+  WORDS.forEach(function(w){
+    var s = state[w.id];
+    if(s){ learned++; if(s.due <= now) due++; }
+    else newCount++;
+  });
+
+  document.getElementById('statLearned').textContent = learned;
+  document.getElementById('statDue').textContent = due;
+  document.getElementById('statNew').textContent = Math.min(newCount, NEW_LIMIT);
+  document.getElementById('streakPill').textContent = '🔥 ' + streak.days;
+
+  var sessionSize = due + Math.min(newCount, NEW_LIMIT);
+  var cta = document.getElementById('ctaMain');
+  var ctaText = document.getElementById('ctaText');
+  if(sessionSize > 0){
+    var parts = [];
+    if(due > 0) parts.push(due + ' review' + (due===1?'':'s'));
+    if(newCount > 0) parts.push(Math.min(newCount, NEW_LIMIT) + ' new');
+    ctaText.textContent = 'Study ' + sessionSize + ' cards (' + parts.join(' + ') + ')';
+    cta.classList.remove('dim');
+  } else {
+    ctaText.textContent = 'All done today ✓';
+    cta.classList.add('dim');
+  }
+
+  // Category cards
+  var html = '';
+  Object.keys(CATS).forEach(function(key){
+    var cat = CATS[key];
+    var words = WORDS.filter(function(w){ return w.cat === key; });
+    var catDue = words.filter(function(w){ var s=state[w.id]; return s&&s.due<=now; }).length;
+    var catNew = words.filter(function(w){ return !state[w.id]; }).length;
+    var catLearned = words.length - catNew;
+    html += '<div class="cat-card' + (catDue > 0 ? ' has-due' : '') + '" onclick="startSession(\'' + key + '\')">'
+      + '<span class="cat-em">' + cat.em + '</span>'
+      + '<span class="cat-name">' + cat.name + '</span>'
+      + '<span class="cat-prog">' + catLearned + ' / ' + words.length + '</span>'
+      + (catDue > 0 ? '<span class="cat-due-badge">' + catDue + ' due</span>' : '')
+      + '</div>';
+  });
+  document.getElementById('catGrid').innerHTML = html;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STUDY SESSION
+═══════════════════════════════════════════════════════════ */
+function startSession(filterCat){
+  var queue = buildQueue(filterCat);
+  if(!queue.length) return;
+
+  sess.queue = queue;
+  sess.idx = 0;
+  sess.got = 0;
+  sess.almost = 0;
+  sess.missed = 0;
+
+  show('sStudy');
+  showCard();
+}
+
+function showCard(){
+  var card = sess.queue[sess.idx];
+  if(!card){ endSession(); return; }
+
+  flipped = false;
+  document.getElementById('cardWrap').classList.remove('flipped');
+  document.getElementById('answerWrap').classList.remove('show');
+
+  var state = loadState();
+  var isNew = !state[card.id];
+  var cat = CATS[card.cat] || {};
+
+  var badge = (cat.em || '') + ' ' + (cat.name || card.cat);
+  document.getElementById('cardBadge').textContent  = badge;
+  document.getElementById('cardBadge2').textContent = badge;
+  document.getElementById('cardWord').textContent   = card.it;
+  document.getElementById('cardPron').textContent   = '(' + card.pron + ')';
+  document.getElementById('cardEn').textContent     = card.en;
+  document.getElementById('cardPronBack').textContent = '(' + card.pron + ')';
+  document.getElementById('cardEg').textContent     = card.eg;
+
+  var newBadge = document.getElementById('newBadge');
+  newBadge.style.display = isNew ? 'block' : 'none';
+
+  updateProg();
+}
+
+function updateProg(){
+  var total = sess.queue.length;
+  var pct   = total > 0 ? (sess.idx / total * 100) : 0;
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progLbl').textContent  = sess.idx + ' / ' + total;
+}
+
+function flipCard(){
+  if(flipped) return;
+  flipped = true;
+  document.getElementById('cardWrap').classList.add('flipped');
+  document.getElementById('answerWrap').classList.add('show');
+}
+
+function answer(q){
+  var card = sess.queue[sess.idx];
+  if(!card || !flipped) return;
+
+  var state = loadState();
+  state[card.id] = sm2(state[card.id] || {}, q);
+  saveState(state);
+
+  if(q === 5)      sess.got++;
+  else if(q === 3) sess.almost++;
+  else             sess.missed++;
+
+  sess.idx++;
+  showCard();
+}
+
+function exitStudy(){
+  goHome();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DONE SCREEN
+═══════════════════════════════════════════════════════════ */
+function endSession(){
+  // Update streak
+  var today = todayStr();
+  var streak = loadStreak();
+  if(streak.last !== today){
+    var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    streak.days = (streak.last === yesterday) ? streak.days + 1 : 1;
+    streak.last = today;
+    saveStreak(streak);
+  }
+
+  var total   = sess.got + sess.almost + sess.missed;
+  var pct     = total > 0 ? Math.round(sess.got / total * 100) : 0;
+
+  document.getElementById('doneTotal').textContent  = total;
+  document.getElementById('doneGot').textContent    = sess.got;
+  document.getElementById('doneMissed').textContent = sess.missed;
+
+  var msgs = [
+    'Spaced repetition works — your brain will consolidate these overnight.',
+    'The Ebbinghaus curve is on your side. Come back tomorrow.',
+    'Every review builds the neural path. Bravissimo!',
+    'Consistency beats intensity. Same time tomorrow?',
+    'You\'re building real fluency one card at a time.',
+  ];
+  document.getElementById('doneSub').textContent = msgs[Math.floor(Math.random() * msgs.length)];
+  document.getElementById('doneEm').textContent  = pct >= 80 ? '🎉' : pct >= 50 ? '💪' : '📚';
+
+  show('sDone');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+renderHome();
+</script>
+</body>
+</html>
