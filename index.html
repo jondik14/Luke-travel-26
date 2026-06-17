@@ -32,6 +32,7 @@
   --ac:      #F26419;
   --ac-dim:  rgba(242,100,25,.13);
   --ac-tx:   #F58A50;
+  --ac-dark: #B8450F;
   --ok:      #4ade80;
   --ok-dim:  rgba(74,222,128,.12);
   --ok-tx:   #4ade80;
@@ -147,7 +148,7 @@ body {
 .nbtn {
   flex:1; display:flex; flex-direction:column; align-items:center;
   justify-content:center; gap:3px;
-  padding:6px 0 4px;
+  padding:6px 0 0;
   color:var(--tx3); font-size:9px; font-weight:700;
   letter-spacing:.07em; text-transform:uppercase;
   transition: color .2s, transform .4s var(--spring);
@@ -430,7 +431,7 @@ body {
 }
 .day-flt-code { font-size:18px; font-weight:800; letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .day-flt-arrow { color:var(--sky); flex-shrink:0; }
-.day-flt-meta  { font-size:12px; color:var(--tx2); font-weight:500; display:flex; align-items:center; gap:5px; }
+.day-flt-meta  { font-size:12px; color:var(--tx); font-weight:600; display:flex; align-items:center; gap:5px; }
 
 /* Guide CTA inside card */
 .cta-sm {
@@ -488,21 +489,6 @@ body {
   margin-bottom:var(--sp3);
 }
 
-/* Tab switcher for guide content sections (Must Do, Food & Drink, etc.) */
-.guide-tabs {
-  display:flex; gap:var(--sp2); overflow-x:auto;
-  padding-bottom:var(--sp1); margin-bottom:var(--sp3);
-}
-.guide-tab {
-  display:flex; align-items:center; gap:5px;
-  padding:7px 14px; border-radius:var(--r-full);
-  border:1px solid var(--bd); background:var(--s2);
-  font-size:12px; font-weight:700; letter-spacing:.04em;
-  text-transform:uppercase; color:var(--tx2); white-space:nowrap; flex-shrink:0;
-  transition:all .2s, transform .3s var(--spring);
-}
-.guide-tab.on { background:var(--ac); border-color:var(--ac); color:#fff; }
-.guide-tab:active { transform:scale(.94); }
 .guide-hdr-icon {
   width:28px; height:28px; border-radius:var(--r-sm);
   background:var(--ac-dim); border:1px solid rgba(242,100,25,.2);
@@ -514,17 +500,6 @@ body {
   font-size:13px; font-weight:700; letter-spacing:.02em; color:var(--tx);
 }
 
-.guide-item {
-  display:flex; align-items:flex-start; gap:var(--sp2);
-  padding:var(--sp2) 0; border-bottom:1px solid var(--bd);
-  font-size:14px; color:var(--tx2); line-height:1.55;
-}
-.guide-item:last-child { border-bottom:none; }
-.guide-item::before {
-  content:''; width:4px; height:4px; border-radius:var(--r-full);
-  background:var(--ac); opacity:.6; flex-shrink:0; margin-top:7px;
-}
-.guide-item-txt { flex:1; }
 .guide-item-add {
   flex-shrink:0; width:24px; height:24px; border-radius:50%;
   display:flex; align-items:center; justify-content:center;
@@ -793,6 +768,7 @@ body {
 .map-panel {
   background:var(--s1); border-bottom:1px solid var(--bd);
   transition:background .3s;
+  position:sticky; top:0; z-index:5;
 }
 .map-toggle {
   display:flex; align-items:center; justify-content:space-between;
@@ -806,14 +782,14 @@ body {
 .leaflet-container { background:#e9e6e0 !important; font-family:var(--font); }
 .map-pin { background:none; border:none; }
 .map-pin-num {
-  width:24px; height:24px; border-radius:50%;
+  width:28px; height:28px; border-radius:50%;
   background:var(--ac); color:#fff;
   border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.3);
   display:flex; align-items:center; justify-content:center;
-  font-size:11px; font-weight:800; font-family:var(--font);
+  font-size:12px; font-weight:800; font-family:var(--font);
   transition: transform .25s var(--spring), background .2s, color .2s;
 }
-.map-pin-num.active { background:#fff; color:var(--ac); border-color:var(--ac); transform:scale(1.35); z-index:2; }
+.map-pin-num.active { background:#fff; color:var(--ac-dark); border-color:var(--ac-dark); transform:scale(1.6); z-index:2; }
 .map-pin-num.done { background:var(--ok); opacity:.85; }
 .map-pin-num.map-pin-home { background:#1a1a1a; border-color:#fff; }
 
@@ -868,6 +844,8 @@ body {
 }
 .place-item-title { font-size:14px; font-weight:600; color:var(--tx); }
 .place-item-desc { font-size:12px; color:var(--tx2); line-height:1.45; margin-top:2px; }
+.act-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.act-review { font-size:12px; font-style:italic; color:var(--tx2); line-height:1.5; margin-top:6px; }
 
 /* Numbered stop badge — links a day in the trip list to its map pin */
 .stop-num {
@@ -974,6 +952,7 @@ body {
 .upnext-scroll {
   display:flex; gap:var(--sp3); overflow-x:auto;
   padding:0 var(--sp4) var(--sp5);
+  scroll-padding-left:var(--sp4);
   scroll-snap-type:x mandatory;
   -webkit-overflow-scrolling:touch;
 }
@@ -1722,7 +1701,7 @@ var WMO={
   85:'🌨️ Snow showers',86:'❄️ Snow showers',
   95:'⛈️ Thunderstorm',96:'⛈️ Thunderstorm',99:'⛈️ Thunderstorm'
 };
-var _wxCache={}, _expCat='Food', _goalCat='All', _guideTab={};
+var _wxCache={}, _expCat='Food', _goalCat='All';
 var _xr=parseFloat(localStorage.getItem('lk_xr'))||1.64, _xrFetched=false; // EUR → AUD
 
 function g(id){ return document.getElementById(id); }
@@ -2020,7 +1999,7 @@ function initRouteMap(){
   L.polyline(coords,{color:'#F26419',weight:2.5,opacity:.9,dashArray:'5 7'}).addTo(_map);
   for(var si=0;si<STOPS.length;si++){
     var stop=STOPS[si], c=stop.city;
-    var icon=L.divIcon({className:'map-pin', html:'<div class="map-pin-num">'+stop.num+'</div>', iconSize:[24,24], iconAnchor:[12,12]});
+    var icon=L.divIcon({className:'map-pin', html:'<div class="map-pin-num">'+stop.num+'</div>', iconSize:[28,28], iconAnchor:[14,14]});
     var m=L.marker(COORDS[c],{icon:icon}).addTo(_map)
       .bindPopup('<strong style="font-size:13px">'+stop.num+'. '+c+'</strong><div class="cap" style="color:var(--tx2);margin-top:2px">'+stopRange(stop)+'</div>');
     m.on('click', (function(city){ return function(){ focusStopFromMap(city); }; })(c));
@@ -2108,6 +2087,13 @@ function geocodePOI(c,title,cb){
       if(GEO[key]) cb(GEO[key]);
     }).catch(function(){});
 }
+// Straight-line distance between two [lat,lng] points, in km
+function distanceKm(a,b){
+  var R=6371, dLat=(b[0]-a[0])*Math.PI/180, dLng=(b[1]-a[1])*Math.PI/180;
+  var lat1=a[0]*Math.PI/180, lat2=b[0]*Math.PI/180;
+  var h=Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return 2*R*Math.asin(Math.sqrt(h));
+}
 // Nudge a new pin away from any already-placed pin that's too close,
 // so suggestions for the same beach/village don't render on top of each other
 function avoidOverlap(pos, placed){
@@ -2129,7 +2115,7 @@ function initPlaceMap(c, items){
   var stay=STAY_COORDS[c]||COORDS[c]; if(!stay) return;
   _placeMap=L.map('placeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:true}).setView(stay,13);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_placeMap);
-  L.marker(stay,{icon:L.divIcon({className:'map-pin',html:'<div class="map-pin-num map-pin-home"><i class="ph-fill ph-house-line" style="font-size:11px"></i></div>',iconSize:[24,24],iconAnchor:[12,12]})})
+  L.marker(stay,{icon:L.divIcon({className:'map-pin',html:'<div class="map-pin-num map-pin-home"><i class="ph-fill ph-house-line" style="font-size:11px"></i></div>',iconSize:[28,28],iconAnchor:[14,14]})})
     .addTo(_placeMap).bindPopup('<strong style="font-size:13px">Where you\'re staying</strong>');
   var placed=[stay];
   for(var i=0;i<items.length;i++){
@@ -2138,11 +2124,18 @@ function initPlaceMap(c, items){
         if(!_placeMap) return;
         var pos=avoidOverlap([coords.lat,coords.lng],placed); placed.push(pos);
         var done=!!POIS[poiKey(c,it.title)];
-        var icon=L.divIcon({className:'map-pin',html:'<div class="map-pin-num'+(done?' done':'')+'">'+(idx+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+        var icon=L.divIcon({className:'map-pin',html:'<div class="map-pin-num'+(done?' done':'')+'">'+(idx+1)+'</div>',iconSize:[28,28],iconAnchor:[14,14]});
         var m=L.marker(pos,{icon:icon}).addTo(_placeMap)
           .bindPopup('<strong style="font-size:13px">'+(idx+1)+'. '+it.title+'</strong>');
         _placeMarkers[it.title]=m;
         _placeMap.fitBounds(L.latLngBounds(placed),{padding:[28,28]});
+        // Surface "X km from stay" on the matching activity row, once known
+        var distEl=null;
+        document.querySelectorAll('.act-dist').forEach(function(e){ if(e.dataset.key===poiKey(c,it.title)) distEl=e; });
+        if(distEl){
+          distEl.querySelector('.act-dist-txt').textContent=distanceKm(stay,pos).toFixed(1)+' km away';
+          distEl.style.display='';
+        }
       }
       var known=POI_COORDS[poiKey(c,it.title)];
       if(known) place({lat:known[0],lng:known[1]});
@@ -2286,6 +2279,7 @@ function renderToday(){
       for(var i=0;i<planTh.length;i++) planKeys.push('plan|'+ts+'|'+planTh[i].replace('🔒 ',''));
 
       if(planTh.length){
+        out += '<div class="label mb3">Today\'s plan</div>';
         out += '<div class="card mb3">';
         for(var i=0;i<planTh.length;i++){
           var t=planTh[i];
@@ -2302,6 +2296,7 @@ function renderToday(){
       }
 
       if(todaySugg.length){
+        out += '<div class="label mb3">More to do today</div>';
         out += '<div class="card mb4">';
         for(var i=0;i<todaySugg.length;i++){
           var sg=todaySugg[i], skey=poiKey(sg.city,sg.title), sopen=!!openSugg[skey], sdone=!!POIS[skey];
@@ -2469,7 +2464,8 @@ function travelInfo(d){
     from:from, to:to,
     dep:b?b.dep:null, arr:b?b.arr:null,
     ref: b?b.fl:ref,
-    seat: b?b.seat:null, eur: b?b.eur:null
+    seat: b?b.seat:null, eur: b?b.eur:null,
+    note: (!b && d.th && d.th.length) ? d.th[0].replace('🔒 ','') : null
   };
 }
 function photoCity(c){ var p=c.split(' → '); return p[p.length-1]; }
@@ -2596,10 +2592,13 @@ function renderTimeline(){
     if(d.t==='event') badges.push('<span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked</span>');
     if(d.t==='travel'){
       var tiB=travelInfo(d);
-      var tLbl=(tiB.dep&&tiB.arr)?tiB.dep+' → '+tiB.arr:'Travel day';
+      var tLbl=(tiB.dep&&tiB.arr)?tiB.dep+' → '+tiB.arr:(tiB.note||'Travel day');
       badges.push('<span class="badge b-sky"><i class="ph-fill ph-airplane-in-flight"></i>'+tLbl+'</span>');
     }
-    if(d.bus) badges.push('<span class="badge b-sky"><i class="ph-fill ph-bus"></i>'+d.bus.dep+' → '+d.bus.arr+'</span>');
+    if(d.bus){
+      var busOp=(d.bus.ref||'').split(' #')[0]||'Bus';
+      badges.push('<span class="badge b-sky"><i class="ph-fill ph-bus"></i>'+busOp+' · '+d.bus.dep+' → '+d.bus.arr+'</span>');
+    }
     if(d.a) badges.push('<span class="badge b-dim"><i class="ph-fill ph-bed"></i>'+d.a+'</span>');
     if(badges.length) out+='<div class="day-tog-badge">'+badges.join('')+'</div>';
     out+='</div>';
@@ -2620,10 +2619,15 @@ function renderTimeline(){
     if(d.t==='travel'){
       var ti=travelInfo(d);
       out+='<div class="day-flt"><div class="day-flt-route"><span class="day-flt-code">'+ti.from+'</span><i class="ph-fill ph-airplane-in-flight day-flt-arrow"></i><span class="day-flt-code">'+ti.to+'</span></div>';
-      var metaBits=[(ti.dep&&ti.arr)?ti.dep+'–'+ti.arr:'Time TBC'];
-      if(ti.ref) metaBits.push(ti.ref);
-      if(ti.seat) metaBits.push('Seat '+ti.seat);
-      if(ti.eur) metaBits.push('€'+ti.eur);
+      var metaBits;
+      if(ti.dep&&ti.arr){
+        metaBits=[ti.dep+'–'+ti.arr];
+        if(ti.ref) metaBits.push(ti.ref);
+        if(ti.seat) metaBits.push('Seat '+ti.seat);
+        if(ti.eur) metaBits.push('€'+ti.eur);
+      } else {
+        metaBits=[ti.note||'Details TBC'];
+      }
       out+='<div class="day-flt-meta">'+metaBits.join(' · ')+'</div></div>';
     }
     if(d.bus){
@@ -2635,10 +2639,7 @@ function renderTimeline(){
       for(var j=0;j<d.th.length;j++) out+='<div class="day-hl">'+d.th[j].replace('🔒 ','')+'</div>';
     }
     if(gc){
-      out+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">';
-      out+='<button class="cta-sm" style="margin-top:0" onclick="event.stopPropagation();goGuide(\''+gc+'\')"><i class="ph ph-compass"></i>'+gc+' guide</button>';
-      if(COORDS[gc]) out+='<button class="cta-sm" style="margin-top:0" onclick="event.stopPropagation();zoomMapToCity(\''+gc+'\')"><i class="ph ph-map-pin"></i>Map</button>';
-      out+='</div>';
+      out+='<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+gc+'\')"><i class="ph ph-compass"></i>'+gc+' guide</button>';
     }
 
     out+='</div></div></div></div>'; // body-inner, day-body, day-card, day-wrap
@@ -2663,10 +2664,6 @@ function selCity(c){
   renderGuide();
   try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
 }
-function setGuideTab(k){
-  _guideTab[city]=k;
-  renderGuide();
-}
 function prevCity(){
   var i=CITY_ORDER.indexOf(city);
   if(i>0) selCity(CITY_ORDER[i-1]);
@@ -2681,6 +2678,9 @@ function initCitySwipe(){
   el._swipeInit=true;
   var sx=0, sy=0, tracking=false;
   el.addEventListener('touchstart', function(e){
+    // Ignore touches on the place map — pinch/pan gestures there
+    // shouldn't be read as a horizontal swipe between cities
+    if(e.touches.length>1 || (e.target.closest && e.target.closest('#placeMapWrap'))){ tracking=false; return; }
     var t=e.touches[0]; sx=t.clientX; sy=t.clientY; tracking=true;
   }, {passive:true});
   el.addEventListener('touchend', function(e){
@@ -2717,6 +2717,59 @@ function renderGuide(){
 
   out+='<div class="px pt4">';
 
+  // ── Things to do — every guide category combined into one list, each
+  //    showing category, distance from the stay, and a matching local
+  //    review (if any), so there's enough context to decide what to do ──
+  var allItems = cityItems(city);
+  var mapItems = COORDS[city] ? allItems.slice(0,12) : [];
+  var stayC = STAY_COORDS[city]||COORDS[city];
+  var usedReviews = [];
+  if(allItems.length){
+    out+='<div class="guide-sec">';
+    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-compass"></i></div><span class="guide-hdr-label">Things to do</span>';
+    if(mapItems.length) out+='<a class="cap accent" style="margin-left:auto;font-weight:700;display:inline-flex;align-items:center;gap:4px" href="'+gmapsUrl(city,mapItems)+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Open in Maps</a>';
+    out+='</div>';
+    if(mapItems.length) out+='<div id="placeMapWrap" style="height:220px;border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--sp3)"><div id="placeMap" style="height:100%"></div></div>';
+    out+='<div class="place-list">';
+    for(var i=0;i<allItems.length;i++){
+      var it=allItems[i], pkey=poiKey(city,it.title), pdone=!!POIS[pkey];
+      var rv=findReview(city,it.title);
+      if(rv) usedReviews.push(rv);
+      var secDef=null; for(var k=0;k<GSECS.length;k++) if(GSECS[k].k===it.cat){ secDef=GSECS[k]; break; }
+      var geo=GEO[pkey]||(POI_COORDS[pkey]?{lat:POI_COORDS[pkey][0],lng:POI_COORDS[pkey][1]}:null);
+      var distTxt = (geo&&stayC) ? distanceKm(stayC,[geo.lat,geo.lng]).toFixed(1)+' km away' : '';
+      var added=ideas[city]&&ideas[city].indexOf(it.title)!==-1;
+      out+='<div class="place-item'+(pdone?' done':'')+'" onclick="togPoi(\''+pkey.replace(/'/g,"\\'")+'\')">';
+      out+='<div class="pack-chk'+(pdone?' on':'')+'"></div>';
+      out+='<div class="place-item-num">'+(i+1)+'</div>';
+      out+='<div class="grow1">';
+      out+='<div class="place-item-title">'+it.title+'</div>';
+      if(it.desc) out+='<div class="place-item-desc">'+it.desc+'</div>';
+      out+='<div class="act-meta">';
+      if(secDef) out+='<span class="badge b-dim"><i class="ph '+secDef.ph+'"></i>'+secDef.l+'</span>';
+      if(rv) out+='<span class="badge b-ac"><i class="ph-fill ph-star"></i>'+rv.r+' '+stars(rv.r)+'</span>';
+      out+='<span class="badge b-dim act-dist" data-key="'+pkey+'"'+(distTxt?'':' style="display:none"')+'><i class="ph ph-map-pin"></i> <span class="act-dist-txt">'+distTxt+'</span></span>';
+      out+='</div>';
+      if(rv) out+='<div class="act-review">"'+rv.t+'"</div>';
+      out+='</div>';
+      out+='<button class="guide-item-add'+(added?' on':'')+'" onclick="event.stopPropagation();addIdea(\''+city.replace(/'/g,"\\'")+'\',\''+it.title.replace(/'/g,"\\'")+'\')"'+(added?' disabled':'')+'><i class="ph'+(added?'-fill ph-check':' ph-plus')+'"></i></button>';
+      out+='</div>';
+    }
+    out+='</div>';
+    // Insider Tips reviews that don't tie to a specific activity above
+    if(gu.reviews&&gu.reviews.length){
+      var extra=gu.reviews.filter(function(r){ return usedReviews.indexOf(r)===-1; });
+      if(extra.length){
+        out+='<div class="label mb2 mt4">More from Insider Tips</div>';
+        for(var i=0;i<extra.length;i++){
+          var rv=extra[i];
+          out+='<div class="review-card"><div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div><div class="review-txt">'+rv.t+'</div></div>';
+        }
+      }
+    }
+    out+='</div>';
+  }
+
   // ── My Visit ──
   if(days.length){
     var firstD=days[0];
@@ -2743,64 +2796,6 @@ function renderGuide(){
       out+='<div class="visit-day-date">'+fmt(d.d)+'</div>';
       if(d.th&&d.th.length) for(var j=0;j<Math.min(d.th.length,3);j++) out+='<div class="visit-day-item">'+d.th[j].replace('🔒 ','')+'</div>';
       out+='</div></div>';
-    }
-    out+='</div>';
-  }
-
-  // ── Explore on map ──
-  var mapItems = COORDS[city] ? cityItems(city).slice(0,8) : [];
-  if(mapItems.length){
-    out+='<div class="guide-sec">';
-    out+='<div class="guide-hdr"><div class="guide-hdr-icon"><i class="ph ph-map-trifold"></i></div><span class="guide-hdr-label">Explore on map</span>';
-    out+='<a class="cap accent" style="margin-left:auto;font-weight:700;display:inline-flex;align-items:center;gap:4px" href="'+gmapsUrl(city,mapItems)+'" target="_blank" rel="noopener"><i class="ph ph-arrow-square-out"></i>Open in Maps</a>';
-    out+='</div>';
-    out+='<div id="placeMapWrap" style="height:220px;border-radius:var(--r-lg);overflow:hidden;margin-bottom:var(--sp3)"><div id="placeMap" style="height:100%"></div></div>';
-    out+='<div class="place-list">';
-    for(var i=0;i<mapItems.length;i++){
-      var it=mapItems[i], pkey=poiKey(city,it.title), pdone=!!POIS[pkey];
-      out+='<div class="place-item'+(pdone?' done':'')+'" onclick="togPoi(\''+pkey.replace(/'/g,"\\'")+'\')">';
-      out+='<div class="pack-chk'+(pdone?' on':'')+'"></div>';
-      out+='<div class="place-item-num">'+(i+1)+'</div>';
-      out+='<div class="grow1"><div class="place-item-title">'+it.title+'</div>'+(it.desc?'<div class="place-item-desc">'+it.desc+'</div>':'')+'</div>';
-      out+='</div>';
-    }
-    out+='</div></div>';
-  }
-
-  // ── Guide content tabs — Insider Tips + per-category sections, one at a time ──
-  var tabs=[];
-  if(gu.reviews&&gu.reviews.length) tabs.push({k:'reviews',ph:'ph-star',pf:true,l:'Insider Tips'});
-  for(var i=0;i<GSECS.length;i++){
-    var s=GSECS[i];
-    if(gu[s.k]&&gu[s.k].length) tabs.push({k:s.k,ph:s.ph,l:s.l});
-  }
-  if(tabs.length){
-    var activeTab=_guideTab[city];
-    if(!activeTab||!tabs.some(function(t){return t.k===activeTab;})) activeTab=tabs[0].k;
-    out+='<div class="guide-tabs">';
-    for(var i=0;i<tabs.length;i++){
-      var t=tabs[i];
-      out+='<button class="guide-tab'+(t.k===activeTab?' on':'')+'" onclick="setGuideTab(\''+t.k+'\')"><i class="ph'+(t.pf?'-fill':'')+' '+t.ph+'"></i>'+t.l+'</button>';
-    }
-    out+='</div>';
-    out+='<div class="guide-sec">';
-    if(activeTab==='reviews'){
-      for(var i=0;i<gu.reviews.length;i++){
-        var rv=gu.reviews[i];
-        out+='<div class="review-card">';
-        out+='<div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div>';
-        out+='<div class="review-txt">'+rv.t+'</div>';
-        out+='</div>';
-      }
-    } else {
-      var items=gu[activeTab];
-      for(var j=0;j<items.length;j++){
-        var txt=items[j];
-        var added=ideas[city]&&ideas[city].indexOf(txt)!==-1;
-        out+='<div class="guide-item"><span class="guide-item-txt">'+txt+'</span>';
-        out+='<button class="guide-item-add'+(added?' on':'')+'" onclick="event.stopPropagation();addIdea(\''+city.replace(/'/g,"\\'")+'\',\''+txt.replace(/'/g,"\\'")+'\')"'+(added?' disabled':'')+'><i class="ph'+(added?'-fill ph-check':' ph-plus')+'"></i></button>';
-        out+='</div>';
-      }
     }
     out+='</div>';
   }
