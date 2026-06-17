@@ -1405,6 +1405,33 @@ superballs.register();
         <input class="insp-note-inp" id="inspNoteInp" type="text" placeholder="e.g. make this bigger and use the accent color" style="margin-bottom:var(--sp2)">
         <div class="insp-ai-hint">Describe the change in plain English — it's saved with this item for whoever builds it.</div>
       </div>
+
+      <div class="insp-tab-content" data-tab="move" id="inspTabMove">
+        <div class="insp-edit-row">
+          <span class="insp-edit-label">Order</span>
+          <div class="insp-edit-ctrl">
+            <button class="insp-step" id="inspMoveEarlier" onclick="moveSibling(-1)" aria-label="Move earlier"><i class="ph ph-arrow-up" id="inspMoveEarlierIcon"></i></button>
+            <span class="insp-edit-val" id="inspArrangePos" style="min-width:88px">–</span>
+            <button class="insp-step" id="inspMoveLater" onclick="moveSibling(1)" aria-label="Move later"><i class="ph ph-arrow-down" id="inspMoveLaterIcon"></i></button>
+          </div>
+        </div>
+        <div class="insp-edit-row">
+          <span class="insp-edit-label">Width</span>
+          <div class="insp-edit-ctrl">
+            <button class="insp-step" onclick="stepEdit('width',-1)" aria-label="Decrease width">−</button>
+            <span class="insp-edit-val" id="insp-val-width">–</span>
+            <button class="insp-step" onclick="stepEdit('width',1)" aria-label="Increase width">+</button>
+          </div>
+        </div>
+        <div class="insp-edit-row">
+          <span class="insp-edit-label">Height</span>
+          <div class="insp-edit-ctrl">
+            <button class="insp-step" onclick="stepEdit('height',-1)" aria-label="Decrease height">−</button>
+            <span class="insp-edit-val" id="insp-val-height">–</span>
+            <button class="insp-step" onclick="stepEdit('height',1)" aria-label="Increase height">+</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <button class="insp-reset-btn" id="inspResetBtn" onclick="resetEdits()" style="display:none">
@@ -1416,7 +1443,8 @@ superballs.register();
       <button class="insp-tab" data-tab="color" onclick="setInspTab('color')"><i class="ph ph-palette"></i><span>Color</span></button>
       <button class="insp-tab" data-tab="type" onclick="setInspTab('type')"><i class="ph ph-text-aa"></i><span>Type</span></button>
       <button class="insp-tab" data-tab="layout" onclick="setInspTab('layout')"><i class="ph ph-square"></i><span>Layout</span></button>
-      <button class="insp-tab" data-tab="ai" onclick="setInspTab('ai')"><i class="ph ph-sparkle"></i><span>AI Note</span></button>
+      <button class="insp-tab" data-tab="move" onclick="setInspTab('move')"><i class="ph ph-arrows-out-cardinal"></i><span>Move</span></button>
+      <button class="insp-tab" data-tab="ai" onclick="setInspTab('ai')"><i class="ph ph-sparkle"></i><span>AI</span></button>
     </div>
 
     <button class="cta-btn" onclick="addInspectNote()">Add to list</button>
@@ -3406,12 +3434,17 @@ var inspEditCurrent = {};
 var inspEdits = {};
 var inspCritiqueCache = [];
 var inspPreviewClone = null;
+var inspOriginalNextSibling = null;
+var inspOriginalIndex = 0;
+var inspWHBounds = {};
 var EDIT_PROPS = [
   {key:'fontSize', label:'Text size', step:1, min:8, max:48},
   {key:'padding', label:'Spacing', step:4, min:0, max:48},
-  {key:'borderRadius', label:'Corners', step:2, min:0, max:32}
+  {key:'borderRadius', label:'Corners', step:2, min:0, max:32},
+  {key:'width', label:'Width', step:8},
+  {key:'height', label:'Height', step:8}
 ];
-var EDIT_LABELS = {fontSize:'Text size', padding:'Spacing', borderRadius:'Corners', color:'Color'};
+var EDIT_LABELS = {fontSize:'Text size', padding:'Spacing', borderRadius:'Corners', color:'Color', width:'Width', height:'Height', order:'Order'};
 
 function saveInsp(){ localStorage.setItem('lk_insp', JSON.stringify(inspectItems)); }
 
@@ -3537,13 +3570,18 @@ function sanitizePreview(node){
   for(var i=0;i<node.children.length;i++) sanitizePreview(node.children[i]);
 }
 
+function snap8(v){ return Math.max(8, Math.round(v/8)*8); }
+
 function captureOriginal(el){
   var cs=getComputedStyle(el);
+  var r=el.getBoundingClientRect();
   return {
     fontSize: Math.round(parseFloat(cs.fontSize)||0),
     padding: Math.round(parseFloat(cs.paddingTop)||0),
     borderRadius: Math.round(parseFloat(cs.borderTopLeftRadius)||0),
-    color: rgbToHex(parseColor(cs.color))
+    color: rgbToHex(parseColor(cs.color)),
+    width: Math.round(r.width),
+    height: Math.round(r.height)
   };
 }
 
@@ -3585,6 +3623,42 @@ function refreshEditUI(){
     hl.style.width=r.width+'px'; hl.style.height=r.height+'px';
   }
   renderCritique();
+  refreshArrangeUI();
+}
+
+function refreshArrangeUI(){
+  if(!inspCurrentEl) return;
+  var parent = inspCurrentEl.parentElement;
+  if(!parent) return;
+  var siblings = Array.prototype.slice.call(parent.children);
+  var idx = siblings.indexOf(inspCurrentEl);
+  var posEl = g('inspArrangePos');
+  if(posEl) posEl.textContent = 'Position '+(idx+1)+' of '+siblings.length;
+  var prevBtn = g('inspMoveEarlier'), nextBtn = g('inspMoveLater');
+  if(prevBtn) prevBtn.style.opacity = idx<=0 ? '.35' : '1';
+  if(nextBtn) nextBtn.style.opacity = idx>=siblings.length-1 ? '.35' : '1';
+  var isRow = /row/.test(getComputedStyle(parent).flexDirection);
+  var ei = g('inspMoveEarlierIcon'), eni = g('inspMoveLaterIcon');
+  if(ei) ei.className = isRow ? 'ph ph-arrow-left' : 'ph ph-arrow-up';
+  if(eni) eni.className = isRow ? 'ph ph-arrow-right' : 'ph ph-arrow-down';
+}
+
+function moveSibling(delta){
+  if(!inspCurrentEl) return;
+  var parent = inspCurrentEl.parentElement;
+  if(!parent) return;
+  var siblings = Array.prototype.slice.call(parent.children);
+  var idx = siblings.indexOf(inspCurrentEl);
+  var newIdx = idx + delta;
+  if(newIdx<0 || newIdx>=siblings.length) return;
+  if(delta<0) parent.insertBefore(inspCurrentEl, siblings[newIdx]);
+  else parent.insertBefore(inspCurrentEl, siblings[newIdx].nextSibling);
+
+  var newIdxAfter = Array.prototype.indexOf.call(parent.children, inspCurrentEl);
+  if(newIdxAfter === inspOriginalIndex) delete inspEdits.order;
+  else inspEdits.order = { from:'position '+(inspOriginalIndex+1), to:'position '+(newIdxAfter+1) };
+
+  refreshEditUI();
 }
 
 function stepEdit(key, delta){
@@ -3592,12 +3666,14 @@ function stepEdit(key, delta){
   var def;
   for(var i=0;i<EDIT_PROPS.length;i++) if(EDIT_PROPS[i].key===key) def=EDIT_PROPS[i];
   if(!def) return;
+  var isDim = (key==='width'||key==='height');
+  var bounds = isDim ? inspWHBounds[key] : def;
   var next = inspEditCurrent[key] + delta*def.step;
-  next = Math.max(def.min, Math.min(def.max, next));
+  next = Math.max(bounds.min, Math.min(bounds.max, next));
   inspEditCurrent[key] = next;
   if(next === inspOriginal[key]){
     inspCurrentEl.style[key] = '';
-    if(inspPreviewClone) inspPreviewClone.style[key] = '';
+    if(inspPreviewClone) inspPreviewClone.style[key] = isDim ? next+'px' : '';
     delete inspEdits[key];
   } else {
     inspCurrentEl.style[key] = next+'px';
@@ -3625,12 +3701,14 @@ function resetEditColor(){
 function resetEdits(){
   if(!inspCurrentEl) return;
   EDIT_PROPS.forEach(function(p){
+    var isDim = (p.key==='width'||p.key==='height');
     inspCurrentEl.style[p.key]='';
-    if(inspPreviewClone) inspPreviewClone.style[p.key]='';
+    if(inspPreviewClone) inspPreviewClone.style[p.key] = isDim ? inspOriginal[p.key]+'px' : '';
     inspEditCurrent[p.key]=inspOriginal[p.key];
   });
   inspCurrentEl.style.color='';
   if(inspPreviewClone) inspPreviewClone.style.color='';
+  if(inspCurrentEl.parentElement) inspCurrentEl.parentElement.insertBefore(inspCurrentEl, inspOriginalNextSibling||null);
   inspEdits={};
   refreshEditUI();
 }
@@ -3644,8 +3722,16 @@ function handleInspectClick(e){
   inspCurrentTarget = describeElement(el);
   inspCurrentEl = inspCurrentTarget.el;
   inspOriginal = captureOriginal(inspCurrentEl);
-  inspEditCurrent = {fontSize:inspOriginal.fontSize, padding:inspOriginal.padding, borderRadius:inspOriginal.borderRadius};
+  inspEditCurrent = {fontSize:inspOriginal.fontSize, padding:inspOriginal.padding, borderRadius:inspOriginal.borderRadius, width:inspOriginal.width, height:inspOriginal.height};
   inspEdits = {};
+
+  var moveParent = inspCurrentEl.parentElement;
+  inspOriginalNextSibling = inspCurrentEl.nextSibling;
+  inspOriginalIndex = moveParent ? Array.prototype.indexOf.call(moveParent.children, inspCurrentEl) : 0;
+  inspWHBounds = {
+    width: { min: Math.max(24, snap8(inspOriginal.width*0.4)), max: snap8(Math.min(window.innerWidth-32, inspOriginal.width*2.2)) },
+    height: { min: Math.max(16, snap8(inspOriginal.height*0.4)), max: snap8(Math.min(window.innerHeight*0.8, inspOriginal.height*2.5)) }
+  };
 
   var hl = g('inspHighlight');
   hl.style.display = 'block';
