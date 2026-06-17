@@ -1153,12 +1153,36 @@ body.build-on .insp-banner { display:flex; }
 
 .insp-preview {
   position:relative; display:flex; align-items:flex-start; justify-content:center;
-  min-height:64px; max-height:170px; overflow:hidden;
+  min-height:80px; max-height:220px; overflow:hidden;
   margin-bottom:var(--sp3); padding:var(--sp2);
   border:2px solid var(--ac); border-radius:var(--r-md);
   background:rgba(242,100,25,.08);
 }
 .insp-preview, .insp-preview * { pointer-events:none!important; }
+
+.insp-tabbar {
+  display:flex; justify-content:space-around;
+  border-top:1px solid var(--bd); padding-top:var(--sp2); margin-bottom:var(--sp3);
+}
+.insp-tab {
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:var(--sp1) 2px; color:var(--tx3); font-size:10px; font-weight:700;
+  position:relative; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+  transition:color .15s;
+}
+.insp-tab i { font-size:19px; }
+.insp-tab.on { color:var(--ac); }
+.insp-tab:active { opacity:.7; }
+.insp-tab-badge {
+  position:absolute; top:-2px; right:18%; display:none;
+  min-width:14px; height:14px; border-radius:999px;
+  background:var(--err); color:#fff; font-size:9px; font-weight:800;
+  align-items:center; justify-content:center; padding:0 3px;
+}
+.insp-tabpanel { min-height:96px; }
+.insp-tab-content { display:none; }
+.insp-tab-content.on { display:block; }
+.insp-ai-hint { font-size:11px; color:var(--tx3); line-height:1.5; }
 
 .insp-note-target {
   background:var(--s2); border:1px solid var(--bd);
@@ -1207,7 +1231,6 @@ body.build-on .insp-banner { display:flex; }
 .insp-crit-info { background:var(--s2); color:var(--tx2); }
 .insp-crit-ok   { background:var(--ok-dim); color:var(--ok-tx); }
 
-.insp-edit-grid { margin-bottom:var(--sp2); }
 .insp-edit-row {
   display:flex; align-items:center; justify-content:space-between;
   padding:var(--sp2) 0; border-bottom:1px solid var(--bd);
@@ -1373,36 +1396,13 @@ superballs.register();
     <div class="insp-preview" id="inspPreview"></div>
     <div class="insp-note-target" id="inspNoteTarget"></div>
 
-    <div class="insp-crit-wrap" id="inspCritique"></div>
+    <div class="insp-tabpanel" id="inspTabPanel">
+      <div class="insp-tab-content on" data-tab="issues" id="inspTabIssues">
+        <div class="insp-crit-wrap" id="inspCritique"></div>
+      </div>
 
-    <div class="insp-edit-grid">
-      <div class="insp-edit-row">
-        <span class="insp-edit-label">Text size</span>
-        <div class="insp-edit-ctrl">
-          <button class="insp-step" onclick="stepEdit('fontSize',-1)" aria-label="Decrease text size">−</button>
-          <span class="insp-edit-val" id="insp-val-fontSize">–</span>
-          <button class="insp-step" onclick="stepEdit('fontSize',1)" aria-label="Increase text size">+</button>
-        </div>
-      </div>
-      <div class="insp-edit-row">
-        <span class="insp-edit-label">Spacing</span>
-        <div class="insp-edit-ctrl">
-          <button class="insp-step" onclick="stepEdit('padding',-1)" aria-label="Decrease spacing">−</button>
-          <span class="insp-edit-val" id="insp-val-padding">–</span>
-          <button class="insp-step" onclick="stepEdit('padding',1)" aria-label="Increase spacing">+</button>
-        </div>
-      </div>
-      <div class="insp-edit-row">
-        <span class="insp-edit-label">Corners</span>
-        <div class="insp-edit-ctrl">
-          <button class="insp-step" onclick="stepEdit('borderRadius',-1)" aria-label="Decrease corner radius">−</button>
-          <span class="insp-edit-val" id="insp-val-borderRadius">–</span>
-          <button class="insp-step" onclick="stepEdit('borderRadius',1)" aria-label="Increase corner radius">+</button>
-        </div>
-      </div>
-      <div class="insp-edit-row">
-        <span class="insp-edit-label">Color</span>
-        <div class="insp-edit-ctrl">
+      <div class="insp-tab-content" data-tab="color" id="inspTabColor">
+        <div class="insp-edit-ctrl" style="justify-content:center;gap:var(--sp3);padding:var(--sp2) 0">
           <button class="insp-color-sw" style="background:var(--tx)" onclick="setEditColor('var(--tx)','text')" aria-label="Text color"></button>
           <button class="insp-color-sw" style="background:var(--tx2)" onclick="setEditColor('var(--tx2)','muted')" aria-label="Muted color"></button>
           <button class="insp-color-sw" style="background:var(--ac)" onclick="setEditColor('var(--ac)','accent')" aria-label="Accent color"></button>
@@ -1411,12 +1411,55 @@ superballs.register();
           <button class="insp-color-sw insp-color-reset" onclick="resetEditColor()" aria-label="Reset color"><i class="ph ph-arrow-counter-clockwise"></i></button>
         </div>
       </div>
+
+      <div class="insp-tab-content" data-tab="type" id="inspTabType">
+        <div class="insp-edit-row">
+          <span class="insp-edit-label">Text size</span>
+          <div class="insp-edit-ctrl">
+            <button class="insp-step" onclick="stepEdit('fontSize',-1)" aria-label="Decrease text size">−</button>
+            <span class="insp-edit-val" id="insp-val-fontSize">–</span>
+            <button class="insp-step" onclick="stepEdit('fontSize',1)" aria-label="Increase text size">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="insp-tab-content" data-tab="layout" id="inspTabLayout">
+        <div class="insp-edit-row">
+          <span class="insp-edit-label">Spacing</span>
+          <div class="insp-edit-ctrl">
+            <button class="insp-step" onclick="stepEdit('padding',-1)" aria-label="Decrease spacing">−</button>
+            <span class="insp-edit-val" id="insp-val-padding">–</span>
+            <button class="insp-step" onclick="stepEdit('padding',1)" aria-label="Increase spacing">+</button>
+          </div>
+        </div>
+        <div class="insp-edit-row">
+          <span class="insp-edit-label">Corners</span>
+          <div class="insp-edit-ctrl">
+            <button class="insp-step" onclick="stepEdit('borderRadius',-1)" aria-label="Decrease corner radius">−</button>
+            <span class="insp-edit-val" id="insp-val-borderRadius">–</span>
+            <button class="insp-step" onclick="stepEdit('borderRadius',1)" aria-label="Increase corner radius">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="insp-tab-content" data-tab="ai" id="inspTabAi">
+        <input class="insp-note-inp" id="inspNoteInp" type="text" placeholder="e.g. make this bigger and use the accent color" style="margin-bottom:var(--sp2)">
+        <div class="insp-ai-hint">Describe the change in plain English — it's saved with this item for whoever builds it.</div>
+      </div>
     </div>
+
     <button class="insp-reset-btn" id="inspResetBtn" onclick="resetEdits()" style="display:none">
       <i class="ph ph-arrow-counter-clockwise"></i> Reset preview
     </button>
 
-    <input class="insp-note-inp" id="inspNoteInp" type="text" placeholder="e.g. make this bigger, broken on tap...">
+    <div class="insp-tabbar" id="inspTabBar">
+      <button class="insp-tab on" data-tab="issues" onclick="setInspTab('issues')"><i class="ph ph-warning-circle"></i><span>Issues</span><span class="insp-tab-badge" id="inspTabBadge"></span></button>
+      <button class="insp-tab" data-tab="color" onclick="setInspTab('color')"><i class="ph ph-palette"></i><span>Color</span></button>
+      <button class="insp-tab" data-tab="type" onclick="setInspTab('type')"><i class="ph ph-text-aa"></i><span>Type</span></button>
+      <button class="insp-tab" data-tab="layout" onclick="setInspTab('layout')"><i class="ph ph-square"></i><span>Layout</span></button>
+      <button class="insp-tab" data-tab="ai" onclick="setInspTab('ai')"><i class="ph ph-sparkle"></i><span>AI Note</span></button>
+    </div>
+
     <button class="cta-btn" onclick="addInspectNote()">Add to list</button>
   </div>
 </div>
@@ -3492,6 +3535,20 @@ function renderCritique(){
     var icon = c.type==='ok' ? 'ph-fill ph-check-circle' : (c.type==='warn' ? 'ph-fill ph-warning' : 'ph ph-info');
     return '<div class="insp-crit insp-crit-'+c.type+'"><i class="'+icon+'"></i>'+c.text+'</div>';
   }).join('');
+  var warnCount = inspCritiqueCache.filter(function(c){ return c.type==='warn'; }).length;
+  var badge = g('inspTabBadge');
+  if(badge){ badge.style.display = warnCount ? 'flex' : 'none'; badge.textContent = warnCount; }
+}
+
+function setInspTab(name){
+  var bar = g('inspTabBar'), panel = g('inspTabPanel');
+  if(!bar || !panel) return;
+  Array.prototype.forEach.call(bar.querySelectorAll('.insp-tab'), function(b){
+    b.classList.toggle('on', b.dataset.tab===name);
+  });
+  Array.prototype.forEach.call(panel.querySelectorAll('.insp-tab-content'), function(c){
+    c.classList.toggle('on', c.dataset.tab===name);
+  });
 }
 
 function refreshEditUI(){
@@ -3588,11 +3645,11 @@ function handleInspectClick(e){
     + (inspCurrentTarget.text ? '<br>"'+inspCurrentTarget.text+'"' : '');
 
   refreshEditUI();
+  setInspTab('issues');
 
   var inp = g('inspNoteInp');
   inp.value = '';
   g('inspNoteOvl').classList.add('on');
-  setTimeout(function(){ inp.focus(); }, 300);
 }
 
 function closeInspectNote(){
