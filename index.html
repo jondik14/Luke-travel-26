@@ -33,6 +33,7 @@
   --ac-dim:  rgba(242,100,25,.13);
   --ac-tx:   #F58A50;
   --ac-dark: #B8450F;
+  --ok-dark: #1B6B42;
   --ok:      #4ade80;
   --ok-dim:  rgba(74,222,128,.12);
   --ok-tx:   #4ade80;
@@ -114,6 +115,7 @@ body {
 }
 #main {
   flex:1; overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
   padding-bottom: calc(env(safe-area-inset-bottom,0px) + 48px);
 }
 
@@ -139,7 +141,7 @@ body {
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
   border-top: 1px solid var(--bd);
-  padding-bottom: env(safe-area-inset-bottom,0);
+  padding-bottom: calc(4px + env(safe-area-inset-bottom,0) * 0.5);
   z-index:100; display:flex;
   transition: background .3s;
 }
@@ -432,6 +434,7 @@ body {
 .day-flt-code { font-size:18px; font-weight:800; letter-spacing:-.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .day-flt-arrow { color:var(--sky); flex-shrink:0; }
 .day-flt-meta  { font-size:12px; color:var(--tx); font-weight:600; display:flex; align-items:center; gap:5px; }
+.day-flt-meta-sec { color:var(--tx2); font-weight:500; }
 
 /* Guide CTA inside card */
 .cta-sm {
@@ -769,6 +772,7 @@ body {
   background:var(--s1); border-bottom:1px solid var(--bd);
   transition:background .3s;
   position:sticky; top:0; z-index:5;
+  transform:translateZ(0);
 }
 .map-toggle {
   display:flex; align-items:center; justify-content:space-between;
@@ -780,17 +784,17 @@ body {
 .map-caret-icon.open { transform:rotate(180deg); }
 #routeMap { height:260px; background:#e9e6e0; }
 .leaflet-container { background:#e9e6e0 !important; font-family:var(--font); }
-.map-pin { background:none; border:none; }
+.map-pin { background:none; border:none; display:flex; align-items:center; justify-content:center; }
 .map-pin-num {
   width:28px; height:28px; border-radius:50%;
-  background:var(--ac); color:#fff;
+  background:var(--ac-dark); color:#fff;
   border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.3);
   display:flex; align-items:center; justify-content:center;
   font-size:12px; font-weight:800; font-family:var(--font);
   transition: transform .25s var(--spring), background .2s, color .2s;
 }
 .map-pin-num.active { background:#fff; color:var(--ac-dark); border-color:var(--ac-dark); transform:scale(1.6); z-index:2; }
-.map-pin-num.done { background:var(--ok); opacity:.85; }
+.map-pin-num.done { background:var(--ok-dark); opacity:1; }
 .map-pin-num.map-pin-home { background:#1a1a1a; border-color:#fff; }
 
 /* ─── Today: big, satisfying checklist rows ──────────────── */
@@ -813,7 +817,7 @@ body {
 .todo-body { flex:1; min-width:0; }
 .todo-title { font-size:15px; font-weight:600; line-height:1.4; color:var(--tx); transition:color .2s; }
 .todo-row.done .todo-title { color:var(--tx3); text-decoration:line-through; }
-.todo-meta { margin-top:5px; display:flex; align-items:center; gap:6px; }
+.todo-meta { margin-top:5px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .todo-info-btn {
   width:27px; height:27px; border-radius:50%; flex-shrink:0; margin-top:1px;
   background:var(--s2); border:1px solid var(--bd); color:var(--tx3);
@@ -822,8 +826,9 @@ body {
 }
 .todo-info-btn:active { transform:scale(.88); }
 .todo-row.sugg-open .todo-info-btn { background:var(--ac-dim); color:var(--ac); border-color:rgba(242,100,25,.25); }
-.todo-detail { padding:0 0 var(--sp3) 39px; border-bottom:1px solid var(--bd); }
-.todo-detail:last-child { border-bottom:none; }
+.todo-detail { overflow:hidden; height:0; transition:height .3s ease; }
+.todo-detail-inner { padding:0 0 var(--sp3) 39px; border-bottom:1px solid var(--bd); }
+.todo-detail:last-child .todo-detail-inner { border-bottom:none; }
 
 /* ─── Cities: per-place map & tick-off list ──────────────── */
 #placeMap { height:100%; background:var(--s2); }
@@ -1688,7 +1693,7 @@ function todaySuggestions(entry){
       if(thText.indexOf(it.title.toLowerCase())>-1) continue;
       seen[it.title]=true;
       out.push({title:it.title, desc:it.desc, city:c});
-      if(out.length>=4) return out;
+      if(out.length>=6) return out;
     }
   }
   return out;
@@ -1989,10 +1994,30 @@ function togToday(key){
   localStorage.setItem('lk_poi',JSON.stringify(POIS));
   renderToday();
 }
-// Expand/collapse a "more info" suggestion row on Today
-function toggleSugg(key){
-  openSugg[key]=!openSugg[key];
-  renderToday();
+// Expand/collapse a "more info" suggestion row on Today — animates the
+// height directly instead of re-rendering, so it eases open/closed like
+// the day cards on Trip rather than snapping instantly.
+function toggleSugg(key,btn){
+  var wasOpen=!!openSugg[key];
+  openSugg[key]=!wasOpen;
+  var row=btn&&btn.closest('.todo-row');
+  var detail=row&&row.nextElementSibling;
+  if(!row||!detail||!detail.classList.contains('todo-detail')){ renderToday(); return; }
+  var icon=btn.querySelector('i');
+  if(wasOpen){
+    detail.style.height=detail.scrollHeight+'px';
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ detail.style.height='0'; });
+    });
+    row.classList.remove('sugg-open');
+    if(icon) icon.classList.remove('ph-fill');
+  } else {
+    row.classList.add('sugg-open');
+    if(icon) icon.classList.add('ph-fill');
+    var inner=detail.querySelector('.todo-detail-inner');
+    detail.style.height=inner.scrollHeight+'px';
+    detail.addEventListener('transitionend',function h(){ detail.style.height='auto'; detail.removeEventListener('transitionend',h); });
+  }
 }
 function goBook(){
   var btn=document.querySelector('.nbtn[data-icon="ph-ticket"]');
@@ -2070,7 +2095,7 @@ function initRouteMap(){
   L.polyline(coords,{color:'#F26419',weight:2.5,opacity:.9,dashArray:'5 7'}).addTo(_map);
   for(var si=0;si<STOPS.length;si++){
     var stop=STOPS[si], c=stop.city;
-    var icon=L.divIcon({className:'map-pin', html:'<div class="map-pin-num">'+stop.num+'</div>', iconSize:[28,28], iconAnchor:[14,14]});
+    var icon=L.divIcon({className:'map-pin', html:'<div class="map-pin-num">'+stop.num+'</div>', iconSize:[44,44], iconAnchor:[22,22]});
     var m=L.marker(COORDS[c],{icon:icon}).addTo(_map)
       .bindPopup('<strong style="font-size:13px">'+stop.num+'. '+c+'</strong><div class="cap" style="color:var(--tx2);margin-top:2px">'+stopRange(stop)+'</div>');
     m.on('click', (function(city){ return function(){ focusStopFromMap(city); }; })(c));
@@ -2158,6 +2183,18 @@ function geocodePOI(c,title,cb){
       if(GEO[key]) cb(GEO[key]);
     }).catch(function(){});
 }
+// Fills in a "More to do today" distance badge once geocoding resolves —
+// the row may already be on screen by the time the lookup comes back
+function updateTodayDistBadge(key,stayC){
+  var geo=GEO[key]; if(!geo||!stayC) return;
+  var badges=document.querySelectorAll('.act-dist[data-key]');
+  for(var i=0;i<badges.length;i++){
+    if(badges[i].getAttribute('data-key')!==key) continue;
+    var span=badges[i].querySelector('.act-dist-txt');
+    if(span) span.textContent=distanceKm(stayC,[geo.lat,geo.lng]).toFixed(1)+' km from your stay';
+    badges[i].style.display='';
+  }
+}
 // Straight-line distance between two [lat,lng] points, in km
 function distanceKm(a,b){
   var R=6371, dLat=(b[0]-a[0])*Math.PI/180, dLng=(b[1]-a[1])*Math.PI/180;
@@ -2186,7 +2223,7 @@ function initPlaceMap(c, items){
   var stay=STAY_COORDS[c]||COORDS[c]; if(!stay) return;
   _placeMap=L.map('placeMap',{zoomControl:false,attributionControl:false,scrollWheelZoom:false,dragging:true}).setView(stay,13);
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,minZoom:3}).addTo(_placeMap);
-  L.marker(stay,{icon:L.divIcon({className:'map-pin',html:'<div class="map-pin-num map-pin-home"><i class="ph-fill ph-house-line" style="font-size:11px"></i></div>',iconSize:[28,28],iconAnchor:[14,14]})})
+  L.marker(stay,{icon:L.divIcon({className:'map-pin',html:'<div class="map-pin-num map-pin-home"><i class="ph-fill ph-house-line" style="font-size:11px"></i></div>',iconSize:[44,44],iconAnchor:[22,22]})})
     .addTo(_placeMap).bindPopup('<strong style="font-size:13px">Where you\'re staying</strong>');
   var placed=[stay];
   for(var i=0;i<items.length;i++){
@@ -2195,7 +2232,7 @@ function initPlaceMap(c, items){
         if(!_placeMap) return;
         var pos=avoidOverlap([coords.lat,coords.lng],placed); placed.push(pos);
         var done=!!POIS[poiKey(c,it.title)];
-        var icon=L.divIcon({className:'map-pin',html:'<div class="map-pin-num'+(done?' done':'')+'">'+(idx+1)+'</div>',iconSize:[28,28],iconAnchor:[14,14]});
+        var icon=L.divIcon({className:'map-pin',html:'<div class="map-pin-num'+(done?' done':'')+'">'+(idx+1)+'</div>',iconSize:[44,44],iconAnchor:[22,22]});
         var m=L.marker(pos,{icon:icon}).addTo(_placeMap)
           .bindPopup('<strong style="font-size:13px">'+(idx+1)+'. '+it.title+'</strong>');
         _placeMarkers[it.title]=m;
@@ -2370,18 +2407,27 @@ function renderToday(){
         for(var i=0;i<todaySugg.length;i++){
           var sg=todaySugg[i], skey=poiKey(sg.city,sg.title), sopen=!!openSugg[skey], sdone=!!POIS[skey];
           var rv=findReview(sg.city,sg.title);
+          var sgeo=GEO[skey]||(POI_COORDS[skey]?{lat:POI_COORDS[skey][0],lng:POI_COORDS[skey][1]}:null);
+          var sstayC=STAY_COORDS[sg.city]||COORDS[sg.city];
+          var sdistTxt=(sgeo&&sstayC)?distanceKm(sstayC,[sgeo.lat,sgeo.lng]).toFixed(1)+' km from your stay':'';
           out += '<div class="todo-row'+(sdone?' done':'')+(sopen?' sugg-open':'')+'" onclick="togToday(\''+skey.replace(/'/g,"\\'")+'\')">';
           out += '<div class="todo-chk'+(sdone?' on':'')+'"><i class="ph-fill ph-check"></i></div>';
-          out += '<div class="todo-body"><div class="todo-title">'+sg.title+'</div></div>';
-          out += '<div class="todo-info-btn" onclick="event.stopPropagation();toggleSugg(\''+skey.replace(/'/g,"\\'")+'\')"><i class="ph'+(sopen?'-fill':'')+' ph-info"></i></div>';
+          out += '<div class="todo-body"><div class="todo-title">'+sg.title+'</div>';
+          out += '<div class="todo-meta"><span class="badge b-dim act-dist" data-key="'+skey.replace(/'/g,"\\'")+'"'+(sdistTxt?'':' style="display:none"')+'><i class="ph ph-map-pin"></i> <span class="act-dist-txt">'+sdistTxt+'</span></span></div>';
           out += '</div>';
-          if(sopen){
-            out += '<div class="todo-detail">';
-            if(sg.desc) out += '<div class="cap mb2" style="color:var(--tx2)">'+sg.desc+'</div>';
-            if(rv) out += '<div class="review-card" style="margin-bottom:0"><div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div><div class="review-txt">'+rv.t+'</div></div>';
-            out += '<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+sg.city+'\')"><i class="ph ph-book-open"></i>View '+sg.city+' guide</button>';
-            out += '</div>';
+          if(!sdistTxt && !GEO.hasOwnProperty(skey)){
+            (function(geoCity,geoTitle,geoKey,geoStayC){
+              geocodePOI(geoCity,geoTitle,function(){ updateTodayDistBadge(geoKey,geoStayC); });
+            })(sg.city,sg.title,skey,sstayC);
           }
+          out += '<div class="todo-info-btn" onclick="event.stopPropagation();toggleSugg(\''+skey.replace(/'/g,"\\'")+'\',this)"><i class="ph'+(sopen?'-fill':'')+' ph-info"></i></div>';
+          out += '</div>';
+          out += '<div class="todo-detail"'+(sopen?' style="height:auto"':'')+'>';
+          out += '<div class="todo-detail-inner">';
+          if(sg.desc) out += '<div class="cap mb2" style="color:var(--tx2)">'+sg.desc+'</div>';
+          if(rv) out += '<div class="review-card" style="margin-bottom:0"><div class="row between mb2"><span class="review-place">'+rv.p+'</span><span class="review-rating stars">'+rv.r+' '+stars(rv.r)+'</span></div><div class="review-txt">'+rv.t+'</div></div>';
+          out += '<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+sg.city+'\')"><i class="ph ph-book-open"></i>View '+sg.city+' guide</button>';
+          out += '</div></div>';
         }
         out += '</div>';
       }
@@ -2597,6 +2643,22 @@ function loadCityPhotos(){
   });
 }
 
+// Land on the trip day you're currently up to, instead of always
+// starting at the top — keeps the sticky route map clear of the card.
+function scrollTimelineToToday(){
+  var ts=TODAY.toISOString().split('T')[0];
+  var idx=-1;
+  for(var k=0;k<DAYS.length;k++) if(DAYS[k].d===ts){ idx=k; break; }
+  if(idx===-1) for(var k=0;k<DAYS.length;k++) if(DAYS[k].d>=ts){ idx=k; break; }
+  var main=g('main');
+  if(!main) return;
+  var card=idx>-1?g('dc'+idx):null;
+  if(!card){ main.scrollTo({top:0,behavior:'instant'}); return; }
+  var panel=document.querySelector('.map-panel');
+  var offset=panel?panel.getBoundingClientRect().height:0;
+  var cardTop=card.getBoundingClientRect().top-main.getBoundingClientRect().top;
+  main.scrollTo({top:main.scrollTop+cardTop-offset-12,behavior:'smooth'});
+}
 function renderTimeline(){
   var ts=TODAY.toISOString().split('T')[0];
   // Find first upcoming day to auto-open (only if not on trip)
@@ -2691,20 +2753,19 @@ function renderTimeline(){
     if(d.t==='travel'){
       var ti=travelInfo(d);
       out+='<div class="day-flt"><div class="day-flt-route"><span class="day-flt-code">'+ti.from+'</span><i class="ph-fill ph-airplane-in-flight day-flt-arrow"></i><span class="day-flt-code">'+ti.to+'</span></div>';
-      var metaBits;
       if(ti.dep&&ti.arr){
-        metaBits=[ti.dep+'–'+ti.arr];
-        if(ti.ref) metaBits.push(ti.ref);
-        if(ti.seat) metaBits.push('Seat '+ti.seat);
-        if(ti.eur) metaBits.push('€'+ti.eur);
+        var extra=[];
+        if(ti.ref) extra.push(ti.ref);
+        if(ti.seat) extra.push('Seat '+ti.seat);
+        if(ti.eur) extra.push('€'+ti.eur);
+        out+='<div class="day-flt-meta">'+ti.dep+'–'+ti.arr+(extra.length?' <span class="day-flt-meta-sec">· '+extra.join(' · ')+'</span>':'')+'</div></div>';
       } else {
-        metaBits=[ti.note||'Details TBC'];
+        out+='<div class="day-flt-meta">'+(ti.note||'Details TBC')+'</div></div>';
       }
-      out+='<div class="day-flt-meta">'+metaBits.join(' · ')+'</div></div>';
     }
     if(d.bus){
       out+='<div class="day-flt"><div class="day-flt-route"><span class="day-flt-code">'+d.bus.from+'</span><i class="ph-fill ph-bus day-flt-arrow"></i><span class="day-flt-code">'+d.bus.to+'</span></div>';
-      out+='<div class="day-flt-meta">'+d.bus.dep+'–'+d.bus.arr+' · '+d.bus.ref+'</div></div>';
+      out+='<div class="day-flt-meta">'+d.bus.dep+'–'+d.bus.arr+' <span class="day-flt-meta-sec">· '+d.bus.ref+'</span></div></div>';
     }
     if(d.th&&d.th.length){
       out+='<div class="label" style="margin:'+((d.a||d.t==='travel'||d.bus)?'12px':'0')+'px 0 6px">Plan</div>';
@@ -3366,8 +3427,8 @@ function go(name,btn){
   btn.classList.add('on');
   var activeIcon=btn.querySelector('i');
   if(activeIcon) activeIcon.className='ph-fill '+btn.getAttribute('data-icon');
-  try{ g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
-  if(name==='Timeline') setTimeout(initRouteMap,120);
+  try{ if(name!=='Timeline') g('main').scrollTo({top:0,behavior:'instant'}); }catch(e){}
+  if(name==='Timeline'){ setTimeout(initRouteMap,120); setTimeout(scrollTimelineToToday,150); }
   // FAB visible on Budget only
   var fab=g('fab');
   if(fab) fab.classList.toggle('hidden', name!=='Budget');
