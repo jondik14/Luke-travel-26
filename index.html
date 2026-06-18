@@ -1988,9 +1988,8 @@ function renderToday(){
     out += '<div class="hero-display">'+left+'</div>';
     out += '<div class="hero-sub">days &nbsp;·&nbsp; Tue 9 June · Sydney → Athens</div>';
     out += '</div>';
-    // Trip progress + up next
+    // Trip progress
     out += renderTripVis();
-    out += renderUpNext(moments);
     out += '<div class="px">';
     // Athens weather preview (anticipation!)
     out += '<div id="wxZone"><div class="weather-row" style="opacity:.6">';
@@ -2012,9 +2011,8 @@ function renderToday(){
       out += '<div class="hero-sub">'+dayTag+'</div>';
     }
     out += '</div>';
-    // Trip progress + up next
+    // Trip progress
     out += renderTripVis();
-    out += renderUpNext(moments);
     out += '<div class="px">';
 
     // Travel
@@ -2144,13 +2142,16 @@ function renderToday(){
     out += '<div class="hero-sub">39 days · 13 cities · Europe 2026</div>';
     out += '</div>';
     out += renderTripVis();
-    out += renderUpNext(moments);
     out += '<div class="px">';
     out += '<div class="card card-ok mb4 row">';
     out += '<div class="ico ico-ok"><i class="ph-fill ph-check-circle"></i></div>';
     out += '<div class="grow1"><div class="title ok-tx">Back in Sydney</div><div class="cap mt1">Trip finished '+fmt('2026-07-17')+'</div></div>';
     out += '</div>';
   }
+
+  out += '</div>'; // px — close before the full-bleed Up next carousel
+  out += renderUpNext(moments);
+  out += '<div class="px">';
 
   // To book — compact summary, links through to the To Book tab
   var todoLeft=actionListCount();
