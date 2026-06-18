@@ -352,6 +352,34 @@ body {
 .phase-label { font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
 .phase-caret { margin-left:auto; color:var(--tx3); font-size:16px; }
 
+/* City block — groups every day of one continuous stay under one header,
+   with a "things to do" teaser beneath the day cards */
+.city-block-hdr {
+  display:flex; align-items:center; gap:var(--sp3);
+  padding:var(--sp4) var(--sp4) var(--sp3);
+}
+.city-block-hdr.tappable { cursor:pointer; -webkit-user-select:none; user-select:none; }
+.city-block-hdr.tappable:active { opacity:.7; }
+.city-block-em { font-size:24px; line-height:1; }
+.city-block-name { font-size:16px; font-weight:800; color:var(--tx); }
+.city-block-name.ac { color:var(--ac); }
+.city-block-sub { font-size:12px; color:var(--tx2); margin-top:1px; }
+.city-block-arrow { color:var(--tx3); font-size:16px; }
+.block-things {
+  background:var(--s1); border:1px solid var(--bd); border-radius:var(--r-lg);
+  padding:var(--sp3);
+}
+.block-things-hdr {
+  display:flex; align-items:center; gap:6px; margin-bottom:var(--sp2);
+  font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--tx2);
+}
+.block-thing-row {
+  display:flex; align-items:center; gap:8px; padding:7px 0;
+  border-bottom:1px solid var(--bd); font-size:13px; font-weight:600; color:var(--tx);
+}
+.block-thing-row:last-of-type { border-bottom:none; }
+.block-thing-row i { color:var(--ac); font-size:14px; flex-shrink:0; }
+
 /* Day card */
 .day-wrap { padding:0 var(--sp4) var(--sp3); }
 .day-card {
@@ -1213,6 +1241,34 @@ function dayCountry(d){
   return CITY_COUNTRY[c];
 }
 // Contiguous runs of days spent in the same country, in itinerary order
+// Days grouped into one block per continuous stay in the same place —
+// e.g. a 1-night transit stopover still gets its own block, and a city
+// revisited later in the trip (after being away) starts a new block.
+function tripCityBlocks(){
+  var blocks=[];
+  for(var i=0;i<DAYS.length;i++){
+    var c=photoCity(DAYS[i].c);
+    var last=blocks[blocks.length-1];
+    if(!last||last.city!==c) blocks.push({city:c, days:[DAYS[i]], idxs:[i]});
+    else { last.days.push(DAYS[i]); last.idxs.push(i); }
+  }
+  return blocks;
+}
+// Things to do in a city that aren't already part of the block's day-by-day
+// plan — a lightweight teaser so each block also answers "what else could I do here"
+function blockExtraThings(blockDays,city,limit){
+  var thText=blockDays.map(function(d){ return (d.th||[]).join(' | '); }).join(' | ').toLowerCase();
+  var items=cityItems(city), out=[], seen={};
+  for(var i=0;i<items.length;i++){
+    var it=items[i];
+    if(seen[it.title]) continue;
+    if(thText.indexOf(it.title.toLowerCase())>-1) continue;
+    seen[it.title]=true;
+    out.push(it);
+    if(out.length>=limit) break;
+  }
+  return out;
+}
 function tripSegments(){
   var segs=[];
   for(var i=0;i<DAYS.length;i++){
@@ -2357,9 +2413,12 @@ function scrollTimelineToToday(){
   if(!main) return;
   var card=idx>-1?g('dc'+idx):null;
   if(!card){ main.scrollTo({top:0,behavior:'instant'}); return; }
+  // Land on the city-block header (not just the day card) so the city
+  // name/dates are visible too, not only the expanded day
+  var target=card.closest('.city-block')||card;
   var panel=document.querySelector('.map-panel');
   var offset=panel?panel.getBoundingClientRect().height:0;
-  var cardTop=card.getBoundingClientRect().top-main.getBoundingClientRect().top;
+  var cardTop=target.getBoundingClientRect().top-main.getBoundingClientRect().top;
   main.scrollTo({top:main.scrollTop+cardTop-offset-12,behavior:'smooth'});
 }
 function renderTimeline(){
@@ -2394,16 +2453,14 @@ function renderTimeline(){
   }
 
   var lp=-1;
-  for(var i=0;i<DAYS.length;i++){
-    var d=DAYS[i];
-    var isToday=d.d===ts, isPast=d.d<ts;
-    var isOpen=isToday||(i===firstUp);
-    var dn=dayNum(d.d);
-    var pc=photoCity(d.c);
-    var gc=guideCity(d.c);
-    var bg=HERO_BG[pc]||HERO_BG[d.c]||'135deg,#444,#222';
+  var blocks=tripCityBlocks();
+  for(var bi=0;bi<blocks.length;bi++){
+    var block=blocks[bi], bc=block.city;
+    var bFirst=block.days[0], bLast=block.days[block.days.length-1];
+    var bGuide=GUIDES[bc]?bc:null;
+    var bIsToday=false; for(var bk=0;bk<block.days.length;bk++) if(block.days[bk].d===ts){ bIsToday=true; break; }
 
-    var si=segOf[d.d];
+    var si=segOf[bFirst.d];
     if(si!==lp){
       lp=si;
       var cn=CN[segs[si].country];
@@ -2415,6 +2472,23 @@ function renderTimeline(){
       out+='</div>';
     }
 
+    var bSub=fmt(bFirst.d)+(block.days.length>1?' – '+fmt(bLast.d):'')+' · '+block.days.length+(block.days.length>1?' days':' day');
+    out+='<div class="city-block">';
+    out+='<div class="city-block-hdr'+(bGuide?' tappable':'')+'"'+(bGuide?' onclick="goGuide(\''+bc+'\')"':'')+'>';
+    out+='<span class="city-block-em">'+bFirst.e+'</span>';
+    out+='<div class="grow1"><div class="city-block-name'+(bIsToday?' ac':'')+'">'+bc+'</div><div class="city-block-sub">'+bSub+'</div></div>';
+    if(bGuide) out+='<i class="ph ph-caret-right city-block-arrow"></i>';
+    out+='</div>';
+
+    for(var di=0;di<block.idxs.length;di++){
+    var i=block.idxs[di];
+    var d=DAYS[i];
+    var isToday=d.d===ts, isPast=d.d<ts;
+    var isOpen=isToday||(i===firstUp);
+    var dn=dayNum(d.d);
+    var pc=photoCity(d.c);
+    var bg=HERO_BG[pc]||HERO_BG[d.c]||'135deg,#444,#222';
+
     out+='<div class="day-wrap"><div class="day-card'+(isToday?' today':'')+(isPast?' past':'')+(isOpen?' open':'')+(d.t==='travel'?' travel-day':'')+'" style="border-left:3px solid '+CN[segs[si].country].c+'4d" id="dc'+i+'">';
 
     // ── Tap header ──
@@ -2422,8 +2496,9 @@ function renderTimeline(){
     out+='<div class="day-thumb"><div class="day-thumb-bg" style="background:linear-gradient('+bg+')"></div><div class="day-thumb-em">'+d.e+'</div><img class="bg-photo" data-city="'+pc+'" alt="" onload="this.classList.add(\'vis\')"></div>';
     out+='<div class="day-tog-meta">';
     var pStop=STOP_BY_CITY[pc];
-    out+='<div class="day-tog-city'+(isToday?' ac':'')+'">'+(pStop?'<span class="stop-num" data-stop="'+pc+'" onclick="event.stopPropagation();zoomMapToCity(\''+pc+'\')">'+pStop.num+'</span>':'')+d.c+'</div>';
-    out+='<div class="day-tog-date">'+fmt(d.d)+'&nbsp;·&nbsp;Day '+dn+'</div>';
+    var showCityName=d.t==='travel'||d.c!==bc;
+    out+='<div class="day-tog-city'+(isToday?' ac':'')+'">'+(pStop?'<span class="stop-num" data-stop="'+pc+'" onclick="event.stopPropagation();zoomMapToCity(\''+pc+'\')">'+pStop.num+'</span>':'')+(showCityName?d.c:('Day '+dn))+'</div>';
+    out+='<div class="day-tog-date">'+fmt(d.d)+(showCityName?'&nbsp;·&nbsp;Day '+dn:'')+'</div>';
     var badges=[];
     if(isToday) badges.push('<span class="badge b-ac">Today</span>');
     if(d.t==='event') badges.push('<span class="badge b-ac"><i class="ph-fill ph-lock-simple"></i>Locked</span>');
@@ -2474,11 +2549,25 @@ function renderTimeline(){
       out+='<div class="label" style="margin:'+((d.a||d.t==='travel'||d.bus)?'12px':'0')+'px 0 6px">Plan</div>';
       for(var j=0;j<d.th.length;j++) out+='<div class="day-hl">'+d.th[j].replace('🔒 ','')+'</div>';
     }
-    if(gc){
-      out+='<button class="cta-sm" onclick="event.stopPropagation();goGuide(\''+gc+'\')"><i class="ph ph-compass"></i>'+gc+' guide</button>';
-    }
 
     out+='</div></div></div></div>'; // body-inner, day-body, day-card, day-wrap
+    }
+
+    if(bGuide){
+      var extras=blockExtraThings(block.days,bc,4);
+      if(extras.length){
+        out+='<div class="day-wrap"><div class="block-things">';
+        out+='<div class="block-things-hdr"><i class="ph ph-compass"></i>Other things to do in '+bc+'</div>';
+        for(var ei=0;ei<extras.length;ei++){
+          var ex=extras[ei], secDef=null;
+          for(var sk=0;sk<GSECS.length;sk++) if(GSECS[sk].k===ex.cat){ secDef=GSECS[sk]; break; }
+          out+='<div class="block-thing-row"><i class="ph '+(secDef?secDef.ph:'ph-map-pin')+'"></i>'+ex.title+'</div>';
+        }
+        out+='<button class="cta-sm" style="margin-top:var(--sp2)" onclick="goGuide(\''+bc+'\')"><i class="ph ph-book-open"></i>View full '+bc+' guide</button>';
+        out+='</div></div>';
+      }
+    }
+    out+='</div>'; // city-block
   }
 
   g('pTimeline').innerHTML=out;
